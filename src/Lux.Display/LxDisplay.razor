@@ -1042,7 +1042,7 @@
                             }
                             else if (isChecks || isSteps)
                             {
-                                <span class="inline-flex size-5 shrink-0 items-center justify-center rounded-full @(item.Done ? "bg-(--lux-success)/15 text-(--lux-success-text)" : item.Current ? "bg-(--lux-primary) text-white" : "bg-(--lux-bg-muted) text-(--lux-text-muted)") text-xs font-semibold">
+                                <span class="inline-flex size-5 shrink-0 items-center justify-center rounded-full @(item.Done ? "bg-(--lux-success)/15 text-(--lux-success-text)" : item.Current ? "bg-(--lux-primary) text-(--lux-primary-contrast)" : "bg-(--lux-bg-muted) text-(--lux-text-muted)") text-xs font-semibold">
                                     @if (item.Done)
                                     {
                                         @RenderIcon("check", "size-3")
@@ -1121,7 +1121,7 @@
                     var item = visible[i];
                     var state = item.State ?? DisplayTimelineState.Done;
                     <li class="flex items-start gap-3" aria-current="@(state == DisplayTimelineState.Current ? "step" : null)" data-slot="timeline-item" data-state="@state.ToString().ToLowerInvariant()">
-                        <span class="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full @(state == DisplayTimelineState.Done ? "bg-(--lux-primary) text-white" : state == DisplayTimelineState.Current ? "border-2 border-(--lux-primary-text) text-(--lux-primary-text)" : "border border-(--lux-border) text-(--lux-text-muted)") text-[11px] font-semibold">
+                        <span class="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full @(state == DisplayTimelineState.Done ? "bg-(--lux-primary) text-(--lux-primary-contrast)" : state == DisplayTimelineState.Current ? "border-2 border-(--lux-primary-text) text-(--lux-primary-text)" : "border border-(--lux-border) text-(--lux-text-muted)") text-[11px] font-semibold">
                             @(i + 1)
                         </span>
                         <div class="flex min-w-0 flex-1 flex-col gap-0.5">
