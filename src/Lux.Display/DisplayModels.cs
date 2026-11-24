@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace Lux.Display;
 
-/// <summary>The 19 read-only display block kinds supported by <see cref="BxDisplay"/>.</summary>
+/// <summary>The 19 read-only display block kinds supported by <see cref="LxDisplay"/>.</summary>
 public enum DisplayKind
 {
     /// <summary>Section heading or eyebrow with optional icon, count pill, description and action.</summary>
@@ -63,7 +63,7 @@ public enum DisplayKind
     Accordion,
 }
 
-/// <summary>Container surface treatment of a <see cref="BxDisplay"/> block.</summary>
+/// <summary>Container surface treatment of a <see cref="LxDisplay"/> block.</summary>
 public enum DisplaySurface
 {
     /// <summary>No border, background or padding.</summary>
@@ -79,13 +79,13 @@ public enum DisplaySurface
     Elevated,
 }
 
-/// <summary>A chip/badge displayed inside a <see cref="BxDisplay"/> block.</summary>
+/// <summary>A chip/badge displayed inside a <see cref="LxDisplay"/> block.</summary>
 public sealed record DisplayChip(
     string Label,
-    BxColor? Color = null,
+    LxColor? Color = null,
     string? Icon = null);
 
-/// <summary>An action button or link displayed inside a <see cref="BxDisplay"/> block.</summary>
+/// <summary>An action button or link displayed inside a <see cref="LxDisplay"/> block.</summary>
 public sealed class DisplayAction
 {
     public required string Label { get; init; }
@@ -93,7 +93,7 @@ public sealed class DisplayAction
     public string? Href { get; init; }
     public string? Target { get; init; }
     public EventCallback OnClick { get; init; }
-    public BxColor Color { get; init; } = BxColor.Neutral;
+    public LxColor Color { get; init; } = LxColor.Neutral;
     public ButtonVariant Variant { get; init; } = ButtonVariant.Outline;
 }
 
@@ -104,7 +104,7 @@ public sealed class DisplayFact
     public string? Value { get; init; }
     public string? Hint { get; init; }
     public DisplayChip? Chip { get; init; }
-    public BxColor? Tone { get; init; }
+    public LxColor? Tone { get; init; }
     public bool Copy { get; init; }
     public string? CopyText { get; init; }
     public bool Mono { get; init; }
@@ -125,7 +125,7 @@ public sealed record DisplayStatItem(
     string Label,
     string Value,
     string? Caption = null,
-    BxColor? Tone = null);
+    LxColor? Tone = null);
 
 /// <summary>One line item in a <see cref="DisplayKind.Breakdown"/> block.</summary>
 public sealed record DisplayBreakdownLine(
@@ -135,7 +135,7 @@ public sealed record DisplayBreakdownLine(
     string? Detail = null,
     bool IsSubtotal = false,
     bool IsMuted = false,
-    BxColor? Tone = null,
+    LxColor? Tone = null,
     DisplayChip? Chip = null);
 
 /// <summary>One segment or part in a <see cref="DisplayKind.Meter"/> block.</summary>
@@ -143,7 +143,7 @@ public sealed record DisplayMeterPart(
     string Label,
     double Value,
     string? ValueLabel = null,
-    BxColor? Tone = null,
+    LxColor? Tone = null,
     string? Icon = null,
     double? Max = null);
 
@@ -151,7 +151,7 @@ public sealed record DisplayMeterPart(
 public sealed record DisplayChartPoint(
     string Label,
     double Value,
-    BxColor? Tone = null);
+    LxColor? Tone = null);
 
 /// <summary>One column definition in a <see cref="DisplayKind.Table"/> block.</summary>
 public sealed record DisplayTableColumn(
@@ -180,7 +180,7 @@ public sealed class DisplayRecordItem
     public string? Icon { get; init; }
     public string? AvatarText { get; init; }
     public string? ImageSrc { get; init; }
-    public BxColor? Tone { get; init; }
+    public LxColor? Tone { get; init; }
     public IReadOnlyList<DisplayChip>? Badges { get; init; }
     public DisplayChip? Chip { get; init; }
     public string? Trailing { get; init; }
@@ -194,7 +194,7 @@ public sealed record DisplayPersonItem(
     string Name,
     string? Description = null,
     string? AvatarSrc = null,
-    BxColor? Tone = null,
+    LxColor? Tone = null,
     DisplayChip? Chip = null);
 
 /// <summary>One contact channel in the <c>contact</c> variant of a <see cref="DisplayKind.Person"/> block.</summary>
@@ -210,7 +210,7 @@ public sealed class DisplayListItem
     public required string Text { get; init; }
     public string? Description { get; init; }
     public string? Icon { get; init; }
-    public BxColor? Tone { get; init; }
+    public LxColor? Tone { get; init; }
     public bool Done { get; init; }
     public bool Current { get; init; }
     public string? Meta { get; init; }
@@ -237,7 +237,7 @@ public sealed record DisplayTimelineItem(
     string? Icon = null,
     string? ActorName = null,
     DisplayTimelineState? State = null,
-    BxColor? Tone = null);
+    LxColor? Tone = null);
 
 /// <summary>One collapsible section in a <see cref="DisplayKind.Accordion"/> block.</summary>
 public sealed record DisplayAccordionItem(

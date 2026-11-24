@@ -1,5 +1,5 @@
 @namespace Lux.Display
-@inherits BxComponentBase
+@inherits LxComponentBase
 @using System.Globalization
 @using Microsoft.JSInterop
 
@@ -100,7 +100,7 @@
     [Parameter] public DisplaySurface? Surface { get; set; }
 
     /// <summary>Primary accent tone of the block.</summary>
-    [Parameter] public BxColor Tone { get; set; } = BxColor.Primary;
+    [Parameter] public LxColor Tone { get; set; } = LxColor.Primary;
 
     /// <summary>Shows a layout-matched placeholder skeleton instead of the block content.</summary>
     [Parameter] public bool Loading { get; set; }
@@ -313,12 +313,12 @@
     {
         var surfaceClass = EffectiveSurface switch
         {
-            DisplaySurface.Muted => "rounded-(--blux-radius) bg-(--blux-bg-muted) p-4",
-            DisplaySurface.Bordered => "rounded-(--blux-radius) border border-(--blux-border) bg-(--blux-bg) p-4",
-            DisplaySurface.Elevated => "rounded-(--blux-radius) border border-(--blux-border-accented) bg-(--blux-bg-elevated) p-4 shadow-sm",
+            DisplaySurface.Muted => "rounded-(--lux-radius) bg-(--lux-bg-muted) p-4",
+            DisplaySurface.Bordered => "rounded-(--lux-radius) border border-(--lux-border) bg-(--lux-bg) p-4",
+            DisplaySurface.Elevated => "rounded-(--lux-radius) border border-(--lux-border-accented) bg-(--lux-bg-elevated) p-4 shadow-sm",
             _ => "",
         };
-        return $"flex w-full min-w-0 flex-col gap-3 text-sm text-(--blux-text) {surfaceClass} {Class}".Trim();
+        return $"flex w-full min-w-0 flex-col gap-3 text-sm text-(--lux-text) {surfaceClass} {Class}".Trim();
     }
 
     private (IReadOnlyList<T> Visible, int Remaining) ApplyReveal<T>(IReadOnlyList<T>? source)
@@ -338,7 +338,7 @@
     }
 
     private RenderFragment RenderRevealButton(int nextCount, int totalCount) =>
-        @<button type="button" class="inline-flex items-center gap-1.5 self-start rounded-(--blux-radius) px-2 py-1 text-xs font-medium text-(--blux-text-muted) hover:bg-(--blux-bg-muted) hover:text-(--blux-text) focus-visible:outline-2 focus-visible:outline-(--blux-primary-text)"
+        @<button type="button" class="inline-flex items-center gap-1.5 self-start rounded-(--lux-radius) px-2 py-1 text-xs font-medium text-(--lux-text-muted) hover:bg-(--lux-bg-muted) hover:text-(--lux-text) focus-visible:outline-2 focus-visible:outline-(--lux-primary-text)"
                  data-slot="display-more" @onclick="@(() => RevealMore(totalCount))">
             <span>Show more · @nextCount</span>
             @RenderIcon("chevron-down", "size-3.5")
@@ -358,9 +358,9 @@
 
     private RenderFragment RenderSkeleton() =>
         @<div class="flex flex-col gap-2.5" data-slot="display-skeleton" aria-busy="true">
-            <BxSkeleton Class="h-5 w-1/3" />
-            <BxSkeleton Class="h-4 w-2/3" />
-            <BxSkeleton Class="h-4 w-1/2" />
+            <LxSkeleton Class="h-5 w-1/3" />
+            <LxSkeleton Class="h-4 w-2/3" />
+            <LxSkeleton Class="h-4 w-1/2" />
         </div>;
 
     private RenderFragment RenderHeading() =>
@@ -368,7 +368,7 @@
             <div class="flex min-w-0 items-center gap-2.5">
                 @if (!string.IsNullOrEmpty(Icon))
                 {
-                    <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-(--blux-radius) bg-(--blux-bg-muted) text-(--blux-primary-text)">
+                    <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-(--lux-radius) bg-(--lux-bg-muted) text-(--lux-primary-text)">
                         @RenderIcon(Icon, "size-4")
                     </span>
                 }
@@ -376,20 +376,20 @@
                     <div class="flex items-center gap-2">
                         @if (string.Equals(Variant, "eyebrow", StringComparison.OrdinalIgnoreCase))
                         {
-                            <span class="text-xs font-semibold tracking-wider uppercase text-(--blux-text-muted)" data-slot="heading-title">@Title</span>
+                            <span class="text-xs font-semibold tracking-wider uppercase text-(--lux-text-muted)" data-slot="heading-title">@Title</span>
                         }
                         else
                         {
-                            <h3 class="m-0 truncate text-base font-semibold text-(--blux-text-highlighted)" data-slot="heading-title">@Title</h3>
+                            <h3 class="m-0 truncate text-base font-semibold text-(--lux-text-highlighted)" data-slot="heading-title">@Title</h3>
                         }
                         @if (!string.IsNullOrEmpty(Count))
                         {
-                            <span class="inline-flex items-center rounded-full border border-(--blux-border-accented) px-2 py-0.5 text-xs font-medium tabular-nums text-(--blux-text-muted)" data-slot="heading-count">@Count</span>
+                            <span class="inline-flex items-center rounded-full border border-(--lux-border-accented) px-2 py-0.5 text-xs font-medium tabular-nums text-(--lux-text-muted)" data-slot="heading-count">@Count</span>
                         }
                     </div>
                     @if (!string.IsNullOrEmpty(Description))
                     {
-                        <p class="m-0 text-xs text-(--blux-text-muted)" data-slot="heading-description">@Description</p>
+                        <p class="m-0 text-xs text-(--lux-text-muted)" data-slot="heading-description">@Description</p>
                     }
                 </div>
             </div>
@@ -400,16 +400,16 @@
         </div>;
 
     private RenderFragment RenderText() =>
-        @<div class="@(string.Equals(Variant, "quote", StringComparison.OrdinalIgnoreCase) ? "border-s-2 border-(--blux-primary-text) ps-3 italic" : "flex flex-col gap-2")" data-slot="display-text">
+        @<div class="@(string.Equals(Variant, "quote", StringComparison.OrdinalIgnoreCase) ? "border-s-2 border-(--lux-primary-text) ps-3 italic" : "flex flex-col gap-2")" data-slot="display-text">
             @if (!string.IsNullOrEmpty(Title))
             {
-                <p class="m-0 font-semibold text-(--blux-text-highlighted)">@Title</p>
+                <p class="m-0 font-semibold text-(--lux-text-highlighted)">@Title</p>
             }
             @if (Paragraphs is { Count: > 0 })
             {
                 @foreach (var p in Paragraphs)
                 {
-                    <p class="m-0 text-(--blux-text)">@p</p>
+                    <p class="m-0 text-(--lux-text)">@p</p>
                 }
             }
             else if (!string.IsNullOrEmpty(Value))
@@ -418,42 +418,42 @@
             }
             @if (MaxLines is > 0)
             {
-                <button type="button" class="self-start text-xs font-medium text-(--blux-primary-text) hover:underline"
+                <button type="button" class="self-start text-xs font-medium text-(--lux-primary-text) hover:underline"
                         data-slot="text-toggle" @onclick="@(() => _textExpanded = !_textExpanded)">
                     @(_textExpanded ? "Show less" : "Read more")
                 </button>
             }
             @if (!string.IsNullOrEmpty(Author) || !string.IsNullOrEmpty(Meta))
             {
-                <footer class="text-xs not-italic text-(--blux-text-muted)">
+                <footer class="text-xs not-italic text-(--lux-text-muted)">
                     @string.Join(" · ", new[] { Author, Meta }.Where(s => !string.IsNullOrWhiteSpace(s)))
                 </footer>
             }
         </div>;
 
     private RenderFragment RenderAlert() =>
-        @<div class="flex items-start gap-3" role="@(Tone == BxColor.Error || Tone == BxColor.Warning ? "status" : null)" data-slot="display-alert">
+        @<div class="flex items-start gap-3" role="@(Tone == LxColor.Error || Tone == LxColor.Warning ? "status" : null)" data-slot="display-alert">
             @if (Icon != "")
             {
                 var iconName = !string.IsNullOrEmpty(Icon) ? Icon
-                    : Tone == BxColor.Success ? "circle-check"
-                    : Tone == BxColor.Warning ? "triangle-alert"
-                    : Tone == BxColor.Error ? "circle-x"
+                    : Tone == LxColor.Success ? "circle-check"
+                    : Tone == LxColor.Warning ? "triangle-alert"
+                    : Tone == LxColor.Error ? "circle-x"
                     : "info";
-                <span class="mt-0.5 shrink-0 text-(--blux-text-highlighted)">@RenderIcon(iconName, "size-4")</span>
+                <span class="mt-0.5 shrink-0 text-(--lux-text-highlighted)">@RenderIcon(iconName, "size-4")</span>
             }
             <div class="flex min-w-0 flex-1 flex-col gap-1.5">
                 @if (!string.IsNullOrEmpty(Title))
                 {
-                    <p class="m-0 font-semibold text-(--blux-text-highlighted)" data-slot="alert-title">@Title</p>
+                    <p class="m-0 font-semibold text-(--lux-text-highlighted)" data-slot="alert-title">@Title</p>
                 }
                 @if (!string.IsNullOrEmpty(Value) || !string.IsNullOrEmpty(Description))
                 {
-                    <p class="m-0 text-(--blux-text-muted)" data-slot="alert-message">@(Value ?? Description)</p>
+                    <p class="m-0 text-(--lux-text-muted)" data-slot="alert-message">@(Value ?? Description)</p>
                 }
                 @if (!string.IsNullOrEmpty(Details))
                 {
-                    <button type="button" class="inline-flex items-center gap-1 self-start text-xs font-medium text-(--blux-text-highlighted) hover:underline"
+                    <button type="button" class="inline-flex items-center gap-1 self-start text-xs font-medium text-(--lux-text-highlighted) hover:underline"
                             aria-expanded="@(_detailsOpen ? "true" : "false")" data-slot="alert-details-toggle"
                             @onclick="@(() => _detailsOpen = !_detailsOpen)">
                         <span>@(_detailsOpen ? "Hide details" : "Show details")</span>
@@ -461,7 +461,7 @@
                     </button>
                     @if (_detailsOpen)
                     {
-                        <div class="rounded-(--blux-radius) bg-(--blux-bg) p-2.5 text-xs text-(--blux-text-muted)" data-slot="alert-details">@Details</div>
+                        <div class="rounded-(--lux-radius) bg-(--lux-bg) p-2.5 text-xs text-(--lux-text-muted)" data-slot="alert-details">@Details</div>
                     }
                 }
                 @if (Actions is { Count: > 0 })
@@ -485,11 +485,11 @@
                     <div class="flex flex-col gap-2" data-slot="fact-group">
                         @if (!string.IsNullOrEmpty(grp.Title) || !string.IsNullOrEmpty(grp.Aside))
                         {
-                            <div class="flex items-center justify-between gap-2 border-b border-(--blux-border) pb-1">
-                                <span class="text-xs font-semibold text-(--blux-text-highlighted)">@grp.Title</span>
+                            <div class="flex items-center justify-between gap-2 border-b border-(--lux-border) pb-1">
+                                <span class="text-xs font-semibold text-(--lux-text-highlighted)">@grp.Title</span>
                                 @if (!string.IsNullOrEmpty(grp.Aside))
                                 {
-                                    <span class="text-xs text-(--blux-text-muted)">@grp.Aside</span>
+                                    <span class="text-xs text-(--lux-text-muted)">@grp.Aside</span>
                                 }
                             </div>
                         }
@@ -508,39 +508,39 @@
             }
             else
             {
-                <p class="m-0 text-xs text-(--blux-text-muted)" data-slot="display-empty-line">—</p>
+                <p class="m-0 text-xs text-(--lux-text-muted)" data-slot="display-empty-line">—</p>
             }
         </div>;
 
     private RenderFragment RenderFactList(IReadOnlyList<DisplayFact> items) =>
-        @<dl class="m-0 divide-y divide-(--blux-border)">
+        @<dl class="m-0 divide-y divide-(--lux-border)">
             @foreach (var fact in items)
             {
                 var isEmpty = string.IsNullOrWhiteSpace(fact.Value) && fact.Chip is null;
                 <div class="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0" data-slot="fact-item">
-                    <dt class="flex items-center gap-1.5 text-xs font-medium text-(--blux-text-muted)" data-slot="fact-label">
+                    <dt class="flex items-center gap-1.5 text-xs font-medium text-(--lux-text-muted)" data-slot="fact-label">
                         @if (!string.IsNullOrEmpty(fact.Icon))
                         {
                             @RenderIcon(fact.Icon, "size-3.5 shrink-0")
                         }
                         <span>@fact.Label</span>
                     </dt>
-                    <dd class="m-0 flex items-center gap-1.5 text-end @(fact.Mono ? "font-mono" : "") @(fact.Emphasis ? "font-semibold text-(--blux-text-highlighted)" : "text-(--blux-text)")" data-slot="fact-value">
+                    <dd class="m-0 flex items-center gap-1.5 text-end @(fact.Mono ? "font-mono" : "") @(fact.Emphasis ? "font-semibold text-(--lux-text-highlighted)" : "text-(--lux-text)")" data-slot="fact-value">
                         @if (fact.Loading)
                         {
-                            <BxSkeleton Class="h-4 w-20" />
+                            <LxSkeleton Class="h-4 w-20" />
                         }
                         else if (fact.Chip is { } chip)
                         {
-                            <BxBadge Label="@chip.Label" Color="@(chip.Color ?? BxColor.Neutral)" Variant="BxVariant.Subtle" Size="BxSize.Sm" />
+                            <LxBadge Label="@chip.Label" Color="@(chip.Color ?? LxColor.Neutral)" Variant="LxVariant.Subtle" Size="LxSize.Sm" />
                         }
                         else if (isEmpty)
                         {
-                            <span class="text-(--blux-text-dimmed)" data-slot="fact-empty">—</span>
+                            <span class="text-(--lux-text-dimmed)" data-slot="fact-empty">—</span>
                         }
                         else if (!string.IsNullOrEmpty(fact.Href))
                         {
-                            <a href="@fact.Href" class="text-(--blux-primary-text) hover:underline">@fact.Value</a>
+                            <a href="@fact.Href" class="text-(--lux-primary-text) hover:underline">@fact.Value</a>
                         }
                         else
                         {
@@ -549,7 +549,7 @@
                         @if ((fact.Copy || !string.IsNullOrEmpty(fact.CopyText)) && !isEmpty)
                         {
                             var toCopy = fact.CopyText ?? fact.Value;
-                            <button type="button" class="inline-flex size-6 items-center justify-center rounded-(--blux-radius) text-(--blux-text-muted) hover:bg-(--blux-bg-muted) hover:text-(--blux-text)"
+                            <button type="button" class="inline-flex size-6 items-center justify-center rounded-(--lux-radius) text-(--lux-text-muted) hover:bg-(--lux-bg-muted) hover:text-(--lux-text)"
                                     aria-label="@($"Copy {fact.Label}")" data-slot="fact-copy"
                                     @onclick="@(() => CopyToClipboardAsync(toCopy))">
                                 @RenderIcon("copy", "size-3.5")
@@ -568,11 +568,11 @@
                     @foreach (var item in StatItems)
                     {
                         <div class="flex flex-col gap-0.5" data-slot="stat-item">
-                            <span class="text-xs font-medium text-(--blux-text-muted)">@item.Label</span>
-                            <span class="text-xl font-bold tabular-nums text-(--blux-text-highlighted)">@item.Value</span>
+                            <span class="text-xs font-medium text-(--lux-text-muted)">@item.Label</span>
+                            <span class="text-xl font-bold tabular-nums text-(--lux-text-highlighted)">@item.Value</span>
                             @if (!string.IsNullOrEmpty(item.Caption))
                             {
-                                <span class="text-xs text-(--blux-text-muted)">@item.Caption</span>
+                                <span class="text-xs text-(--lux-text-muted)">@item.Caption</span>
                             }
                         </div>
                     }
@@ -582,25 +582,25 @@
             {
                 @if (!string.IsNullOrEmpty(Title))
                 {
-                    <span class="text-xs font-medium text-(--blux-text-muted)" data-slot="stat-label">@Title</span>
+                    <span class="text-xs font-medium text-(--lux-text-muted)" data-slot="stat-label">@Title</span>
                 }
                 <div class="flex flex-wrap items-baseline justify-between gap-2">
                     <div class="flex items-baseline gap-1.5">
-                        <span class="text-2xl font-bold tabular-nums text-(--blux-text-highlighted)" data-slot="stat-value">@(Value ?? "—")</span>
+                        <span class="text-2xl font-bold tabular-nums text-(--lux-text-highlighted)" data-slot="stat-value">@(Value ?? "—")</span>
                         @if (!string.IsNullOrEmpty(Unit))
                         {
-                            <span class="text-xs font-medium text-(--blux-text-muted)" data-slot="stat-unit">@Unit</span>
+                            <span class="text-xs font-medium text-(--lux-text-muted)" data-slot="stat-unit">@Unit</span>
                         }
                     </div>
                     @if (!string.IsNullOrEmpty(Delta))
                     {
                         var deltaColor = DeltaDirection switch
                         {
-                            "down" => BxColor.Error,
-                            "flat" => BxColor.Neutral,
-                            _ => BxColor.Success,
+                            "down" => LxColor.Error,
+                            "flat" => LxColor.Neutral,
+                            _ => LxColor.Success,
                         };
-                        <BxBadge Label="@Delta" Color="deltaColor" Variant="BxVariant.Subtle" Size="BxSize.Sm" data-slot="stat-delta" />
+                        <LxBadge Label="@Delta" Color="deltaColor" Variant="LxVariant.Subtle" Size="LxSize.Sm" data-slot="stat-delta" />
                     }
                 </div>
                 @if (Trend is { Count: >= 2 })
@@ -609,7 +609,7 @@
                 }
                 @if (!string.IsNullOrEmpty(Description))
                 {
-                    <span class="text-xs text-(--blux-text-muted)" data-slot="stat-caption">@Description</span>
+                    <span class="text-xs text-(--lux-text-muted)" data-slot="stat-caption">@Description</span>
                 }
             }
         </div>;
@@ -627,7 +627,7 @@
             coords.Add($"{x},{y}");
         }
         var polyline = string.Join(' ', coords);
-        return @<svg viewBox="0 0 100 30" class="h-8 w-full overflow-visible text-(--blux-primary-text)" data-slot="stat-sparkline" aria-hidden="true">
+        return @<svg viewBox="0 0 100 30" class="h-8 w-full overflow-visible text-(--lux-primary-text)" data-slot="stat-sparkline" aria-hidden="true">
             <polyline fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="@polyline" />
         </svg>;
     }
@@ -636,11 +636,11 @@
         @<div class="flex flex-col gap-2" data-slot="display-breakdown">
             @if (!string.IsNullOrEmpty(Title))
             {
-                <p class="m-0 font-semibold text-(--blux-text-highlighted)">@Title</p>
+                <p class="m-0 font-semibold text-(--lux-text-highlighted)">@Title</p>
             }
             @if (string.Equals(Variant, "collapsible", StringComparison.OrdinalIgnoreCase))
             {
-                <button type="button" class="inline-flex items-center gap-1 self-start text-xs font-medium text-(--blux-primary-text) hover:underline"
+                <button type="button" class="inline-flex items-center gap-1 self-start text-xs font-medium text-(--lux-primary-text) hover:underline"
                         aria-expanded="@(_detailsOpen ? "true" : "false")" data-slot="breakdown-toggle"
                         @onclick="@(() => _detailsOpen = !_detailsOpen)">
                     <span>@(_detailsOpen ? "Hide details" : "Details")</span>
@@ -654,7 +654,7 @@
                     <div class="flex flex-col gap-1.5" data-slot="breakdown-lines">
                         @foreach (var line in BreakdownLines)
                         {
-                            <div class="flex items-baseline justify-between gap-2 @(line.IsSubtotal ? "border-t border-(--blux-border) pt-1.5 font-semibold text-(--blux-text-highlighted)" : line.IsMuted ? "text-(--blux-text-dimmed)" : "")" data-slot="breakdown-line">
+                            <div class="flex items-baseline justify-between gap-2 @(line.IsSubtotal ? "border-t border-(--lux-border) pt-1.5 font-semibold text-(--lux-text-highlighted)" : line.IsMuted ? "text-(--lux-text-dimmed)" : "")" data-slot="breakdown-line">
                                 <span>@line.Label</span>
                                 <span class="tabular-nums">@(line.Value ?? "—")</span>
                             </div>
@@ -664,14 +664,14 @@
             }
             @if (BreakdownTotal is { } total)
             {
-                <div class="flex items-baseline justify-between gap-2 border-t border-(--blux-border-accented) pt-2 font-semibold text-(--blux-text-highlighted)" data-slot="breakdown-total">
+                <div class="flex items-baseline justify-between gap-2 border-t border-(--lux-border-accented) pt-2 font-semibold text-(--lux-text-highlighted)" data-slot="breakdown-total">
                     <span>@total.Label</span>
                     <span class="tabular-nums">@total.Value</span>
                 </div>
             }
             @if (!string.IsNullOrEmpty(Details))
             {
-                <p class="m-0 text-xs text-(--blux-text-muted)" data-slot="breakdown-footnote">@Details</p>
+                <p class="m-0 text-xs text-(--lux-text-muted)" data-slot="breakdown-footnote">@Details</p>
             }
         </div>;
 
@@ -680,16 +680,16 @@
         var max = MeterMax > 0 ? MeterMax : (MeterParts is { Count: > 0 } ? Math.Max(1, MeterParts.Sum(p => p.Value)) : 100);
         var val = Math.Clamp(MeterValue, 0, max);
         var pct = Math.Clamp(val / max * 100.0, 0, 100);
-        var effectiveTone = ErrorThreshold is { } err && pct >= err ? "bg-(--blux-error)"
-            : WarningThreshold is { } warn && pct >= warn ? "bg-(--blux-warning)"
-            : "bg-(--blux-primary)";
+        var effectiveTone = ErrorThreshold is { } err && pct >= err ? "bg-(--lux-error)"
+            : WarningThreshold is { } warn && pct >= warn ? "bg-(--lux-warning)"
+            : "bg-(--lux-primary)";
 
         return @<div class="flex flex-col gap-2" data-slot="display-meter" data-tone="@(ErrorThreshold is { } e && pct >= e ? "error" : WarningThreshold is { } w && pct >= w ? "warning" : "primary")">
             @if (!string.IsNullOrEmpty(Title) || !string.IsNullOrEmpty(Value))
             {
                 <div class="flex items-baseline justify-between gap-2">
-                    <span class="text-xs font-medium text-(--blux-text-muted)" data-slot="meter-label">@Title</span>
-                    <span class="text-xs font-semibold tabular-nums text-(--blux-text-highlighted)" data-slot="meter-value">@(Value ?? $"{val:0.##} / {max:0.##}")</span>
+                    <span class="text-xs font-medium text-(--lux-text-muted)" data-slot="meter-label">@Title</span>
+                    <span class="text-xs font-semibold tabular-nums text-(--lux-text-highlighted)" data-slot="meter-value">@(Value ?? $"{val:0.##} / {max:0.##}")</span>
                 </div>
             }
             @if (string.Equals(Variant, "scale", StringComparison.OrdinalIgnoreCase) && MeterLevels is { Count: > 0 })
@@ -698,7 +698,7 @@
                     @for (var i = 0; i < MeterLevels.Count; i++)
                     {
                         var reached = CurrentLevel is { } cur && i <= cur;
-                        <div class="rounded-(--blux-radius) border px-2 py-1 text-center text-xs font-medium @(reached ? "border-(--blux-primary-text) bg-(--blux-bg-muted) text-(--blux-text-highlighted)" : "border-(--blux-border) text-(--blux-text-muted)")"
+                        <div class="rounded-(--lux-radius) border px-2 py-1 text-center text-xs font-medium @(reached ? "border-(--lux-primary-text) bg-(--lux-bg-muted) text-(--lux-text-highlighted)" : "border-(--lux-border) text-(--lux-text-muted)")"
                              data-slot="meter-level" data-active="@(CurrentLevel == i ? "true" : null)">
                             @MeterLevels[i]
                         </div>
@@ -707,7 +707,7 @@
             }
             else
             {
-                <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-(--blux-bg-muted)"
+                <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-(--lux-bg-muted)"
                      role="meter" aria-label="@(Title ?? "Meter")"
                      aria-valuenow="@val.ToString("0.##", CultureInfo.InvariantCulture)"
                      aria-valuemin="0"
@@ -718,7 +718,7 @@
                         @foreach (var part in MeterParts)
                         {
                             var partPct = Math.Clamp(part.Value / max * 100.0, 0, 100).ToString("0.##", CultureInfo.InvariantCulture);
-                            <div class="h-full bg-(--blux-primary) first:rounded-s-full last:rounded-e-full" style="@($"width:{partPct}%")" title="@($"{part.Label}: {part.Value}")" data-slot="meter-part"></div>
+                            <div class="h-full bg-(--lux-primary) first:rounded-s-full last:rounded-e-full" style="@($"width:{partPct}%")" title="@($"{part.Label}: {part.Value}")" data-slot="meter-part"></div>
                         }
                     }
                     else
@@ -729,7 +729,7 @@
             }
             @if (!string.IsNullOrEmpty(Description))
             {
-                <span class="text-xs text-(--blux-text-muted)" data-slot="meter-caption">@Description</span>
+                <span class="text-xs text-(--lux-text-muted)" data-slot="meter-caption">@Description</span>
             }
         </div>;
     }
@@ -739,16 +739,16 @@
             @if (!string.IsNullOrEmpty(Title) || !string.IsNullOrEmpty(Unit))
             {
                 <div class="flex items-baseline justify-between gap-2">
-                    <span class="font-semibold text-(--blux-text-highlighted)" data-slot="chart-title">@Title</span>
+                    <span class="font-semibold text-(--lux-text-highlighted)" data-slot="chart-title">@Title</span>
                     @if (!string.IsNullOrEmpty(Unit))
                     {
-                        <span class="text-xs text-(--blux-text-muted)">@Unit</span>
+                        <span class="text-xs text-(--lux-text-muted)">@Unit</span>
                     }
                 </div>
             }
             @if (ChartData is not { Count: > 0 })
             {
-                <p class="m-0 text-xs text-(--blux-text-muted)" data-slot="chart-empty">No data</p>
+                <p class="m-0 text-xs text-(--lux-text-muted)" data-slot="chart-empty">No data</p>
             }
             else if (string.Equals(Variant, "funnel", StringComparison.OrdinalIgnoreCase))
             {
@@ -761,10 +761,10 @@
                         var rate = i > 0 && ChartData[i - 1].Value > 0 ? $"{Math.Round(pt.Value / ChartData[i - 1].Value * 100)}%" : null;
                         <div class="flex flex-col gap-1" data-slot="funnel-step">
                             <div class="flex items-baseline justify-between gap-2 text-xs">
-                                <span class="font-medium text-(--blux-text)">@pt.Label</span>
-                                <span class="tabular-nums text-(--blux-text-muted)">@pt.Value @(rate is not null ? $"({rate})" : "")</span>
+                                <span class="font-medium text-(--lux-text)">@pt.Label</span>
+                                <span class="tabular-nums text-(--lux-text-muted)">@pt.Value @(rate is not null ? $"({rate})" : "")</span>
                             </div>
-                            <div class="h-2 rounded-full bg-(--blux-primary)" style="@($"width:{widthPct}%")"></div>
+                            <div class="h-2 rounded-full bg-(--lux-primary)" style="@($"width:{widthPct}%")"></div>
                         </div>
                     }
                 </div>
@@ -777,8 +777,8 @@
                     {
                         var hPct = Math.Clamp(pt.Value / max * 100.0, 6, 100).ToString("0.#", CultureInfo.InvariantCulture);
                         <div class="flex flex-1 flex-col items-center gap-1" title="@($"{pt.Label}: {pt.Value}")" data-slot="chart-bar">
-                            <div class="w-full rounded-t-sm bg-(--blux-primary)" style="@($"height:{hPct}%")"></div>
-                            <span class="max-w-full truncate text-[11px] text-(--blux-text-muted)">@pt.Label</span>
+                            <div class="w-full rounded-t-sm bg-(--lux-primary)" style="@($"height:{hPct}%")"></div>
+                            <span class="max-w-full truncate text-[11px] text-(--lux-text-muted)">@pt.Label</span>
                         </div>
                     }
                 </div>
@@ -792,7 +792,7 @@
         return @<div class="flex flex-col gap-2" data-slot="display-table">
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
-                    <thead class="border-b border-(--blux-border) text-xs font-semibold text-(--blux-text-muted)">
+                    <thead class="border-b border-(--lux-border) text-xs font-semibold text-(--lux-text-muted)">
                         <tr>
                             @foreach (var col in cols)
                             {
@@ -800,7 +800,7 @@
                             }
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-(--blux-border)">
+                    <tbody class="divide-y divide-(--lux-border)">
                         @foreach (var row in visibleRows)
                         {
                             <tr data-slot="display-table-row">
@@ -814,7 +814,7 @@
                     </tbody>
                     @if (TableFooter is { Count: > 0 })
                     {
-                        <tfoot class="border-t border-(--blux-border-accented) font-semibold text-(--blux-text-highlighted)">
+                        <tfoot class="border-t border-(--lux-border-accented) font-semibold text-(--lux-text-highlighted)">
                             <tr>
                                 @foreach (var col in cols)
                                 {
@@ -839,29 +839,29 @@
         return @<div class="flex flex-col gap-2" data-slot="display-diff">
             @if (!string.IsNullOrEmpty(Title))
             {
-                <p class="m-0 font-semibold text-(--blux-text-highlighted)">@Title</p>
+                <p class="m-0 font-semibold text-(--lux-text-highlighted)">@Title</p>
             }
-            <div class="divide-y divide-(--blux-border)">
+            <div class="divide-y divide-(--lux-border)">
                 @foreach (var item in items)
                 {
                     <div class="flex flex-wrap items-center justify-between gap-2 py-2 first:pt-0 last:pb-0" data-slot="diff-item" data-changed="@(item.Changed ? "true" : "false")">
-                        <span class="text-xs font-medium text-(--blux-text-muted)">@item.Label</span>
+                        <span class="text-xs font-medium text-(--lux-text-muted)">@item.Label</span>
                         <div class="flex items-center gap-2 text-xs">
                             @if (item.Changed)
                             {
                                 @if (!string.IsNullOrEmpty(item.Before))
                                 {
-                                    <span class="line-through text-(--blux-error-text)" data-slot="diff-before">@item.Before</span>
+                                    <span class="line-through text-(--lux-error-text)" data-slot="diff-before">@item.Before</span>
                                 }
                                 @if (!string.IsNullOrEmpty(item.Before) && !string.IsNullOrEmpty(item.After))
                                 {
-                                    <span class="text-(--blux-text-muted)" aria-hidden="true">→</span>
+                                    <span class="text-(--lux-text-muted)" aria-hidden="true">→</span>
                                 }
-                                <span class="font-semibold text-(--blux-success-text)" data-slot="diff-after">@(item.After ?? "—")</span>
+                                <span class="font-semibold text-(--lux-success-text)" data-slot="diff-after">@(item.After ?? "—")</span>
                             }
                             else
                             {
-                                <span class="text-(--blux-text-muted)" data-slot="diff-unchanged">@(item.After ?? item.Before ?? "—")</span>
+                                <span class="text-(--lux-text-muted)" data-slot="diff-unchanged">@(item.After ?? item.Before ?? "—")</span>
                             }
                         </div>
                     </div>
@@ -877,10 +877,10 @@
             @if (!string.IsNullOrEmpty(Title))
             {
                 <div class="flex items-center justify-between gap-2">
-                    <span class="font-semibold text-(--blux-text-highlighted)">@Title</span>
+                    <span class="font-semibold text-(--lux-text-highlighted)">@Title</span>
                     @if (!string.IsNullOrEmpty(Count))
                     {
-                        <span class="text-xs tabular-nums text-(--blux-text-muted)">@Count</span>
+                        <span class="text-xs tabular-nums text-(--lux-text-muted)">@Count</span>
                     }
                 </div>
             }
@@ -890,7 +890,7 @@
                     <div class="flex min-w-0 items-center gap-3">
                         @if (!string.IsNullOrEmpty(rec.AvatarText) || !string.IsNullOrEmpty(rec.Icon))
                         {
-                            <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-(--blux-radius) bg-(--blux-bg-muted) text-xs font-semibold text-(--blux-text-highlighted)">
+                            <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-(--lux-radius) bg-(--lux-bg-muted) text-xs font-semibold text-(--lux-text-highlighted)">
                                 @if (!string.IsNullOrEmpty(rec.Icon))
                                 {
                                     @RenderIcon(rec.Icon, "size-4")
@@ -904,30 +904,30 @@
                         <div class="flex min-w-0 flex-col">
                             @if (!string.IsNullOrEmpty(rec.Reference))
                             {
-                                <span class="text-[11px] font-mono text-(--blux-text-muted)">@rec.Reference</span>
+                                <span class="text-[11px] font-mono text-(--lux-text-muted)">@rec.Reference</span>
                             }
                             @if (!string.IsNullOrEmpty(rec.Href))
                             {
-                                <a href="@rec.Href" class="truncate font-medium text-(--blux-text-highlighted) hover:underline" data-slot="record-title">@rec.Title</a>
+                                <a href="@rec.Href" class="truncate font-medium text-(--lux-text-highlighted) hover:underline" data-slot="record-title">@rec.Title</a>
                             }
                             else
                             {
-                                <span class="truncate font-medium text-(--blux-text-highlighted)" data-slot="record-title">@rec.Title</span>
+                                <span class="truncate font-medium text-(--lux-text-highlighted)" data-slot="record-title">@rec.Title</span>
                             }
                             @if (!string.IsNullOrEmpty(rec.Meta) || !string.IsNullOrEmpty(rec.Description))
                             {
-                                <span class="truncate text-xs text-(--blux-text-muted)">@(rec.Meta ?? rec.Description)</span>
+                                <span class="truncate text-xs text-(--lux-text-muted)">@(rec.Meta ?? rec.Description)</span>
                             }
                         </div>
                     </div>
                     <div class="flex shrink-0 items-center gap-2">
                         @if (rec.Chip is { } chip)
                         {
-                            <BxBadge Label="@chip.Label" Color="@(chip.Color ?? BxColor.Neutral)" Variant="BxVariant.Subtle" Size="BxSize.Sm" />
+                            <LxBadge Label="@chip.Label" Color="@(chip.Color ?? LxColor.Neutral)" Variant="LxVariant.Subtle" Size="LxSize.Sm" />
                         }
                         @if (!string.IsNullOrEmpty(rec.Trailing))
                         {
-                            <span class="font-semibold tabular-nums text-(--blux-text-highlighted)" data-slot="record-trailing">@rec.Trailing</span>
+                            <span class="font-semibold tabular-nums text-(--lux-text-highlighted)" data-slot="record-trailing">@rec.Trailing</span>
                         }
                     </div>
                 </div>
@@ -950,18 +950,18 @@
                     <div class="flex -space-x-2">
                         @foreach (var p in shown)
                         {
-                            <span class="inline-flex size-8 items-center justify-center rounded-full border-2 border-(--blux-bg) bg-(--blux-bg-muted) text-xs font-semibold text-(--blux-text-highlighted)"
+                            <span class="inline-flex size-8 items-center justify-center rounded-full border-2 border-(--lux-bg) bg-(--lux-bg-muted) text-xs font-semibold text-(--lux-text-highlighted)"
                                   title="@p.Name" data-slot="person-avatar">@InitialsOf(p.Name)</span>
                         }
                         @if (extra > 0)
                         {
-                            <span class="inline-flex size-8 items-center justify-center rounded-full border-2 border-(--blux-bg) bg-(--blux-bg-elevated) text-xs font-semibold text-(--blux-text-muted)"
+                            <span class="inline-flex size-8 items-center justify-center rounded-full border-2 border-(--lux-bg) bg-(--lux-bg-elevated) text-xs font-semibold text-(--lux-text-muted)"
                                   data-slot="person-overflow">+@extra</span>
                         }
                     </div>
                     @if (!string.IsNullOrEmpty(Title))
                     {
-                        <span class="text-xs text-(--blux-text-muted)">@Title</span>
+                        <span class="text-xs text-(--lux-text-muted)">@Title</span>
                     }
                 </div>
             }
@@ -970,31 +970,31 @@
                 var person = People is { Count: > 0 } ? People[0] : new DisplayPersonItem(Title ?? "User", Description, null, Tone, Chip);
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex min-w-0 items-center gap-2.5">
-                        <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-(--blux-bg-muted) text-xs font-semibold text-(--blux-text-highlighted)"
+                        <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-(--lux-bg-muted) text-xs font-semibold text-(--lux-text-highlighted)"
                               data-slot="person-avatar">@InitialsOf(person.Name)</span>
                         <div class="flex min-w-0 flex-col">
-                            <span class="truncate font-semibold text-(--blux-text-highlighted)" data-slot="person-name">@person.Name</span>
+                            <span class="truncate font-semibold text-(--lux-text-highlighted)" data-slot="person-name">@person.Name</span>
                             @if (!string.IsNullOrEmpty(person.Description))
                             {
-                                <span class="truncate text-xs text-(--blux-text-muted)">@person.Description</span>
+                                <span class="truncate text-xs text-(--lux-text-muted)">@person.Description</span>
                             }
                         </div>
                     </div>
                     @if (person.Chip is { } chip)
                     {
-                        <BxBadge Label="@chip.Label" Color="@(chip.Color ?? BxColor.Neutral)" Variant="BxVariant.Subtle" Size="BxSize.Sm" />
+                        <LxBadge Label="@chip.Label" Color="@(chip.Color ?? LxColor.Neutral)" Variant="LxVariant.Subtle" Size="LxSize.Sm" />
                     }
                 </div>
                 @if (Contacts is { Count: > 0 })
                 {
-                    <div class="flex flex-col gap-1.5 border-t border-(--blux-border) pt-2" data-slot="person-contacts">
+                    <div class="flex flex-col gap-1.5 border-t border-(--lux-border) pt-2" data-slot="person-contacts">
                         @foreach (var c in Contacts)
                         {
                             <div class="flex items-center justify-between gap-2 text-xs">
-                                <span class="truncate text-(--blux-text)">@c.Value</span>
+                                <span class="truncate text-(--lux-text)">@c.Value</span>
                                 @if (c.Copy)
                                 {
-                                    <button type="button" class="inline-flex size-6 items-center justify-center rounded-(--blux-radius) text-(--blux-text-muted) hover:bg-(--blux-bg-muted)"
+                                    <button type="button" class="inline-flex size-6 items-center justify-center rounded-(--lux-radius) text-(--lux-text-muted) hover:bg-(--lux-bg-muted)"
                                             aria-label="@($"Copy {c.Value}")" @onclick="@(() => CopyToClipboardAsync(c.Value))">
                                         @RenderIcon("copy", "size-3.5")
                                     </button>
@@ -1024,7 +1024,7 @@
         return @<div class="flex flex-col gap-2" data-slot="display-list">
             @if (!string.IsNullOrEmpty(Title))
             {
-                <p class="m-0 font-semibold text-(--blux-text-highlighted)">@Title</p>
+                <p class="m-0 font-semibold text-(--lux-text-highlighted)">@Title</p>
             }
             <ul class="m-0 flex list-none flex-col gap-2 p-0">
                 @for (var i = 0; i < visible.Count; i++)
@@ -1037,12 +1037,12 @@
                             @if (isFiles)
                             {
                                 var ext = FilePreviewService.ExtensionLabel(item.FileName ?? item.Text, item.MimeType);
-                                <span class="inline-flex h-6 min-w-8 shrink-0 items-center justify-center rounded-(--blux-radius) bg-(--blux-bg-muted) px-1.5 text-[10px] font-bold uppercase text-(--blux-text-highlighted)"
+                                <span class="inline-flex h-6 min-w-8 shrink-0 items-center justify-center rounded-(--lux-radius) bg-(--lux-bg-muted) px-1.5 text-[10px] font-bold uppercase text-(--lux-text-highlighted)"
                                       data-slot="file-badge">@ext</span>
                             }
                             else if (isChecks || isSteps)
                             {
-                                <span class="inline-flex size-5 shrink-0 items-center justify-center rounded-full @(item.Done ? "bg-(--blux-success)/15 text-(--blux-success-text)" : item.Current ? "bg-(--blux-primary) text-white" : "bg-(--blux-bg-muted) text-(--blux-text-muted)") text-xs font-semibold">
+                                <span class="inline-flex size-5 shrink-0 items-center justify-center rounded-full @(item.Done ? "bg-(--lux-success)/15 text-(--lux-success-text)" : item.Current ? "bg-(--lux-primary) text-white" : "bg-(--lux-bg-muted) text-(--lux-text-muted)") text-xs font-semibold">
                                     @if (item.Done)
                                     {
                                         @RenderIcon("check", "size-3")
@@ -1055,21 +1055,21 @@
                             }
                             else
                             {
-                                <span class="size-1.5 shrink-0 rounded-full bg-(--blux-text-muted)"></span>
+                                <span class="size-1.5 shrink-0 rounded-full bg-(--lux-text-muted)"></span>
                             }
                             <div class="flex min-w-0 flex-col">
                                 @if (!string.IsNullOrEmpty(item.Href))
                                 {
-                                    <a href="@item.Href" class="truncate font-medium text-(--blux-text-highlighted) hover:underline"
+                                    <a href="@item.Href" class="truncate font-medium text-(--lux-text-highlighted) hover:underline"
                                        @onclick="@(e => OnFileItemClick(e, item, idx))" @onclick:preventDefault="@CanPreviewFiles()">@item.Text</a>
                                 }
                                 else
                                 {
-                                    <span class="truncate text-(--blux-text)">@item.Text</span>
+                                    <span class="truncate text-(--lux-text)">@item.Text</span>
                                 }
                                 @if (!string.IsNullOrEmpty(item.Description) || item.FileSize is not null)
                                 {
-                                    <span class="text-xs text-(--blux-text-muted)">
+                                    <span class="text-xs text-(--lux-text-muted)">
                                         @(item.FileSize is { } sz ? FilePreviewService.FormatFileSize(sz, FormatCulture) : item.Description)
                                     </span>
                                 }
@@ -1077,7 +1077,7 @@
                         </div>
                         @if (!string.IsNullOrEmpty(item.Meta))
                         {
-                            <span class="shrink-0 text-xs text-(--blux-text-muted)">@item.Meta</span>
+                            <span class="shrink-0 text-xs text-(--lux-text-muted)">@item.Meta</span>
                         }
                     </li>
                 }
@@ -1121,24 +1121,24 @@
                     var item = visible[i];
                     var state = item.State ?? DisplayTimelineState.Done;
                     <li class="flex items-start gap-3" aria-current="@(state == DisplayTimelineState.Current ? "step" : null)" data-slot="timeline-item" data-state="@state.ToString().ToLowerInvariant()">
-                        <span class="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full @(state == DisplayTimelineState.Done ? "bg-(--blux-primary) text-white" : state == DisplayTimelineState.Current ? "border-2 border-(--blux-primary-text) text-(--blux-primary-text)" : "border border-(--blux-border) text-(--blux-text-muted)") text-[11px] font-semibold">
+                        <span class="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full @(state == DisplayTimelineState.Done ? "bg-(--lux-primary) text-white" : state == DisplayTimelineState.Current ? "border-2 border-(--lux-primary-text) text-(--lux-primary-text)" : "border border-(--lux-border) text-(--lux-text-muted)") text-[11px] font-semibold">
                             @(i + 1)
                         </span>
                         <div class="flex min-w-0 flex-1 flex-col gap-0.5">
                             <div class="flex items-baseline justify-between gap-2">
-                                <span class="font-medium text-(--blux-text-highlighted)" data-slot="timeline-title">@item.Title</span>
+                                <span class="font-medium text-(--lux-text-highlighted)" data-slot="timeline-title">@item.Title</span>
                                 @if (!string.IsNullOrEmpty(item.Time))
                                 {
-                                    <span class="text-xs text-(--blux-text-muted)" data-slot="timeline-time">@item.Time</span>
+                                    <span class="text-xs text-(--lux-text-muted)" data-slot="timeline-time">@item.Time</span>
                                 }
                             </div>
                             @if (!string.IsNullOrEmpty(item.Description))
                             {
-                                <p class="m-0 text-xs text-(--blux-text-muted)">@item.Description</p>
+                                <p class="m-0 text-xs text-(--lux-text-muted)">@item.Description</p>
                             }
                             @if (!string.IsNullOrEmpty(item.ActorName))
                             {
-                                <span class="text-xs font-medium text-(--blux-text-muted)">@item.ActorName</span>
+                                <span class="text-xs font-medium text-(--lux-text-muted)">@item.ActorName</span>
                             }
                         </div>
                     </li>
@@ -1157,12 +1157,12 @@
         var now = Now ?? DateTimeOffset.UtcNow;
         var days = (int)Math.Round((date.Date - now.Date).TotalDays);
         return @<div class="flex items-center gap-3" data-slot="display-date">
-            <div class="flex size-12 shrink-0 flex-col items-center justify-center rounded-(--blux-radius) border border-(--blux-border) bg-(--blux-bg-muted) text-center" data-slot="date-tile">
-                <span class="text-[10px] font-bold uppercase text-(--blux-primary-text)">@date.ToString("MMM", FormatCulture)</span>
-                <span class="text-base font-bold leading-none tabular-nums text-(--blux-text-highlighted)">@date.Day</span>
+            <div class="flex size-12 shrink-0 flex-col items-center justify-center rounded-(--lux-radius) border border-(--lux-border) bg-(--lux-bg-muted) text-center" data-slot="date-tile">
+                <span class="text-[10px] font-bold uppercase text-(--lux-primary-text)">@date.ToString("MMM", FormatCulture)</span>
+                <span class="text-base font-bold leading-none tabular-nums text-(--lux-text-highlighted)">@date.Day</span>
             </div>
             <div class="flex min-w-0 flex-col gap-0.5">
-                <span class="font-semibold text-(--blux-text-highlighted)" data-slot="date-title">
+                <span class="font-semibold text-(--lux-text-highlighted)" data-slot="date-title">
                     @if (string.Equals(Variant, "countdown", StringComparison.OrdinalIgnoreCase))
                     {
                         @(days == 0 ? "Today" : days == 1 ? "Tomorrow" : days > 1 ? $"In {days} days" : $"{Math.Abs(days)} days overdue")
@@ -1179,7 +1179,7 @@
                 </span>
                 @if (!string.IsNullOrEmpty(Description))
                 {
-                    <span class="text-xs text-(--blux-text-muted)">@Description</span>
+                    <span class="text-xs text-(--lux-text-muted)">@Description</span>
                 }
             </div>
         </div>;
@@ -1196,7 +1196,7 @@
                     @for (var i = 0; i < shown.Count; i++)
                     {
                         var isLastWithOverflow = i == shown.Count - 1 && hiddenCount > 0;
-                        <div class="relative overflow-hidden rounded-(--blux-radius) border border-(--blux-border)" data-slot="media-tile">
+                        <div class="relative overflow-hidden rounded-(--lux-radius) border border-(--lux-border)" data-slot="media-tile">
                             <img src="@shown[i]" alt="@(Title ?? $"Image {i + 1}")" loading="lazy" class="h-24 w-full object-cover" />
                             @if (isLastWithOverflow)
                             {
@@ -1208,11 +1208,11 @@
             }
             else if (!string.IsNullOrEmpty(Src))
             {
-                <img src="@Src" alt="@(Title ?? "Media")" loading="lazy" class="max-h-64 w-full rounded-(--blux-radius) object-cover" data-slot="media-image" />
+                <img src="@Src" alt="@(Title ?? "Media")" loading="lazy" class="max-h-64 w-full rounded-(--lux-radius) object-cover" data-slot="media-image" />
             }
             @if (!string.IsNullOrEmpty(Description))
             {
-                <p class="m-0 text-xs text-(--blux-text-muted)" data-slot="media-caption">@Description</p>
+                <p class="m-0 text-xs text-(--lux-text-muted)" data-slot="media-caption">@Description</p>
             }
         </div>;
 
@@ -1223,11 +1223,11 @@
         var shown = isSecret && !_secretRevealed ? MaskSecret(raw, VisibleChars) : raw;
         return @<div class="flex flex-col gap-2" data-slot="display-code" data-variant="@(Variant ?? "block")">
             <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-semibold uppercase text-(--blux-text-muted)" data-slot="code-label">@(Title ?? Language ?? (isSecret ? "Secret" : "Code"))</span>
+                <span class="text-xs font-semibold uppercase text-(--lux-text-muted)" data-slot="code-label">@(Title ?? Language ?? (isSecret ? "Secret" : "Code"))</span>
                 <div class="flex items-center gap-1">
                     @if (isSecret)
                     {
-                        <button type="button" class="inline-flex items-center gap-1 rounded-(--blux-radius) px-2 py-1 text-xs font-medium text-(--blux-text-muted) hover:bg-(--blux-bg-muted) hover:text-(--blux-text)"
+                        <button type="button" class="inline-flex items-center gap-1 rounded-(--lux-radius) px-2 py-1 text-xs font-medium text-(--lux-text-muted) hover:bg-(--lux-bg-muted) hover:text-(--lux-text)"
                                 aria-pressed="@(_secretRevealed ? "true" : "false")" data-slot="code-secret-toggle"
                                 @onclick="@(() => _secretRevealed = !_secretRevealed)">
                             @RenderIcon(_secretRevealed ? "eye-off" : "eye", "size-3.5")
@@ -1236,7 +1236,7 @@
                     }
                     @if (Copy)
                     {
-                        <button type="button" class="inline-flex items-center gap-1 rounded-(--blux-radius) px-2 py-1 text-xs font-medium text-(--blux-text-muted) hover:bg-(--blux-bg-muted) hover:text-(--blux-text)"
+                        <button type="button" class="inline-flex items-center gap-1 rounded-(--lux-radius) px-2 py-1 text-xs font-medium text-(--lux-text-muted) hover:bg-(--lux-bg-muted) hover:text-(--lux-text)"
                                 aria-label="Copy code" data-slot="code-copy"
                                 @onclick="@(() => CopyToClipboardAsync(raw))">
                             @RenderIcon("copy", "size-3.5")
@@ -1244,7 +1244,7 @@
                     }
                 </div>
             </div>
-            <pre class="m-0 overflow-x-auto rounded-(--blux-radius) bg-(--blux-bg-muted) p-3 font-mono text-xs text-(--blux-text-highlighted)" data-slot="code-value"><code>@shown</code></pre>
+            <pre class="m-0 overflow-x-auto rounded-(--lux-radius) bg-(--lux-bg-muted) p-3 font-mono text-xs text-(--lux-text-highlighted)" data-slot="code-value"><code>@shown</code></pre>
         </div>;
     }
 
@@ -1256,12 +1256,12 @@
     }
 
     private RenderFragment RenderEmpty() =>
-        @<div class="flex flex-col items-center justify-center gap-2 rounded-(--blux-radius) border border-dashed border-(--blux-border-accented) p-6 text-center" data-slot="display-empty">
-            @RenderIcon(!string.IsNullOrEmpty(Icon) ? Icon : "inbox", "size-8 text-(--blux-text-muted)")
-            <p class="m-0 font-semibold text-(--blux-text-highlighted)" data-slot="empty-title">@(Title ?? "Nothing to show")</p>
+        @<div class="flex flex-col items-center justify-center gap-2 rounded-(--lux-radius) border border-dashed border-(--lux-border-accented) p-6 text-center" data-slot="display-empty">
+            @RenderIcon(!string.IsNullOrEmpty(Icon) ? Icon : "inbox", "size-8 text-(--lux-text-muted)")
+            <p class="m-0 font-semibold text-(--lux-text-highlighted)" data-slot="empty-title">@(Title ?? "Nothing to show")</p>
             @if (!string.IsNullOrEmpty(Description))
             {
-                <p class="m-0 text-xs text-(--blux-text-muted)" data-slot="empty-description">@Description</p>
+                <p class="m-0 text-xs text-(--lux-text-muted)" data-slot="empty-description">@Description</p>
             }
             @if (Actions is { Count: > 0 })
             {
@@ -1275,7 +1275,7 @@
         </div>;
 
     private RenderFragment RenderAccordion() =>
-        @<div class="flex flex-col divide-y divide-(--blux-border) rounded-(--blux-radius) border border-(--blux-border)" data-slot="display-accordion">
+        @<div class="flex flex-col divide-y divide-(--lux-border) rounded-(--lux-radius) border border-(--lux-border)" data-slot="display-accordion">
             @if (AccordionItems is { Count: > 0 })
             {
                 @for (var i = 0; i < AccordionItems.Count; i++)
@@ -1284,21 +1284,21 @@
                     var item = AccordionItems[i];
                     var open = _openAccordionIndices.Contains(idx);
                     <div class="flex flex-col" data-slot="accordion-item" data-open="@(open ? "true" : "false")">
-                        <button type="button" class="flex min-h-10 w-full items-center justify-between gap-2 px-3.5 py-2 text-start font-medium text-(--blux-text-highlighted) hover:bg-(--blux-bg-muted)"
+                        <button type="button" class="flex min-h-10 w-full items-center justify-between gap-2 px-3.5 py-2 text-start font-medium text-(--lux-text-highlighted) hover:bg-(--lux-bg-muted)"
                                 aria-expanded="@(open ? "true" : "false")" data-slot="accordion-trigger"
                                 @onclick="@(() => ToggleAccordion(idx))">
                             <span class="flex items-center gap-2">
                                 @if (!string.IsNullOrEmpty(item.Icon))
                                 {
-                                    @RenderIcon(item.Icon, "size-4 text-(--blux-text-muted)")
+                                    @RenderIcon(item.Icon, "size-4 text-(--lux-text-muted)")
                                 }
                                 <span>@item.Label</span>
                             </span>
-                            @RenderIcon(open ? "chevron-up" : "chevron-down", "size-4 text-(--blux-text-muted)")
+                            @RenderIcon(open ? "chevron-up" : "chevron-down", "size-4 text-(--lux-text-muted)")
                         </button>
                         @if (open)
                         {
-                            <div class="px-3.5 pb-3 pt-1 text-xs text-(--blux-text-muted)" role="region" data-slot="accordion-content">
+                            <div class="px-3.5 pb-3 pt-1 text-xs text-(--lux-text-muted)" role="region" data-slot="accordion-content">
                                 @if (item.Template is not null)
                                 {
                                     @item.Template
@@ -1328,7 +1328,7 @@
     }
 
     private RenderFragment RenderAction(DisplayAction act) =>
-        @<BxButton Label="@act.Label" Href="@act.Href" Color="@act.Color" Variant="@act.Variant" Size="BxSize.Sm"
+        @<LxButton Label="@act.Label" Href="@act.Href" Color="@act.Color" Variant="@act.Variant" Size="LxSize.Sm"
                    LeadingIcon="@(string.IsNullOrEmpty(act.Icon) ? null : RenderIcon(act.Icon, "size-4"))"
                    OnClick="@(() => act.OnClick.InvokeAsync())" data-slot="display-action" />;
 }

@@ -1,6 +1,6 @@
 # Getting Started with Lux.Display
 
-19 read-only presentation blocks inside <BxDisplay> (Heading, Alert, Facts, Stat with sparkline, Breakdown, Meter with thresholds, Diff, masked Code/Secret, Timeline, Accordion…), constrained Audio/Video players with clip Start/End bounds and MaxPlays quotas, plus a modal multi-format file previewer.
+19 read-only presentation blocks inside <LxDisplay> (Heading, Alert, Facts, Stat with sparkline, Breakdown, Meter with thresholds, Diff, masked Code/Secret, Timeline, Accordion…), constrained Audio/Video players with clip Start/End bounds and MaxPlays quotas, plus a modal multi-format file previewer.
 
 ## 1. Choose Your Package
 
@@ -51,13 +51,13 @@ var csv = FilePreviewService.ParseCsv("Region,MRR\nEurope,148900\nUS,192400");
 ### Blazor / MAUI Hybrid (`Lux.Display`)
 
 ```razor
-<BxDisplay Kind="DisplayKind.Stat" Title="MRR" Value="€148,900"
+<LxDisplay Kind="DisplayKind.Stat" Title="MRR" Value="€148,900"
            Delta="+14.2%" Trend="@([102.0, 118.0, 134.0, 149.0])" />
 
-<BxDisplay Kind="DisplayKind.Code" Variant="secret"
+<LxDisplay Kind="DisplayKind.Code" Variant="secret"
            Value="sk_live_9876543210" VisibleChars="4" Copy="true" />
 
-<BxAudioPlayer Src="/media/listening.mp3" Title="Listening Extract #1"
+<LxAudioPlayer Src="/media/listening.mp3" Title="Listening Extract #1"
                Start="15" End="45" MaxPlays="2" Seekable="false" />
 ```
 

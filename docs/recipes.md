@@ -4,11 +4,11 @@
 
 ```csharp
 @* In MainLayout.razor *@
-<BxFilePreviewProvider />
+<LxFilePreviewProvider />
 
 @* In any page *@
 @inject FilePreviewService Preview
-<BxButton Label="Preview PDF" OnClick="@(() => Preview.Open(new FilePreviewItem("spec.pdf", "/files/spec.pdf")))" />
+<LxButton Label="Preview PDF" OnClick="@(() => Preview.Open(new FilePreviewItem("spec.pdf", "/files/spec.pdf")))" />
 ```
 
 ## Recipe 2: Headless Unit Testing (`xUnit`)

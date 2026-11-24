@@ -13,9 +13,9 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
     }
 
     [Fact]
-    public void BxDisplay_renders_Heading_Text_Alert_and_Callout()
+    public void LxDisplay_renders_Heading_Text_Alert_and_Callout()
     {
-        var heading = Render<BxDisplay>(p => p
+        var heading = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Heading)
             .Add(x => x.Title, "Active Subscriptions")
             .Add(x => x.Count, "42")
@@ -24,9 +24,9 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
         Assert.Contains("Active Subscriptions", heading.Find("[data-slot=heading-title]").TextContent);
         Assert.Equal("42", heading.Find("[data-slot=heading-count]").TextContent);
 
-        var alert = Render<BxDisplay>(p => p
+        var alert = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Alert)
-            .Add(x => x.Tone, BxColor.Warning)
+            .Add(x => x.Tone, LxColor.Warning)
             .Add(x => x.Title, "Quota warning")
             .Add(x => x.Details, "85% of monthly volume used"));
 
@@ -37,9 +37,9 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
     }
 
     [Fact]
-    public void BxDisplay_renders_Facts_Stat_Breakdown_Meter_Chart_Table_and_Diff()
+    public void LxDisplay_renders_Facts_Stat_Breakdown_Meter_Chart_Table_and_Diff()
     {
-        var facts = Render<BxDisplay>(p => p
+        var facts = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Facts)
             .Add(x => x.Facts, [
                 new DisplayFact { Label = "Environment", Value = "Production", Copy = true },
@@ -49,7 +49,7 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
         Assert.NotNull(facts.Find("[data-slot=fact-copy]"));
         Assert.NotNull(facts.Find("[data-slot=fact-empty]"));
 
-        var stat = Render<BxDisplay>(p => p
+        var stat = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Stat)
             .Add(x => x.Title, "MRR")
             .Add(x => x.Value, "€12,400")
@@ -58,7 +58,7 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
         Assert.Equal("€12,400", stat.Find("[data-slot=stat-value]").TextContent);
         Assert.NotNull(stat.Find("[data-slot=stat-sparkline]"));
 
-        var meter = Render<BxDisplay>(p => p
+        var meter = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Meter)
             .Add(x => x.Title, "Storage")
             .Add(x => x.MeterValue, 92)
@@ -67,7 +67,7 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
             .Add(x => x.ErrorThreshold, 90));
         Assert.Equal("error", meter.Find("[data-slot=display-meter]").GetAttribute("data-tone"));
 
-        var diff = Render<BxDisplay>(p => p
+        var diff = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Diff)
             .Add(x => x.DiffItems, [
                 new DisplayDiffItem("Plan", "Starter", "Enterprise", Changed: true),
@@ -79,9 +79,9 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
     }
 
     [Fact]
-    public void BxDisplay_renders_Code_secret_mask_Record_Reveal_and_Accordion()
+    public void LxDisplay_renders_Code_secret_mask_Record_Reveal_and_Accordion()
     {
-        var code = Render<BxDisplay>(p => p
+        var code = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Code)
             .Add(x => x.Variant, "secret")
             .Add(x => x.Value, "sk_live_9876543210")
@@ -91,7 +91,7 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
         code.Find("[data-slot=code-secret-toggle]").Click();
         Assert.Equal("sk_live_9876543210", code.Find("[data-slot=code-value]").TextContent);
 
-        var list = Render<BxDisplay>(p => p
+        var list = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.List)
             .Add(x => x.Max, 2)
             .Add(x => x.Step, 2)
@@ -105,7 +105,7 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
         list.Find("[data-slot=display-more]").Click();
         Assert.Equal(3, list.FindAll("[data-slot=list-item]").Count);
 
-        var accordion = Render<BxDisplay>(p => p
+        var accordion = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Accordion)
             .Add(x => x.AccordionItems, [
                 new DisplayAccordionItem("Section A", "Content A", DefaultOpen: true),
@@ -119,11 +119,11 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
     }
 
     [Fact]
-    public async Task BxAudioPlayer_and_BxVideoPlayer_enforce_clip_rules_and_max_plays()
+    public async Task LxAudioPlayer_and_LxVideoPlayer_enforce_clip_rules_and_max_plays()
     {
         var plays = 0;
         var limitReached = false;
-        var cut = Render<BxVideoPlayer>(p => p
+        var cut = Render<LxVideoPlayer>(p => p
             .Add(x => x.Src, "/media/demo.mp4")
             .Add(x => x.Start, 5)
             .Add(x => x.End, 25)
@@ -158,7 +158,7 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
     }
 
     [Fact]
-    public void FilePreviewService_detects_kinds_parses_csv_and_drives_BxFilePreviewProvider()
+    public void FilePreviewService_detects_kinds_parses_csv_and_drives_LxFilePreviewProvider()
     {
         Assert.Equal(FilePreviewKind.Pdf, FilePreviewService.DetectKind("invoice.pdf"));
         Assert.Equal(FilePreviewKind.Image, FilePreviewService.DetectKind("avatar.webp"));
@@ -178,7 +178,7 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
         Assert.True(csv.NumericColumns[1]);
         Assert.False(csv.NumericColumns[0]);
 
-        var provider = Render<BxFilePreviewProvider>();
+        var provider = Render<LxFilePreviewProvider>();
         var service = Services.GetRequiredService<FilePreviewService>();
         Assert.True(service.IsMounted);
 

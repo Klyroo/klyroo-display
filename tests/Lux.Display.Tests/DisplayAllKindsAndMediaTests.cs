@@ -97,33 +97,33 @@ public sealed class DisplayAllKindsAndMediaTests : BunitContext
     }
 
     [Fact]
-    public void BxDisplay_renders_Text_Table_Record_Person_Timeline_and_Empty_kinds()
+    public void LxDisplay_renders_Text_Table_Record_Person_Timeline_and_Empty_kinds()
     {
-        var text = Render<BxDisplay>(p => p
+        var text = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Text)
             .Add(x => x.Variant, "quote")
             .Add(x => x.Value, "Simplicity is prerequisite for reliability."));
         Assert.Contains("Simplicity is prerequisite for reliability.", text.Markup);
 
-        var table = Render<BxDisplay>(p => p
+        var table = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Table)
             .Add(x => x.TableColumns, [new DisplayTableColumn("k", "Key", Mono: true), new DisplayTableColumn("v", "Value", Numeric: true)])
             .Add(x => x.TableRows, [new Dictionary<string, string?> { ["k"] = "latency_p95", ["v"] = "14ms" }]));
         Assert.Contains("latency_p95", table.Markup);
         Assert.Contains("14ms", table.Markup);
 
-        var record = Render<BxDisplay>(p => p
+        var record = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Record)
             .Add(x => x.Records, [new DisplayRecordItem { Reference = "INV-42", Title = "Acme Annual Plan", Trailing = "€12,000" }]));
         Assert.Contains("INV-42", record.Markup);
         Assert.Contains("Acme Annual Plan", record.Markup);
 
-        var person = Render<BxDisplay>(p => p
+        var person = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Person)
             .Add(x => x.People, [new DisplayPersonItem("Ada Lovelace", "Principal Engineer")]));
         Assert.Contains("Ada Lovelace", person.Markup);
 
-        var timeline = Render<BxDisplay>(p => p
+        var timeline = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Timeline)
             .Add(x => x.TimelineItems, [
                 new DisplayTimelineItem("Created", State: DisplayTimelineState.Done),
@@ -133,7 +133,7 @@ public sealed class DisplayAllKindsAndMediaTests : BunitContext
         Assert.Contains("In Review", timeline.Markup);
         Assert.Contains("Published", timeline.Markup);
 
-        var empty = Render<BxDisplay>(p => p
+        var empty = Render<LxDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Empty)
             .Add(x => x.Title, "No artifacts")
             .Add(x => x.Description, "Upload a file to start."));
@@ -141,11 +141,11 @@ public sealed class DisplayAllKindsAndMediaTests : BunitContext
     }
 
     [Fact]
-    public async Task BxAudioPlayer_enforces_clip_boundaries_and_max_plays_lock()
+    public async Task LxAudioPlayer_enforces_clip_boundaries_and_max_plays_lock()
     {
         var plays = 0;
         var limitReached = false;
-        var cut = Render<BxAudioPlayer>(p => p
+        var cut = Render<LxAudioPlayer>(p => p
             .Add(x => x.Src, "/media/brief.mp3")
             .Add(x => x.Start, 10)
             .Add(x => x.End, 40)

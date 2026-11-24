@@ -1,6 +1,6 @@
 @namespace Lux.Display
 @using System.Globalization
-@inherits BxComponentBase
+@inherits LxComponentBase
 
 <div class="@RootClass" role="region" aria-label="@(Title ?? "Video player")" tabindex="@(Keyboard ? 0 : -1)"
      style="@($"aspect-ratio:{AspectRatio}")"
@@ -33,7 +33,7 @@
             else
             {
                 <button type="button"
-                        class="pointer-events-auto inline-flex size-12 items-center justify-center rounded-full bg-(--blux-primary) text-white shadow-md hover:opacity-95 disabled:opacity-40"
+                        class="pointer-events-auto inline-flex size-12 items-center justify-center rounded-full bg-(--lux-primary) text-white shadow-md hover:opacity-95 disabled:opacity-40"
                         disabled="@Disabled"
                         aria-label="Play the video"
                         data-slot="video-start"
@@ -58,7 +58,7 @@
                 <span>No plays left</span>
             </span>
             <span class="ms-auto font-mono text-xs tabular-nums" data-slot="media-time">
-                @BxAudioPlayer.FormatTime(ClipPosition) / @BxAudioPlayer.FormatTime(ClipLength)
+                @LxAudioPlayer.FormatTime(ClipPosition) / @LxAudioPlayer.FormatTime(ClipLength)
             </span>
         }
         else
@@ -75,7 +75,7 @@
             @if (!IsHidden(MediaPlayerControl.Time))
             {
                 <span class="shrink-0 font-mono text-xs tabular-nums text-white/90" data-slot="media-time">
-                    @BxAudioPlayer.FormatTime(ClipPosition) / @BxAudioPlayer.FormatTime(ClipLength)
+                    @LxAudioPlayer.FormatTime(ClipPosition) / @LxAudioPlayer.FormatTime(ClipLength)
                 </span>
             }
 
@@ -86,7 +86,7 @@
                            step="0.1" value="@ClipPosition.ToString("0.##", CultureInfo.InvariantCulture)"
                            disabled="@Disabled"
                            aria-label="Seek"
-                           class="h-1.5 w-full cursor-pointer accent-(--blux-primary)"
+                           class="h-1.5 w-full cursor-pointer accent-(--lux-primary)"
                            data-slot="media-seek"
                            @oninput="OnSeekInputAsync" />
                 }
@@ -97,7 +97,7 @@
                          role="progressbar" aria-label="Playback progress"
                          aria-valuenow="@Math.Round(pct)" aria-valuemin="0" aria-valuemax="100"
                          data-slot="media-progress">
-                        <div class="h-full bg-(--blux-primary)" style="@($"width:{pct.ToString("0.#", CultureInfo.InvariantCulture)}%")"></div>
+                        <div class="h-full bg-(--lux-primary)" style="@($"width:{pct.ToString("0.#", CultureInfo.InvariantCulture)}%")"></div>
                     </div>
                 }
             </div>
@@ -218,7 +218,7 @@
     public double ClipPosition => Math.Clamp(_currentTime - Start, 0, ClipLength);
 
     private string RootClass =>
-        $"relative overflow-hidden rounded-(--blux-radius-md) bg-black text-white shadow-sm {Class}".Trim();
+        $"relative overflow-hidden rounded-(--lux-radius-md) bg-black text-white shadow-sm {Class}".Trim();
 
     protected override void OnParametersSet()
     {

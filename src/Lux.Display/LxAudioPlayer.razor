@@ -1,6 +1,6 @@
 @namespace Lux.Display
 @using System.Globalization
-@inherits BxComponentBase
+@inherits LxComponentBase
 
 <div class="@RootClass" role="region" aria-label="@(Title ?? "Audio player")" tabindex="@(Keyboard ? 0 : -1)"
      @onkeydown="OnKeyDown" data-slot="audio-player" data-locked="@(IsLocked ? "true" : null)" @attributes="AdditionalAttributes">
@@ -8,9 +8,9 @@
 
     @if (IsLocked)
     {
-        <div class="flex items-center justify-between gap-3 px-3 py-1.5 text-xs font-medium text-(--blux-text-muted)" data-slot="media-locked">
+        <div class="flex items-center justify-between gap-3 px-3 py-1.5 text-xs font-medium text-(--lux-text-muted)" data-slot="media-locked">
             <span class="inline-flex items-center gap-1.5">
-                @RenderIcon("lock", "size-4 text-(--blux-warning-text)")
+                @RenderIcon("lock", "size-4 text-(--lux-warning-text)")
                 <span>No plays left</span>
             </span>
             <span class="tabular-nums" data-slot="media-time">@FormatTime(ClipPosition) / @FormatTime(ClipLength)</span>
@@ -20,7 +20,7 @@
     {
         <div class="flex flex-wrap items-center gap-2.5 px-3 py-1.5" data-slot="media-controls">
             <button type="button"
-                    class="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-(--blux-primary) text-white hover:opacity-90 disabled:opacity-40"
+                    class="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-(--lux-primary) text-white hover:opacity-90 disabled:opacity-40"
                     disabled="@Disabled"
                     aria-label="@(_playing ? "Pause" : "Play")"
                     data-slot="media-play"
@@ -30,7 +30,7 @@
 
             @if (!IsHidden(MediaPlayerControl.Time))
             {
-                <span class="shrink-0 font-mono text-xs tabular-nums text-(--blux-text-muted)" data-slot="media-time">
+                <span class="shrink-0 font-mono text-xs tabular-nums text-(--lux-text-muted)" data-slot="media-time">
                     @FormatTime(ClipPosition) / @FormatTime(ClipLength)
                 </span>
             }
@@ -42,25 +42,25 @@
                            step="0.1" value="@ClipPosition.ToString("0.##", CultureInfo.InvariantCulture)"
                            disabled="@Disabled"
                            aria-label="Seek"
-                           class="h-1.5 w-full cursor-pointer accent-(--blux-primary)"
+                           class="h-1.5 w-full cursor-pointer accent-(--lux-primary)"
                            data-slot="media-seek"
                            @oninput="OnSeekInputAsync" />
                 }
                 else
                 {
                     var pct = ClipLength > 0 ? Math.Clamp(ClipPosition / ClipLength * 100.0, 0, 100) : 0;
-                    <div class="h-1.5 w-full overflow-hidden rounded-full bg-(--blux-bg-muted)"
+                    <div class="h-1.5 w-full overflow-hidden rounded-full bg-(--lux-bg-muted)"
                          role="progressbar" aria-label="Playback progress"
                          aria-valuenow="@Math.Round(pct)" aria-valuemin="0" aria-valuemax="100"
                          data-slot="media-progress">
-                        <div class="h-full bg-(--blux-primary)" style="@($"width:{pct.ToString("0.#", CultureInfo.InvariantCulture)}%")"></div>
+                        <div class="h-full bg-(--lux-primary)" style="@($"width:{pct.ToString("0.#", CultureInfo.InvariantCulture)}%")"></div>
                     </div>
                 }
             </div>
 
             @if (MaxPlays > 0)
             {
-                <span class="inline-flex items-center gap-1 rounded-full bg-(--blux-bg-muted) px-2 py-0.5 text-[11px] font-semibold tabular-nums text-(--blux-text-muted)"
+                <span class="inline-flex items-center gap-1 rounded-full bg-(--lux-bg-muted) px-2 py-0.5 text-[11px] font-semibold tabular-nums text-(--lux-text-muted)"
                       title="@($"{RemainingPlays} plays left")" data-slot="media-plays-left">
                     @RemainingPlays
                 </span>
@@ -69,7 +69,7 @@
             @if (!IsHidden(MediaPlayerControl.Volume))
             {
                 <button type="button"
-                        class="inline-flex size-7 items-center justify-center rounded-full text-(--blux-text-muted) hover:bg-(--blux-bg-muted) hover:text-(--blux-text)"
+                        class="inline-flex size-7 items-center justify-center rounded-full text-(--lux-text-muted) hover:bg-(--lux-bg-muted) hover:text-(--lux-text)"
                         aria-label="@(Muted ? "Unmute" : "Mute")"
                         aria-pressed="@(Muted ? "true" : "false")"
                         data-slot="media-mute"
@@ -81,7 +81,7 @@
             @if (!IsHidden(MediaPlayerControl.Rate) && Rates is { Count: > 1 })
             {
                 <button type="button"
-                        class="inline-flex h-7 items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums text-(--blux-text-muted) hover:bg-(--blux-bg-muted) hover:text-(--blux-text)"
+                        class="inline-flex h-7 items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums text-(--lux-text-muted) hover:bg-(--lux-bg-muted) hover:text-(--lux-text)"
                         aria-label="Playback speed"
                         data-slot="media-rate"
                         @onclick="CycleRateAsync">
@@ -92,7 +92,7 @@
             @if (!IsHidden(MediaPlayerControl.Download) && (Download || !string.IsNullOrEmpty(DownloadUrl)))
             {
                 <a href="@(DownloadUrl ?? Src)" download="@(DownloadFileName ?? true.ToString())"
-                   class="inline-flex size-7 items-center justify-center rounded-full text-(--blux-text-muted) hover:bg-(--blux-bg-muted) hover:text-(--blux-text)"
+                   class="inline-flex size-7 items-center justify-center rounded-full text-(--lux-text-muted) hover:bg-(--lux-bg-muted) hover:text-(--lux-text)"
                    aria-label="Download" data-slot="media-download"
                    @onclick="OnDownloadClickAsync">
                     @RenderIcon("download", "size-4")
@@ -173,7 +173,7 @@
     public double ClipPosition => Math.Clamp(_currentTime - Start, 0, ClipLength);
 
     private string RootClass =>
-        $"rounded-full border border-(--blux-border) bg-(--blux-bg-elevated) text-(--blux-text) shadow-xs {Class}".Trim();
+        $"rounded-full border border-(--lux-border) bg-(--lux-bg-elevated) text-(--lux-text) shadow-xs {Class}".Trim();
 
     protected override void OnParametersSet()
     {

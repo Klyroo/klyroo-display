@@ -4,8 +4,8 @@ Complete public API reference extracted directly from the source code of `Lux.Di
 
 ## Razor Components
 
-### `<BxAudioPlayer>`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/BxAudioPlayer.razor`
+### `<LxAudioPlayer>`
+*Package*: `Lux.Display` · *Source*: `src/Lux.Display/LxAudioPlayer.razor`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
@@ -42,15 +42,15 @@ Complete public API reference extracted directly from the source code of `Lux.Di
 | `OnTimeUpdate` | `EventCallback<MediaPlayerProgress>` | — |
 | `OnDownload` | `EventCallback` | — |
 
-### `<BxDisplay>`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/BxDisplay.razor`
+### `<LxDisplay>`
+*Package*: `Lux.Display` · *Source*: `src/Lux.Display/LxDisplay.razor`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `Kind` | `DisplayKind` | The display block kind to render. |
 | `Variant` | `string?` | Visual variant within `Kind` (for example `"hero"`, `"trend"`, `"row"` for `Stat`; `"bar"`, `"segments"`, `"ring"`, `"scale"` for `Meter`; `"block"`, `"value"`, `"secret"` for `Code`). |
 | `Surface` | `DisplaySurface?` | Surface treatment (`Plain`, `Muted`, `Bordered` or `Elevated`). When `null`, uses the default surface of `Kind`. |
-| `Tone` | `BxColor` | Primary accent tone of the block. |
+| `Tone` | `LxColor` | Primary accent tone of the block. |
 | `Loading` | `bool` | Shows a layout-matched placeholder skeleton instead of the block content. |
 | `Title` | `string?` | Title or heading text of the block. |
 | `Value` | `string?` | Primary text, message or value of the block. |
@@ -108,16 +108,16 @@ Complete public API reference extracted directly from the source code of `Lux.Di
 | `Max` | `int?` | Maximum number of items initially revealed before a "Show more" button (`null` shows all). |
 | `Step` | `int?` | Number of additional items revealed per click on "Show more" (when `null`, reveals all remaining items). |
 
-### `<BxFilePreviewProvider>`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/BxFilePreviewProvider.razor`
+### `<LxFilePreviewProvider>`
+*Package*: `Lux.Display` · *Source*: `src/Lux.Display/LxFilePreviewProvider.razor`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `ChildContent` | `RenderFragment?` | Optional child content wrapped by the provider. |
 | `MarkdownRenderer` | `Func<string, string>?` | Optional Markdown-to-HTML callback for `Markdown` files. |
 
-### `<BxVideoPlayer>`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/BxVideoPlayer.razor`
+### `<LxVideoPlayer>`
+*Package*: `Lux.Display` · *Source*: `src/Lux.Display/LxVideoPlayer.razor`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
@@ -163,7 +163,7 @@ Complete public API reference extracted directly from the source code of `Lux.Di
 ### `enum FilePreviewKind`
 *Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewModels.cs`
 
-Built-in file preview renderer kinds supported by `BxFilePreviewProvider` and `FilePreviewService`.
+Built-in file preview renderer kinds supported by `LxFilePreviewProvider` and `FilePreviewService`.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -181,7 +181,7 @@ Built-in file preview renderer kinds supported by `BxFilePreviewProvider` and `F
 ### `enum FilePreviewContainer`
 *Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewModels.cs`
 
-Overlay container mode for `BxFilePreviewProvider`.
+Overlay container mode for `LxFilePreviewProvider`.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -209,7 +209,7 @@ Custom action shown in the file preview header.
 ### `class FilePreviewFile`
 *Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewModels.cs`
 
-Describes a file to preview in `BxFilePreviewProvider` via `FilePreviewService`.
+Describes a file to preview in `LxFilePreviewProvider` via `FilePreviewService`.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -248,18 +248,18 @@ Parsed CSV preview table returned by `FilePreviewService.ParseCsv`.
 ### `class FilePreviewService`
 *Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewService.cs`
 
-Scoped service managing active file preview overlays rendered by `BxFilePreviewProvider`. Also provides deterministic file-kind detection, CSV parsing, and size/extension formatting utilities.
+Scoped service managing active file preview overlays rendered by `LxFilePreviewProvider`. Also provides deterministic file-kind detection, CSV parsing, and size/extension formatting utilities.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
-| `IsMounted` | `bool` | Whether a `BxFilePreviewProvider` is currently mounted in the component tree. |
+| `IsMounted` | `bool` | Whether a `LxFilePreviewProvider` is currently mounted in the component tree. |
 | `IsOpen` | `bool` | Whether the file preview overlay is currently open. |
 | `Files` | `IReadOnlyList<FilePreviewFile>` | Files in the active gallery. |
 | `CurrentIndex` | `int` | Zero-based index of the currently shown file in `Files`. |
 | `Options` | `FilePreviewOptions` | Current options for the active preview session. |
 | `CurrentFile` | `FilePreviewFile?` | Currently active file, or `null` when closed. |
-| `Open(FilePreviewFile file, FilePreviewOptions? options = null)` | `void` | Opens a single file in `BxFilePreviewProvider`. |
-| `OpenGallery(IReadOnlyList<FilePreviewFile> files, FilePreviewOptions? options = null)` | `void` | Opens a gallery of files in `BxFilePreviewProvider`. |
+| `Open(FilePreviewFile file, FilePreviewOptions? options = null)` | `void` | Opens a single file in `LxFilePreviewProvider`. |
+| `OpenGallery(IReadOnlyList<FilePreviewFile> files, FilePreviewOptions? options = null)` | `void` | Opens a gallery of files in `LxFilePreviewProvider`. |
 | `Close()` | `void` | Closes the active file preview overlay. |
 | `Next()` | `void` | Moves to the next file in the gallery. |
 | `Previous()` | `void` | Moves to the previous file in the gallery. |
@@ -277,7 +277,7 @@ Scoped service managing active file preview overlays rendered by `BxFilePreviewP
 ### `enum MediaPlayerControl`
 *Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/MediaModels.cs`
 
-Controls that can be selectively hidden on `BxAudioPlayer` and `BxVideoPlayer`.
+Controls that can be selectively hidden on `LxAudioPlayer` and `LxVideoPlayer`.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -292,17 +292,17 @@ Controls that can be selectively hidden on `BxAudioPlayer` and `BxVideoPlayer`.
 ### `record VideoPlayerTrack`
 *Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/MediaModels.cs`
 
-A subtitle or caption track for `BxVideoPlayer`.
+A subtitle or caption track for `LxVideoPlayer`.
 
 ### `record MediaPlayerProgress`
 *Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/MediaModels.cs`
 
-Playback progress snapshot reported by `BxAudioPlayer` and `BxVideoPlayer`. Seconds elapsed relative to the clip start. Total clip duration in seconds. Raw media element time in seconds.
+Playback progress snapshot reported by `LxAudioPlayer` and `LxVideoPlayer`. Seconds elapsed relative to the clip start. Total clip duration in seconds. Raw media element time in seconds.
 
 ### `enum DisplayKind`
 *Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
 
-The 19 read-only display block kinds supported by `BxDisplay`.
+The 19 read-only display block kinds supported by `LxDisplay`.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -329,7 +329,7 @@ The 19 read-only display block kinds supported by `BxDisplay`.
 ### `enum DisplaySurface`
 *Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
 
-Container surface treatment of a `BxDisplay` block.
+Container surface treatment of a `LxDisplay` block.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -341,12 +341,12 @@ Container surface treatment of a `BxDisplay` block.
 ### `record DisplayChip`
 *Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
 
-A chip/badge displayed inside a `BxDisplay` block.
+A chip/badge displayed inside a `LxDisplay` block.
 
 ### `class DisplayAction`
 *Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
 
-An action button or link displayed inside a `BxDisplay` block.
+An action button or link displayed inside a `LxDisplay` block.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -355,7 +355,7 @@ An action button or link displayed inside a `BxDisplay` block.
 | `Href` | `string?` | — |
 | `Target` | `string?` | — |
 | `OnClick` | `EventCallback` | — |
-| `Color` | `BxColor` | — |
+| `Color` | `LxColor` | — |
 | `Variant` | `ButtonVariant` | — |
 
 ### `class DisplayFact`
@@ -369,7 +369,7 @@ One key/value entry in a `Facts` block.
 | `Value` | `string?` | — |
 | `Hint` | `string?` | — |
 | `Chip` | `DisplayChip?` | — |
-| `Tone` | `BxColor?` | — |
+| `Tone` | `LxColor?` | — |
 | `Copy` | `bool` | — |
 | `CopyText` | `string?` | — |
 | `Mono` | `bool` | — |
@@ -428,7 +428,7 @@ One entity record in a `Record` block.
 | `Icon` | `string?` | — |
 | `AvatarText` | `string?` | — |
 | `ImageSrc` | `string?` | — |
-| `Tone` | `BxColor?` | — |
+| `Tone` | `LxColor?` | — |
 | `Badges` | `IReadOnlyList<DisplayChip>?` | — |
 | `Chip` | `DisplayChip?` | — |
 | `Trailing` | `string?` | — |
@@ -456,7 +456,7 @@ One entry in a `List` block.
 | `Text` | `string` | — |
 | `Description` | `string?` | — |
 | `Icon` | `string?` | — |
-| `Tone` | `BxColor?` | — |
+| `Tone` | `LxColor?` | — |
 | `Done` | `bool` | — |
 | `Current` | `bool` | — |
 | `Meta` | `string?` | — |

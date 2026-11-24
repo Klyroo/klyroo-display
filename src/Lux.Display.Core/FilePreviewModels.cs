@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace Lux.Display;
 
-/// <summary>Built-in file preview renderer kinds supported by <c>BxFilePreviewProvider</c> and <c>FilePreviewService</c>.</summary>
+/// <summary>Built-in file preview renderer kinds supported by <c>LxFilePreviewProvider</c> and <c>FilePreviewService</c>.</summary>
 public enum FilePreviewKind
 {
     Pdf,
@@ -17,7 +17,7 @@ public enum FilePreviewKind
     Other,
 }
 
-/// <summary>Overlay container mode for <c>BxFilePreviewProvider</c>.</summary>
+/// <summary>Overlay container mode for <c>LxFilePreviewProvider</c>.</summary>
 public enum FilePreviewContainer
 {
     Modal,
@@ -37,7 +37,7 @@ public sealed class FilePreviewAction
     public Func<FilePreviewFile, Task>? OnSelect { get; init; }
 }
 
-/// <summary>Describes a file to preview in <c>BxFilePreviewProvider</c> via <c>FilePreviewService</c>.</summary>
+/// <summary>Describes a file to preview in <c>LxFilePreviewProvider</c> via <c>FilePreviewService</c>.</summary>
 public sealed class FilePreviewFile
 {
     /// <summary>URL or data URI of the file.</summary>

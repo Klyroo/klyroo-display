@@ -2,7 +2,7 @@
 
 > **19 read-only display blocks, constrained audio/video players & modal file preview**
 
-19 read-only presentation blocks inside <BxDisplay> (Heading, Alert, Facts, Stat with sparkline, Breakdown, Meter with thresholds, Diff, masked Code/Secret, Timeline, Accordion…), constrained Audio/Video players with clip Start/End bounds and MaxPlays quotas, plus a modal multi-format file previewer.
+19 read-only presentation blocks inside <LxDisplay> (Heading, Alert, Facts, Stat with sparkline, Breakdown, Meter with thresholds, Diff, masked Code/Secret, Timeline, Accordion…), constrained Audio/Video players with clip Start/End bounds and MaxPlays quotas, plus a modal multi-format file previewer.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/)
@@ -55,13 +55,13 @@ var csv = FilePreviewService.ParseCsv("Region,MRR\nEurope,148900\nUS,192400");
 ### Blazor Web & .NET MAUI Hybrid (`Lux.Display`)
 
 ```razor
-<BxDisplay Kind="DisplayKind.Stat" Title="MRR" Value="€148,900"
+<LxDisplay Kind="DisplayKind.Stat" Title="MRR" Value="€148,900"
            Delta="+14.2%" Trend="@([102.0, 118.0, 134.0, 149.0])" />
 
-<BxDisplay Kind="DisplayKind.Code" Variant="secret"
+<LxDisplay Kind="DisplayKind.Code" Variant="secret"
            Value="sk_live_9876543210" VisibleChars="4" Copy="true" />
 
-<BxAudioPlayer Src="/media/listening.mp3" Title="Listening Extract #1"
+<LxAudioPlayer Src="/media/listening.mp3" Title="Listening Extract #1"
                Start="15" End="45" MaxPlays="2" Seekable="false" />
 ```
 
@@ -80,21 +80,21 @@ var csv = FilePreviewService.ParseCsv("Region,MRR\nEurope,148900\nUS,192400");
 
 | Type | Kind | Package | Summary |
 | :--- | :--- | :--- | :--- |
-| `FilePreviewKind` | `enum` | `Lux.Display.Core` | Built-in file preview renderer kinds supported by `BxFilePreviewProvider` and `FilePreviewService`. |
-| `FilePreviewContainer` | `enum` | `Lux.Display.Core` | Overlay container mode for `BxFilePreviewProvider`. |
+| `FilePreviewKind` | `enum` | `Lux.Display.Core` | Built-in file preview renderer kinds supported by `LxFilePreviewProvider` and `FilePreviewService`. |
+| `FilePreviewContainer` | `enum` | `Lux.Display.Core` | Overlay container mode for `LxFilePreviewProvider`. |
 | `FilePreviewDetail` | `record` | `Lux.Display.Core` | Metadata key/value detail shown in the file preview details panel. |
 | `FilePreviewAction` | `class` | `Lux.Display.Core` | Custom action shown in the file preview header. |
-| `FilePreviewFile` | `class` | `Lux.Display.Core` | Describes a file to preview in `BxFilePreviewProvider` via `FilePreviewService`. |
+| `FilePreviewFile` | `class` | `Lux.Display.Core` | Describes a file to preview in `LxFilePreviewProvider` via `FilePreviewService`. |
 | `FilePreviewOptions` | `class` | `Lux.Display.Core` | Options when opening a file or gallery in `FilePreviewService`. |
 | `ParsedCsvPreview` | `record` | `Lux.Display.Core` | Parsed CSV preview table returned by `FilePreviewService.ParseCsv`. |
-| `FilePreviewService` | `class` | `Lux.Display.Core` | Scoped service managing active file preview overlays rendered by `BxFilePreviewProvider`. Also provides deterministic file-kind detection, CSV parsing, and size/extension formatting utilities. |
-| `MediaPlayerControl` | `enum` | `Lux.Display.Core` | Controls that can be selectively hidden on `BxAudioPlayer` and `BxVideoPlayer`. |
-| `VideoPlayerTrack` | `record` | `Lux.Display.Core` | A subtitle or caption track for `BxVideoPlayer`. |
-| `MediaPlayerProgress` | `record` | `Lux.Display.Core` | Playback progress snapshot reported by `BxAudioPlayer` and `BxVideoPlayer`. Seconds elapsed relative to the clip start. Total clip duration in seconds. Raw media element time in seconds. |
-| `DisplayKind` | `enum` | `Lux.Display` | The 19 read-only display block kinds supported by `BxDisplay`. |
-| `DisplaySurface` | `enum` | `Lux.Display` | Container surface treatment of a `BxDisplay` block. |
-| `DisplayChip` | `record` | `Lux.Display` | A chip/badge displayed inside a `BxDisplay` block. |
-| `DisplayAction` | `class` | `Lux.Display` | An action button or link displayed inside a `BxDisplay` block. |
+| `FilePreviewService` | `class` | `Lux.Display.Core` | Scoped service managing active file preview overlays rendered by `LxFilePreviewProvider`. Also provides deterministic file-kind detection, CSV parsing, and size/extension formatting utilities. |
+| `MediaPlayerControl` | `enum` | `Lux.Display.Core` | Controls that can be selectively hidden on `LxAudioPlayer` and `LxVideoPlayer`. |
+| `VideoPlayerTrack` | `record` | `Lux.Display.Core` | A subtitle or caption track for `LxVideoPlayer`. |
+| `MediaPlayerProgress` | `record` | `Lux.Display.Core` | Playback progress snapshot reported by `LxAudioPlayer` and `LxVideoPlayer`. Seconds elapsed relative to the clip start. Total clip duration in seconds. Raw media element time in seconds. |
+| `DisplayKind` | `enum` | `Lux.Display` | The 19 read-only display block kinds supported by `LxDisplay`. |
+| `DisplaySurface` | `enum` | `Lux.Display` | Container surface treatment of a `LxDisplay` block. |
+| `DisplayChip` | `record` | `Lux.Display` | A chip/badge displayed inside a `LxDisplay` block. |
+| `DisplayAction` | `class` | `Lux.Display` | An action button or link displayed inside a `LxDisplay` block. |
 | `DisplayFact` | `class` | `Lux.Display` | One key/value entry in a `Facts` block. |
 | `DisplayFactGroup` | `record` | `Lux.Display` | A named group of `DisplayFact` items in a `Facts` block. |
 | `DisplayStatItem` | `record` | `Lux.Display` | One sub-metric in the `row` variant of a `Stat` block. |
@@ -103,10 +103,10 @@ var csv = FilePreviewService.ParseCsv("Region,MRR\nEurope,148900\nUS,192400");
 
 | Component | Package | Parameters | Source |
 | :--- | :--- | :--- | :--- |
-| `<BxAudioPlayer>` | `Lux.Display` | 32 parameters | `src/Lux.Display/BxAudioPlayer.razor` |
-| `<BxDisplay>` | `Lux.Display` | 60 parameters | `src/Lux.Display/BxDisplay.razor` |
-| `<BxFilePreviewProvider>` | `Lux.Display` | 2 parameters | `src/Lux.Display/BxFilePreviewProvider.razor` |
-| `<BxVideoPlayer>` | `Lux.Display` | 36 parameters | `src/Lux.Display/BxVideoPlayer.razor` |
+| `<LxAudioPlayer>` | `Lux.Display` | 32 parameters | `src/Lux.Display/LxAudioPlayer.razor` |
+| `<LxDisplay>` | `Lux.Display` | 60 parameters | `src/Lux.Display/LxDisplay.razor` |
+| `<LxFilePreviewProvider>` | `Lux.Display` | 2 parameters | `src/Lux.Display/LxFilePreviewProvider.razor` |
+| `<LxVideoPlayer>` | `Lux.Display` | 36 parameters | `src/Lux.Display/LxVideoPlayer.razor` |
 
 ## Building & Testing
 
