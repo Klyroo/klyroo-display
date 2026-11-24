@@ -1,8 +1,9 @@
 using Bunit;
+using Lux.UI;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace Blux.UI.Tools.Tests;
+namespace Lux.Display.Tests;
 
 public sealed class DisplayMediaFilePreviewTests : BunitContext
 {

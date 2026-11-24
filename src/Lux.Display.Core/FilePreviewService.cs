@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Blux.UI.Tools;
+namespace Lux.Display;
 
 /// <summary>Parsed CSV preview table returned by <c>FilePreviewService.ParseCsv</c>.</summary>
 public sealed record ParsedCsvPreview(

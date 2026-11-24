@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 
-namespace Blux.UI.Tools;
+namespace Lux.Display;
 
 /// <summary>The 19 read-only display block kinds supported by <see cref="BxDisplay"/>.</summary>
 public enum DisplayKind

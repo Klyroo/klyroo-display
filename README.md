@@ -41,7 +41,7 @@ builder.Services.AddLuxDisplay();
 ### Headless Core (`Lux.Display.Core`)
 
 ```csharp
-using Blux.UI.Tools;
+using Lux.Display;
 
 // Headless MIME/extension kind detection & modal preview trigger
 filePreview.Open(

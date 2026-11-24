@@ -1,4 +1,4 @@
-namespace Blux.UI.Tools;
+namespace Lux.Display;
 
 /// <summary>Controls that can be selectively hidden on <c>BxAudioPlayer</c> and <c>BxVideoPlayer</c>.</summary>
 public enum MediaPlayerControl

@@ -27,8 +27,8 @@ builder.Services.AddLuxDisplay();
 In `_Imports.razor`:
 
 ```razor
-@using Blux.UI
-@using Blux.UI.Tools
+@using Lux.UI
+@using Lux.Display
 
 ```
 
@@ -37,7 +37,7 @@ In `_Imports.razor`:
 ### Headless C# (`Lux.Display.Core`)
 
 ```csharp
-using Blux.UI.Tools;
+using Lux.Display;
 
 // Headless MIME/extension kind detection & modal preview trigger
 filePreview.Open(

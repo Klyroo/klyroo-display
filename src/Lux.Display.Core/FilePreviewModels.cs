@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Blux.UI.Tools;
+namespace Lux.Display;
 
 /// <summary>Built-in file preview renderer kinds supported by <c>BxFilePreviewProvider</c> and <c>FilePreviewService</c>.</summary>
 public enum FilePreviewKind
