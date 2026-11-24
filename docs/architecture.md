@@ -1,6 +1,6 @@
 # Architecture — Lux.Display
 
-Lux.Display follows the strict TanStack two-layer architecture shared across every repository in **LuxStack**:
+Lux.Display follows the strict headless two-layer architecture shared across every repository in **LuxStack**:
 
 ```text
 +-------------------------------------------------------------------+
