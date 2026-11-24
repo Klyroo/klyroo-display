@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "LuxStack contributors",
+  "classifications": [ "Web", "Blazor", "MAUI", "LuxStack" ],
+  "identity": "Lux.Display.Portal",
+  "name": "LuxStack Document & Media Portal",
+  "shortName": "lux-display-portal",
+  "sourceName": "LuxApp",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project",
+    "luxstack": "display"
+  }
+}

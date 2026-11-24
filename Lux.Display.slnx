@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lux.Display.Core/Lux.Display.Core.csproj" />
+    <Project Path="src/Lux.Display/Lux.Display.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lux.Display.Tests/Lux.Display.Tests.csproj" />
+  </Folder>
+  <Folder Name="/examples/">
+    <Project Path="examples/FilePreviewCoreExample/FilePreviewCoreExample.csproj" />
+  </Folder>
+</Solution>
