@@ -1,141 +1,132 @@
 # Klyroo.Display
 
-*Part of [Klyroo](https://klyroo.dev): Build better. Compose freely.*
+Read-only display blocks, audio and video control bars, and a file preview overlay for Blazor, with a UI-free core for file detection and CSV parsing.
 
-[![CI](https://github.com/klyroo/klyroo-display/actions/workflows/ci.yml/badge.svg)](https://github.com/klyroo/klyroo-display/actions/workflows/ci.yml) [![NuGet](https://img.shields.io/badge/NuGet-0.1.0--preview.1-004880.svg)](https://www.nuget.org/packages/Klyroo.Display) [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/) [![NativeAOT](https://img.shields.io/badge/NativeAOT-Compatible-10b981.svg)](https://klyroo.dev/why) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![CI](https://github.com/klyroo/klyroo-display/actions/workflows/ci.yml/badge.svg)](https://github.com/klyroo/klyroo-display/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/vpre/Klyroo.Display.svg)](https://www.nuget.org/packages/Klyroo.Display)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **19 read-only display blocks, constrained audio/video players & modal file preview**
+Most screens show information more often than they edit it: an order summary, a usage meter, an audit trail, an attachment list. `KlyDisplay` renders those blocks from typed models through one component, so you pick a `DisplayKind` and fill the parameters it reads instead of hand-writing markup for each one. File preview works the same way: you inject a service, call `Open`, and a provider renders the overlay. The Blazor package targets Blazor Web Apps and declares support for .NET MAUI Blazor Hybrid platforms, and the file logic lives in a separate package with no UI dependency.
 
-19 read-only presentation blocks inside <KlyDisplay> (Heading, Alert, Facts, Stat with sparkline, Breakdown, Meter with thresholds, Diff, masked Code/Secret, Timeline, Accordion…), constrained Audio/Video players with clip Start/End bounds and MaxPlays quotas, plus a modal multi-format file previewer.
+## Features
 
-[![MAUI Hybrid](https://img.shields.io/badge/.NET%20MAUI-Blazor%20Hybrid-8b5cf6.svg)](./docs/maui-and-aot.md)
+- **One component, 19 block kinds**: `KlyDisplay` renders headings, text, alerts, facts, statistics, breakdowns, meters, charts, tables, diffs, records, people, lists, timelines, dates, images, code values, empty states and accordions.
+- **Variants and surfaces**: a `Variant` string selects a layout within a kind (for example `row` for a statistic or `pipeline` for a timeline), and `DisplaySurface` sets the border, background and shadow.
+- **Secret values**: the `secret` variant of the code block masks all but the last characters, with a Reveal toggle and a copy button.
+- **Progressive reveal**: `Max` and `Step` show long facts, tables, records, lists and timelines a few items at a time behind a Show more button.
+- **File preview overlay**: `KlyFilePreviewProvider` shows PDF, images, video, audio, CSV, Markdown and text in a modal, drawer or fullscreen panel, with galleries, keyboard navigation, image zoom and rotation, a details panel and downloads.
+- **Headless file helpers**: `Klyroo.Display.Core` detects a file kind from its MIME type or extension, parses CSV and TSV (RFC 4180 quoting, delimiter detection) and formats sizes, and it is NativeAOT compatible.
+- **Clip and play-limit rules**: `KlyAudioPlayer` and `KlyVideoPlayer` model a clip window, a play quota and a non-seekable timeline, and report them through callbacks. In this version your code connects the media element, see [Platforms](docs/platforms.md).
 
----
+## Packages
 
-## Architecture (Two-Layer Headless Split)
-
-- **`Klyroo.Display.Core`** — 100% headless C#, zero UI dependencies, `<IsAotCompatible>true</IsAotCompatible>`, `<IsTrimmable>true</IsTrimmable>`. Runs in Minimal APIs, background workers, CLI apps, and native C# .NET MAUI ViewModels.
-- **`Klyroo.Display`** — Multiplatform Blazor Web (Static SSR, Interactive Server, WebAssembly, Auto) & `.NET MAUI Blazor Hybrid` (`browser`, `ios`, `android`, `maccatalyst`, `windows`).
-
-## Highlights
-
-- **19 Read-Only Display Blocks** (`19 Blocks`) — Heading, Text, expandable Alert, Callout, copyable Facts, Stat with sparkline, Breakdown, threshold Meter, Diff before/after, Timeline, and Secret Code.
-- **Constrained Audio & Video Players** (`Media Quotas`) — Supports Start/End clip slicing, MaxPlays play quotas (ideal for exams and language assessments), Seekable=false locking, and subtitle tracks.
-- **Multi-Format FilePreviewService** (`File Lightbox`) — Headless MIME/extension detection in .Core, built-in RFC 4180 CSV parser, and zoomable modal lightbox for images, PDFs, audio, video, and CSV.
-- **Secret Masking & One-Click Reveal** (`Security UX`) — DisplayKind.Code with Variant="secret" automatically masks API keys (••••••••3210) with Reveal/Hide toggle and clipboard copy.
-
-## Prerequisites
-
-- .NET 10 SDK or later.
-- A Blazor Web App (Static SSR, Interactive Server, WebAssembly or Auto) or a .NET MAUI Blazor Hybrid app for the UI
-  package; the `.Core` package runs anywhere .NET 10 runs, NativeAOT included.
-- For .NET MAUI: the `maui` workload (`dotnet workload install maui`).
+| Package | Description |
+| :--- | :--- |
+| [`Klyroo.Display.Core`](https://www.nuget.org/packages/Klyroo.Display.Core) | `FilePreviewService`, file kind detection, CSV parser and the file and media models. No UI dependency. |
+| [`Klyroo.Display`](https://www.nuget.org/packages/Klyroo.Display) | `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyFilePreviewProvider` for Blazor. Builds on [Klyroo.UI](https://github.com/klyroo/klyroo-ui) and includes the Core package. |
 
 ## Installation
 
 ```bash
-dotnet add package Klyroo.Display.Core   # Headless C# / NativeAOT / MAUI C#
-dotnet add package Klyroo.Display        # Blazor Web & .NET MAUI Blazor Hybrid
+dotnet add package Klyroo.Display --prerelease
 ```
 
-Register services in `Program.cs` (Blazor Web App) or `MauiProgram.cs` (.NET MAUI Blazor Hybrid):
+For code that has no UI, such as an API or a worker, install only the core:
+
+```bash
+dotnet add package Klyroo.Display.Core --prerelease
+```
+
+Register the services in `Program.cs`, and in the client project too when you use WebAssembly or Auto:
 
 ```csharp
 builder.Services.AddKlyrooDisplay();
 ```
 
-## Quick Start
+Import the namespaces in `_Imports.razor`:
 
-### Headless Core (`Klyroo.Display.Core`)
+```razor
+@using Klyroo.UI
+@using Klyroo.Display
+```
+
+Load the stylesheets in `App.razor`, inside `<head>`. `klyroo-display.css` is the compiled Tailwind classes the blocks use:
+
+```razor
+<link rel="stylesheet" href="@Assets["_content/Klyroo.UI/klyroo.preflight.css"]" />
+<link rel="stylesheet" href="@Assets["_content/Klyroo.UI/klyroo.css"]" />
+<link rel="stylesheet" href="@Assets["_content/Klyroo.Display/klyroo-display.css"]" />
+```
+
+## Quick start
+
+Headless, with `Klyroo.Display.Core`:
 
 ```csharp
 using Klyroo.Display;
 
-// Headless MIME/extension kind detection & modal preview trigger
-filePreview.Open(
-    new FilePreviewItem("spec.pdf", "/files/spec.pdf"),
-    new FilePreviewItem("metrics.csv", "/files/metrics.csv"));
+var csv = FilePreviewService.ParseCsv("Item;Price\nDesk;299.90\nChair;149.00", "catalog.csv");
+Console.WriteLine($"{csv.Rows.Count} rows, delimiter '{csv.Delimiter}', price column numeric: {csv.NumericColumns[1]}");
 
-// Built-in RFC 4180 CSV parser for instant preview tables
-var csv = FilePreviewService.ParseCsv("Region,MRR\nEurope,148900\nUS,192400");
+Console.WriteLine(FilePreviewService.DetectKind("report.pdf"));      // Pdf
+Console.WriteLine(FilePreviewService.FormatFileSize(1_572_864));     // 1.5 MB
 ```
 
-### Blazor Web & .NET MAUI Hybrid (`Klyroo.Display`)
+In a Blazor page:
 
 ```razor
-<KlyDisplay Kind="DisplayKind.Stat" Title="MRR" Value="€148,900"
-           Delta="+14.2%" Trend="@([102.0, 118.0, 134.0, 149.0])" />
+<KlyDisplay Kind="DisplayKind.Stat" Title="Monthly revenue" Value="148,900" Unit="EUR"
+            Delta="+14.2%" Trend="_trend" />
 
-<KlyDisplay Kind="DisplayKind.Code" Variant="secret"
-           Value="sk_live_9876543210" VisibleChars="4" Copy="true" />
+<KlyDisplay Kind="DisplayKind.Code" Variant="secret" Title="API key" Value="sk_test_9876543210" />
 
-<KlyAudioPlayer Src="/media/listening.mp3" Title="Listening Extract #1"
-               Start="15" End="45" MaxPlays="2" Seekable="false" />
+@code {
+    private readonly double[] _trend = [102, 118, 134, 149];
+}
 ```
+
+To preview files, add `<KlyFilePreviewProvider />` once to an interactive layout, inject `FilePreviewService` where you need it and call `Open`. [Getting started](docs/getting-started.md) builds that end to end.
 
 ## Documentation
 
-| Guide | Description |
+| | |
 | :--- | :--- |
-| [Online documentation](https://docs.klyroo.dev/display) | Guides, live examples and API reference |
-| [Getting Started](./docs/getting-started.md) | Installation, DI registration, stylesheets, and first working example |
-| [Architecture](./docs/architecture.md) | Headless `.Core` vs UI split, NativeAOT guarantees, and platform matrix |
-| [API Reference](./docs/api-reference.md) | Exhaustive reference of every public class, enum, property, method, and Razor parameter |
-| [MAUI & NativeAOT](./docs/maui-and-aot.md) | `.NET MAUI Blazor Hybrid` (`iOS`, `Android`, `macOS`, `Windows`) and NativeAOT deployment |
-| [Recipes & Testing](./docs/recipes.md) | End-to-end production patterns and `xUnit` / `bUnit` testing recipes |
-| [AI Agent Skill](./skills/klyroo-display/SKILL.md) | Machine-readable guidance for coding agents |
+| [Getting started](docs/getting-started.md) | Step-by-step first integration |
+| [Guides](docs/guides.md) | Task-oriented recipes |
+| [Concepts](docs/concepts.md) | How the library works |
+| [Platforms](docs/platforms.md) | Render modes, .NET MAUI, NativeAOT |
+| [API reference](docs/api-reference.md) | Every public type and member |
+| [FAQ](docs/faq.md) | Troubleshooting and limitations |
 
-## Key Public Types
+## Requirements
 
-| Type | Kind | Package | Summary |
-| :--- | :--- | :--- | :--- |
-| `FilePreviewKind` | `enum` | `Klyroo.Display.Core` | Built-in file preview renderer kinds supported by `KlyFilePreviewProvider` and `FilePreviewService`. |
-| `FilePreviewContainer` | `enum` | `Klyroo.Display.Core` | Overlay container mode for `KlyFilePreviewProvider`. |
-| `FilePreviewDetail` | `record` | `Klyroo.Display.Core` | Metadata key/value detail shown in the file preview details panel. |
-| `FilePreviewAction` | `class` | `Klyroo.Display.Core` | Custom action shown in the file preview header. |
-| `FilePreviewFile` | `class` | `Klyroo.Display.Core` | Describes a file to preview in `KlyFilePreviewProvider` via `FilePreviewService`. |
-| `FilePreviewOptions` | `class` | `Klyroo.Display.Core` | Options when opening a file or gallery in `FilePreviewService`. |
-| `ParsedCsvPreview` | `record` | `Klyroo.Display.Core` | Parsed CSV preview table returned by `FilePreviewService.ParseCsv`. |
-| `FilePreviewService` | `class` | `Klyroo.Display.Core` | Scoped service managing active file preview overlays rendered by `KlyFilePreviewProvider`. Also provides deterministic file-kind detection, CSV parsing, and size/extension formatting utilities. |
-| `MediaPlayerControl` | `enum` | `Klyroo.Display.Core` | Controls that can be selectively hidden on `KlyAudioPlayer` and `KlyVideoPlayer`. |
-| `VideoPlayerTrack` | `record` | `Klyroo.Display.Core` | A subtitle or caption track for `KlyVideoPlayer`. |
-| `MediaPlayerProgress` | `record` | `Klyroo.Display.Core` | Playback progress snapshot reported by `KlyAudioPlayer` and `KlyVideoPlayer`. Seconds elapsed relative to the clip start. Total clip duration in seconds. Raw media element time in seconds. |
-| `DisplayKind` | `enum` | `Klyroo.Display` | The 19 read-only display block kinds supported by `KlyDisplay`. |
-| `DisplaySurface` | `enum` | `Klyroo.Display` | Container surface treatment of a `KlyDisplay` block. |
-| `DisplayChip` | `record` | `Klyroo.Display` | A chip/badge displayed inside a `KlyDisplay` block. |
-| `DisplayAction` | `class` | `Klyroo.Display` | An action button or link displayed inside a `KlyDisplay` block. |
-| `DisplayFact` | `class` | `Klyroo.Display` | One key/value entry in a `Facts` block. |
-| `DisplayFactGroup` | `record` | `Klyroo.Display` | A named group of `DisplayFact` items in a `Facts` block. |
-| `DisplayStatItem` | `record` | `Klyroo.Display` | One sub-metric in the `row` variant of a `Stat` block. |
+- .NET 10 SDK.
+- `Klyroo.Display.Core` runs anywhere .NET 10 runs and is marked `IsAotCompatible` and `IsTrimmable`.
+- `Klyroo.Display` renders in Interactive Server, WebAssembly, Auto and static server rendering. Copy buttons, toggles, action callbacks, the player controls and the file preview overlay need an interactive render mode.
+- `Klyroo.Display` declares `browser`, `ios`, `android`, `maccatalyst` and `windows` as supported platforms for .NET MAUI Blazor Hybrid. It is marked `IsTrimmable` but not `IsAotCompatible`.
+- `Klyroo.Display` depends on `Klyroo.UI` for theming and the base components.
 
-## Razor Components
+## Klyroo ecosystem
 
-| Component | Package | Parameters | Source |
-| :--- | :--- | :--- | :--- |
-| `<KlyAudioPlayer>` | `Klyroo.Display` | 32 parameters | `src/Klyroo.Display/KlyAudioPlayer.razor` |
-| `<KlyDisplay>` | `Klyroo.Display` | 60 parameters | `src/Klyroo.Display/KlyDisplay.razor` |
-| `<KlyFilePreviewProvider>` | `Klyroo.Display` | 2 parameters | `src/Klyroo.Display/KlyFilePreviewProvider.razor` |
-| `<KlyVideoPlayer>` | `Klyroo.Display` | 36 parameters | `src/Klyroo.Display/KlyVideoPlayer.razor` |
+Klyroo is a family of independent .NET libraries that compose. Each one has its own repository, versions and releases.
 
-## Building & Testing
-
-```bash
-dotnet build
-dotnet test
-dotnet pack -c Release
-```
+| Library | Description |
+| :--- | :--- |
+| [Klyroo.UI](https://github.com/klyroo/klyroo-ui) | Accessible Blazor and .NET MAUI Hybrid components styled with Tailwind CSS v4 |
+| [Klyroo.Query](https://github.com/klyroo/klyroo-query) | Typed query model, URL codecs and IQueryable / EF Core execution |
+| [Klyroo.Table](https://github.com/klyroo/klyroo-table) | Data lists and trees built on Klyroo.Query |
+| [Klyroo.Form](https://github.com/klyroo/klyroo-form) | Schema-driven forms, validation and wizards |
+| [Klyroo.Dashboard](https://github.com/klyroo/klyroo-dashboard) | Analytical dashboards with filters, comparisons and KPI blocks |
+| [**Klyroo.Display**](https://github.com/klyroo/klyroo-display) | Read-only display blocks, media players and file preview |
+| [Klyroo.Spreadsheet](https://github.com/klyroo/klyroo-spreadsheet) | CSV and TSV import with column mapping and validation |
+| [Klyroo.Agent](https://github.com/klyroo/klyroo-agent) | Bridge that lets AI agents read and act on a Blazor UI |
+| [Klyroo.Stack](https://github.com/klyroo/klyroo-stack) | Meta-package, MCP server and `dotnet new` templates |
 
 ## Contributing
 
-Issues and pull requests are welcome. Read [CONTRIBUTING.md](./CONTRIBUTING.md) for the workflow (Conventional
-Commits, tests, documentation), follow the [Code of Conduct](./CODE_OF_CONDUCT.md), and report vulnerabilities
-privately as described in [SECURITY.md](./SECURITY.md).
-
-## Migrating from Lux
-
-This library was previously named `lux-display`. [MIGRATION.md](./MIGRATION.md) lists every renamed package, namespace,
-component, CSS token and build setting.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request, and follow the
+[code of conduct](CODE_OF_CONDUCT.md). Report security issues privately as described in [SECURITY.md](SECURITY.md).
 
 ## License
 
-MIT — see [LICENSE](./LICENSE). Part of the **[Klyroo](../klyroo-stack/README.md)** ecosystem.
+[MIT](LICENSE)

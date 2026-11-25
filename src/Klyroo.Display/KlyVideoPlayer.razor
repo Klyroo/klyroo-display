@@ -164,62 +164,104 @@
     private double _currentTime;
     private int _activeTrackIndex = -1;
 
+    /// <summary>The URL of the media file.</summary>
     [Parameter] public required string Src { get; set; }
+    /// <summary>The poster image shown before the video plays.</summary>
     [Parameter] public string? Poster { get; set; }
+    /// <summary>The accessible name of the player region.</summary>
     [Parameter] public string? Title { get; set; }
+    /// <summary>The CSS <c>aspect-ratio</c> of the player (<c>"16 / 9"</c> by default).</summary>
     [Parameter] public string AspectRatio { get; set; } = "16 / 9";
+    /// <summary>The <c>preload</c> attribute of the media element (<c>"metadata"</c> by default).</summary>
     [Parameter] public string Preload { get; set; } = "metadata";
+    /// <summary>Not used in this version: the player never starts by itself.</summary>
     [Parameter] public bool Autoplay { get; set; }
+    /// <summary>Sets <c>loop</c> on the media element. It is ignored when the player is restricted by <see cref="MaxPlays"/> or by <see cref="Seekable"/> being <see langword="false"/>.</summary>
     [Parameter] public bool Loop { get; set; }
+    /// <summary>Sets <c>playsinline</c> on the video element (<see langword="true"/> by default).</summary>
     [Parameter] public bool PlaysInline { get; set; } = true;
+    /// <summary>Disables the play, seek and mute controls.</summary>
     [Parameter] public bool Disabled { get; set; }
+    /// <summary>Not used in this version.</summary>
     [Parameter] public bool Compact { get; set; }
+    /// <summary>Whether the focused player reacts to keys: Space or K toggles playback, M toggles mute (<see langword="true"/> by default).</summary>
     [Parameter] public bool Keyboard { get; set; } = true;
 
+    /// <summary>The clip start, in seconds. Positions and durations are reported relative to it.</summary>
     [Parameter] public double Start { get; set; }
+    /// <summary>The clip end, in seconds. It is used when it is greater than <see cref="Start"/>, otherwise <see cref="Duration"/> gives the end.</summary>
     [Parameter] public double? End { get; set; }
+    /// <summary>The total duration in seconds (<c>60</c> by default). The player does not read the duration from the media element, so set it to the real length, or set <see cref="End"/>.</summary>
     [Parameter] public double Duration { get; set; } = 60;
+    /// <summary>Whether the user can move the position with the timeline. When <see langword="false"/> the timeline is a read-only progress bar (<see langword="true"/> by default).</summary>
     [Parameter] public bool Seekable { get; set; } = true;
+    /// <summary>The number of times the clip can be started (<c>0</c>, the default, means unlimited). Once <see cref="Plays"/> reaches it and the current play ends, the player locks and shows that no plays are left.</summary>
     [Parameter] public int MaxPlays { get; set; }
 
+    /// <summary>The number of plays already used. The component increments it when a play starts and raises <see cref="PlaysChanged"/>: keep the value in your own state and pass it back, so a re-render does not lose it.</summary>
     [Parameter] public int Plays { get; set; }
+    /// <summary>Raised with the new count when a play starts.</summary>
     [Parameter] public EventCallback<int> PlaysChanged { get; set; }
 
+    /// <summary>The playback rate shown on the speed button (<c>1.0</c> by default).</summary>
     [Parameter] public double Rate { get; set; } = 1.0;
+    /// <summary>Raised with the new rate when the speed button is clicked.</summary>
     [Parameter] public EventCallback<double> RateChanged { get; set; }
 
+    /// <summary>The rates the speed button cycles through. The button is hidden when there are fewer than two (0.5, 0.75, 1, 1.25, 1.5 and 2 by default).</summary>
     [Parameter] public IReadOnlyList<double>? Rates { get; set; } = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
+    /// <summary>Not used in this version.</summary>
     [Parameter] public double Volume { get; set; } = 1.0;
+    /// <summary>Not raised in this version.</summary>
     [Parameter] public EventCallback<double> VolumeChanged { get; set; }
 
+    /// <summary>Whether the player is muted. The mute button toggles it and raises <see cref="MutedChanged"/>.</summary>
     [Parameter] public bool Muted { get; set; }
+    /// <summary>Raised with the new value when the mute button is clicked.</summary>
     [Parameter] public EventCallback<bool> MutedChanged { get; set; }
 
+    /// <summary>Shows the download link (<see langword="false"/> by default). The link also shows when <see cref="DownloadUrl"/> is set.</summary>
     [Parameter] public bool Download { get; set; }
+    /// <summary>The target of the download link. When <see langword="null"/>, <see cref="Src"/> is used.</summary>
     [Parameter] public string? DownloadUrl { get; set; }
+    /// <summary>The file name suggested to the browser by the download link.</summary>
     [Parameter] public string? DownloadFileName { get; set; }
 
+    /// <summary>The caption tracks, rendered as <c>track</c> elements. The CC button cycles an internal selection and does not change the browser track mode in this version.</summary>
     [Parameter] public IReadOnlyList<VideoPlayerTrack>? Tracks { get; set; }
+    /// <summary>The controls to remove from the control bar.</summary>
     [Parameter] public IReadOnlyList<MediaPlayerControl>? Hide { get; set; }
 
+    /// <summary>Raised when playback starts or resumes.</summary>
     [Parameter] public EventCallback OnPlay { get; set; }
+    /// <summary>Raised when the user pauses.</summary>
     [Parameter] public EventCallback OnPause { get; set; }
+    /// <summary>Raised when the position reaches the end of the clip.</summary>
     [Parameter] public EventCallback OnEnded { get; set; }
+    /// <summary>Raised when no plays are left: when a play ends with <see cref="Plays"/> at <see cref="MaxPlays"/>, or when a new play is requested after that.</summary>
     [Parameter] public EventCallback OnLimitReached { get; set; }
+    /// <summary>Raised with the position when the user seeks. The player does not raise it during playback.</summary>
     [Parameter] public EventCallback<MediaPlayerProgress> OnTimeUpdate { get; set; }
+    /// <summary>Raised when the download link is clicked.</summary>
     [Parameter] public EventCallback OnDownload { get; set; }
 
+    /// <summary>The number of plays left, or <see cref="int.MaxValue"/> when <see cref="MaxPlays"/> is zero.</summary>
     public int RemainingPlays => MaxPlays > 0 ? Math.Max(0, MaxPlays - Plays) : int.MaxValue;
+    /// <summary>Whether the player is locked: <see cref="MaxPlays"/> is set, no plays are left and no play is in progress.</summary>
     public bool IsLocked => MaxPlays > 0 && RemainingPlays <= 0 && !_playActive;
     private bool IsRestricted => MaxPlays > 0 || !Seekable;
+    /// <summary>The clip end in seconds: <see cref="End"/> when it is greater than <see cref="Start"/>, otherwise <see cref="Duration"/>.</summary>
     public double ClipEnd => End is { } e && e > Start ? e : Math.Max(Start, Duration);
+    /// <summary>The clip length in seconds, <see cref="ClipEnd"/> minus <see cref="Start"/>.</summary>
     public double ClipLength => Math.Max(0, ClipEnd - Start);
+    /// <summary>The position inside the clip in seconds, between zero and <see cref="ClipLength"/>.</summary>
     public double ClipPosition => Math.Clamp(_currentTime - Start, 0, ClipLength);
 
     private string RootClass =>
         $"relative overflow-hidden rounded-(--klyroo-radius-md) bg-black text-white shadow-sm {Class}".Trim();
 
+    /// <inheritdoc />
     protected override void OnParametersSet()
     {
         if (_currentTime < Start) _currentTime = Start;
@@ -233,6 +275,7 @@
         }
     }
 
+    /// <summary>Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of <see cref="MaxPlays"/>. It does nothing when <see cref="Disabled"/> or <see cref="IsLocked"/>.</summary>
     public async Task TogglePlayAsync()
     {
         if (Disabled || IsLocked) return;
@@ -263,6 +306,9 @@
         StateHasChanged();
     }
 
+    /// <summary>Moves the position to an offset inside the clip, raises <see cref="OnTimeUpdate"/>, and ends the play when the offset reaches the clip end. It does nothing unless <see cref="Seekable"/>, and when <see cref="Disabled"/> or <see cref="IsLocked"/>.</summary>
+    /// <param name="clipOffsetSeconds">The offset in seconds from <see cref="Start"/>, clamped to the clip.</param>
+    /// <returns>A task that completes when the callbacks have run.</returns>
     public async Task SeekAsync(double clipOffsetSeconds)
     {
         if (!Seekable || Disabled || IsLocked) return;
@@ -282,12 +328,14 @@
         StateHasChanged();
     }
 
+    /// <summary>Toggles <see cref="Muted"/> and raises <see cref="MutedChanged"/>.</summary>
     public async Task ToggleMuteAsync()
     {
         Muted = !Muted;
         await MutedChanged.InvokeAsync(Muted);
     }
 
+    /// <summary>Selects the next entry of <see cref="Rates"/> (wrapping around), and raises <see cref="RateChanged"/>. It does nothing with fewer than two rates.</summary>
     public async Task CycleRateAsync()
     {
         if (Rates is not { Count: > 1 }) return;

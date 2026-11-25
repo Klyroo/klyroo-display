@@ -1,18 +1,36 @@
 namespace Klyroo.Display;
 
-/// <summary>Controls that can be selectively hidden on <c>KlyAudioPlayer</c> and <c>KlyVideoPlayer</c>.</summary>
+/// <summary>A control of <c>KlyAudioPlayer</c> or <c>KlyVideoPlayer</c> that can be hidden through their <c>Hide</c> parameter.</summary>
 public enum MediaPlayerControl
 {
+    /// <summary>The elapsed and total time label.</summary>
     Time,
+
+    /// <summary>The mute button.</summary>
     Volume,
+
+    /// <summary>The playback speed button.</summary>
     Rate,
+
+    /// <summary>The captions button of the video player.</summary>
     Captions,
+
+    /// <summary>Reserved: neither player renders a picture-in-picture button yet.</summary>
     PictureInPicture,
+
+    /// <summary>Reserved: neither player renders a fullscreen button yet.</summary>
     Fullscreen,
+
+    /// <summary>The download link.</summary>
     Download,
 }
 
-/// <summary>A subtitle or caption track for <c>KlyVideoPlayer</c>.</summary>
+/// <summary>A subtitle or caption track of a video, rendered as a <c>track</c> element.</summary>
+/// <param name="Src">The URL of the WebVTT file.</param>
+/// <param name="SrcLang">The BCP 47 language code of the track, for example <c>"fr"</c>.</param>
+/// <param name="Label">The label shown in the browser's track list.</param>
+/// <param name="Kind">The <c>kind</c> attribute of the track (<c>"subtitles"</c> by default).</param>
+/// <param name="Default">Whether the track is selected initially.</param>
 public sealed record VideoPlayerTrack(
     string Src,
     string SrcLang,
@@ -20,7 +38,7 @@ public sealed record VideoPlayerTrack(
     string Kind = "subtitles",
     bool Default = false);
 
-/// <summary>Playback progress snapshot reported by <c>KlyAudioPlayer</c> and <c>KlyVideoPlayer</c>.</summary>
+/// <summary>The playback position reported by the <c>OnTimeUpdate</c> callback of the audio and video players.</summary>
 /// <param name="Position">Seconds elapsed relative to the clip start.</param>
 /// <param name="Length">Total clip duration in seconds.</param>
 /// <param name="CurrentTime">Raw media element time in seconds.</param>

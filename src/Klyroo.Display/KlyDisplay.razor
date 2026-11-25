@@ -90,186 +90,187 @@
     [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private IServiceProvider Services { get; set; } = default!;
 
-    /// <summary>The display block kind to render.</summary>
+    /// <summary>The kind of block to render (<see cref="DisplayKind.Facts"/> by default).</summary>
     [Parameter] public DisplayKind Kind { get; set; } = DisplayKind.Facts;
 
-    /// <summary>Visual variant within <see cref="Kind"/> (for example <c>"hero"</c>, <c>"trend"</c>, <c>"row"</c> for <see cref="DisplayKind.Stat"/>; <c>"bar"</c>, <c>"segments"</c>, <c>"ring"</c>, <c>"scale"</c> for <see cref="DisplayKind.Meter"/>; <c>"block"</c>, <c>"value"</c>, <c>"secret"</c> for <see cref="DisplayKind.Code"/>).</summary>
+    /// <summary>Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: <c>eyebrow</c>. Text: <c>quote</c>. Stat: <c>row</c>. Breakdown: <c>collapsible</c>. Meter: <c>scale</c>. Chart: <c>funnel</c>. Person: <c>group</c>. List: <c>steps</c>, <c>checks</c>, <c>files</c>. Timeline: <c>pipeline</c>. Date: <c>countdown</c>, <c>range</c>. Media: <c>gallery</c>. Code: <c>secret</c>.</summary>
     [Parameter] public string? Variant { get; set; }
 
-    /// <summary>Surface treatment (<see cref="DisplaySurface.Plain"/>, <see cref="DisplaySurface.Muted"/>, <see cref="DisplaySurface.Bordered"/> or <see cref="DisplaySurface.Elevated"/>). When <see langword="null"/>, uses the default surface of <see cref="Kind"/>.</summary>
+    /// <summary>The surface treatment (<see cref="DisplaySurface.Plain"/>, <see cref="DisplaySurface.Muted"/>, <see cref="DisplaySurface.Bordered"/> or <see cref="DisplaySurface.Elevated"/>). When <see langword="null"/>, a default is chosen from <see cref="Kind"/>: bordered for Facts, Breakdown, Table, Record and Code, muted for Alert and Stat (Stat is bordered for its <c>row</c> variant), and plain for the others.</summary>
     [Parameter] public DisplaySurface? Surface { get; set; }
 
-    /// <summary>Primary accent tone of the block.</summary>
+    /// <summary>The tone of the block. Only <see cref="DisplayKind.Alert"/> reads it: it selects the default icon and sets <c>role="status"</c> for <see cref="KlyColor.Warning"/> and <see cref="KlyColor.Error"/>.</summary>
     [Parameter] public KlyColor Tone { get; set; } = KlyColor.Primary;
 
-    /// <summary>Shows a layout-matched placeholder skeleton instead of the block content.</summary>
+    /// <summary>Shows a skeleton placeholder instead of the block.</summary>
     [Parameter] public bool Loading { get; set; }
 
-    /// <summary>Title or heading text of the block.</summary>
+    /// <summary>The title of the block: the heading text, the bold first line of a Text, the Alert title, the label of a Stat, Meter or Code block, and the title of the other kinds that show one. For a Person block it is the name of the single person, or the caption of a <c>group</c>. For a Date block it replaces the formatted date, and for a Media block it is the alt text.</summary>
     [Parameter] public string? Title { get; set; }
 
-    /// <summary>Primary text, message or value of the block.</summary>
+    /// <summary>The main text of the block: the Text body, the Alert message, the Stat value, the Meter value label, or the Code content.</summary>
     [Parameter] public string? Value { get; set; }
 
-    /// <summary>Secondary description or caption text.</summary>
+    /// <summary>A secondary line: under the title of a Heading, Stat, Meter, Date, Media (caption) or Empty block, under the name of a single Person, or the Alert message when <see cref="Value"/> is not set.</summary>
     [Parameter] public string? Description { get; set; }
 
-    /// <summary>Unit or aside text (for <see cref="DisplayKind.Stat"/> or <see cref="DisplayKind.Chart"/>).</summary>
+    /// <summary>The unit shown beside a Stat value, or at the end of a Chart title.</summary>
     [Parameter] public string? Unit { get; set; }
 
-    /// <summary>Leading icon name.</summary>
+    /// <summary>The name of the leading icon of a Heading, Alert or Empty block. For an Alert, an empty string hides the icon.</summary>
     [Parameter] public string? Icon { get; set; }
 
-    /// <summary>Heading level (<c>2</c> to <c>6</c>, <c>3</c> by default) for <see cref="DisplayKind.Heading"/>.</summary>
+    /// <summary>Not used in this version: a Heading always renders an <c>h3</c>, and the <c>eyebrow</c> variant renders no heading element.</summary>
     [Parameter] public int HeadingLevel { get; set; } = 3;
 
-    /// <summary>Count badge text for <see cref="DisplayKind.Heading"/> or <see cref="DisplayKind.Record"/>.</summary>
+    /// <summary>Count text shown beside the title of a Heading or Record block.</summary>
     [Parameter] public string? Count { get; set; }
 
-    /// <summary>Chip displayed beside the title or value.</summary>
+    /// <summary>The badge of the single person shown by a Person block when <see cref="People"/> is empty.</summary>
     [Parameter] public DisplayChip? Chip { get; set; }
 
-    /// <summary>Primary action of the block.</summary>
+    /// <summary>The button of a Heading block, shown at the end of the row.</summary>
     [Parameter] public DisplayAction? Action { get; set; }
 
-    /// <summary>Action buttons of the block.</summary>
+    /// <summary>The buttons of an Alert or Empty block.</summary>
     [Parameter] public IReadOnlyList<DisplayAction>? Actions { get; set; }
 
-    /// <summary>Paragraphs for <see cref="DisplayKind.Text"/>.</summary>
+    /// <summary>The paragraphs of a Text block. When set, they replace <see cref="Value"/>.</summary>
     [Parameter] public IReadOnlyList<string>? Paragraphs { get; set; }
 
-    /// <summary>Quote author for <see cref="DisplayKind.Text"/> (<c>Variant="quote"</c>).</summary>
+    /// <summary>The author shown in the footer of a Text block, before <see cref="Meta"/>.</summary>
     [Parameter] public string? Author { get; set; }
 
-    /// <summary>Quote or record metadata text.</summary>
+    /// <summary>Extra text shown in the footer of a Text block, after <see cref="Author"/>.</summary>
     [Parameter] public string? Meta { get; set; }
 
-    /// <summary>Maximum number of text lines before clamping with a Read more toggle (<see cref="DisplayKind.Text"/>).</summary>
+    /// <summary>When greater than zero, clamps <see cref="Value"/> of a Text block to two lines and adds a Read more toggle. The number itself is not used, and <see cref="Paragraphs"/> are not clamped.</summary>
     [Parameter] public int? MaxLines { get; set; }
 
-    /// <summary>Collapsible details text (<see cref="DisplayKind.Alert"/>) or footnote (<see cref="DisplayKind.Breakdown"/>).</summary>
+    /// <summary>The collapsible details of an Alert (opened with Show details), or the footnote of a Breakdown.</summary>
     [Parameter] public string? Details { get; set; }
 
-    /// <summary>Whether collapsible details or breakdown lines start open (<see langword="false"/> by default).</summary>
+    /// <summary>Whether the Alert details, or the lines of a <c>collapsible</c> Breakdown, start open. It is read once, when the component first receives its parameters.</summary>
     [Parameter] public bool DefaultOpen { get; set; }
 
-    /// <summary>Fact items for <see cref="DisplayKind.Facts"/>.</summary>
+    /// <summary>The rows of a Facts block. They are ignored when <see cref="FactGroups"/> is set.</summary>
     [Parameter] public IReadOnlyList<DisplayFact>? Facts { get; set; }
 
-    /// <summary>Grouped facts for <see cref="DisplayKind.Facts"/>.</summary>
+    /// <summary>The titled groups of a Facts block. When set, they replace <see cref="Facts"/>, and <see cref="Max"/> does not apply.</summary>
     [Parameter] public IReadOnlyList<DisplayFactGroup>? FactGroups { get; set; }
 
-    /// <summary>Delta text (for example <c>"+12.4%"</c>) for <see cref="DisplayKind.Stat"/>.</summary>
+    /// <summary>The change shown as a badge beside a Stat value, for example <c>"+12.4%"</c>. It is displayed as given.</summary>
     [Parameter] public string? Delta { get; set; }
 
-    /// <summary>Delta direction (<c>"up"</c>, <c>"down"</c> or <c>"flat"</c>) for <see cref="DisplayKind.Stat"/>.</summary>
+    /// <summary>The direction of <see cref="Delta"/>: <c>"up"</c> (green, the default), <c>"down"</c> (red) or <c>"flat"</c> (neutral).</summary>
     [Parameter] public string DeltaDirection { get; set; } = "up";
 
-    /// <summary>Sparkline numeric series (2 or more points) for <see cref="DisplayKind.Stat"/>.</summary>
+    /// <summary>The series of a Stat sparkline. It is drawn from two points or more.</summary>
     [Parameter] public IReadOnlyList<double>? Trend { get; set; }
 
-    /// <summary>Row metrics for <see cref="DisplayKind.Stat"/> (<c>Variant="row"</c>).</summary>
+    /// <summary>The metrics of a Stat block with <c>Variant="row"</c>.</summary>
     [Parameter] public IReadOnlyList<DisplayStatItem>? StatItems { get; set; }
 
-    /// <summary>Line items for <see cref="DisplayKind.Breakdown"/>.</summary>
+    /// <summary>The lines of a Breakdown block.</summary>
     [Parameter] public IReadOnlyList<DisplayBreakdownLine>? BreakdownLines { get; set; }
 
-    /// <summary>Total line for <see cref="DisplayKind.Breakdown"/>.</summary>
+    /// <summary>The total row of a Breakdown block, shown below the lines.</summary>
     [Parameter] public DisplayBreakdownLine? BreakdownTotal { get; set; }
 
-    /// <summary>Comparison column headings for <see cref="DisplayKind.Breakdown"/> (<c>Variant="compare"</c>).</summary>
+    /// <summary>Not used in this version: a Breakdown has no comparison layout.</summary>
     [Parameter] public (string First, string Second)? CompareColumns { get; set; }
 
-    /// <summary>Numeric value for <see cref="DisplayKind.Meter"/>.</summary>
+    /// <summary>The current value of a Meter block, clamped between 0 and <see cref="MeterMax"/>.</summary>
     [Parameter] public double MeterValue { get; set; }
 
-    /// <summary>Maximum numeric value for <see cref="DisplayKind.Meter"/> (<c>100</c> by default).</summary>
+    /// <summary>The maximum of a Meter block (<c>100</c> by default). When it is zero or less, the sum of <see cref="MeterParts"/> is used.</summary>
     [Parameter] public double MeterMax { get; set; } = 100;
 
-    /// <summary>Warning percentage threshold (0..100) for <see cref="DisplayKind.Meter"/>.</summary>
+    /// <summary>The percentage of <see cref="MeterMax"/> from which the Meter bar turns to the warning color.</summary>
     [Parameter] public double? WarningThreshold { get; set; }
 
-    /// <summary>Error percentage threshold (0..100) for <see cref="DisplayKind.Meter"/>.</summary>
+    /// <summary>The percentage of <see cref="MeterMax"/> from which the Meter bar turns to the error color. It wins over <see cref="WarningThreshold"/>.</summary>
     [Parameter] public double? ErrorThreshold { get; set; }
 
-    /// <summary>Segments or parts for <see cref="DisplayKind.Meter"/>.</summary>
+    /// <summary>The segments of a Meter block. When set, they replace the single bar and the thresholds do not apply.</summary>
     [Parameter] public IReadOnlyList<DisplayMeterPart>? MeterParts { get; set; }
 
-    /// <summary>Discrete level labels for <see cref="DisplayKind.Meter"/> (<c>Variant="scale"</c>).</summary>
+    /// <summary>The level labels of a Meter block with <c>Variant="scale"</c>.</summary>
     [Parameter] public IReadOnlyList<string>? MeterLevels { get; set; }
 
-    /// <summary>Zero-based current level index for <see cref="DisplayKind.Meter"/> (<c>Variant="scale"</c>).</summary>
+    /// <summary>The zero-based index of the current level of a <c>scale</c> Meter. The levels up to it are highlighted.</summary>
     [Parameter] public int? CurrentLevel { get; set; }
 
-    /// <summary>Data points for <see cref="DisplayKind.Chart"/>.</summary>
+    /// <summary>The bars of a Chart block, or the steps of a <c>funnel</c> Chart.</summary>
     [Parameter] public IReadOnlyList<DisplayChartPoint>? ChartData { get; set; }
 
-    /// <summary>Columns for <see cref="DisplayKind.Table"/>.</summary>
+    /// <summary>The columns of a Table block.</summary>
     [Parameter] public IReadOnlyList<DisplayTableColumn>? TableColumns { get; set; }
 
-    /// <summary>Rows (keyed by column key) for <see cref="DisplayKind.Table"/>.</summary>
+    /// <summary>The rows of a Table block. Each row maps a column key to its text, and a missing key renders a dash.</summary>
     [Parameter] public IReadOnlyList<IReadOnlyDictionary<string, string?>>? TableRows { get; set; }
 
-    /// <summary>Optional footer cell values (keyed by column key) for <see cref="DisplayKind.Table"/>.</summary>
+    /// <summary>The footer row of a Table block, as a map from column key to text.</summary>
     [Parameter] public IReadOnlyDictionary<string, string?>? TableFooter { get; set; }
 
-    /// <summary>Diff entries for <see cref="DisplayKind.Diff"/>.</summary>
+    /// <summary>The fields of a Diff block.</summary>
     [Parameter] public IReadOnlyList<DisplayDiffItem>? DiffItems { get; set; }
 
-    /// <summary>Shows unchanged diff rows when <see langword="true"/> (<see langword="false"/> by default).</summary>
+    /// <summary>Shows the fields whose <see cref="DisplayDiffItem.Changed"/> is <see langword="false"/> (<see langword="false"/> by default).</summary>
     [Parameter] public bool ShowUnchanged { get; set; }
 
-    /// <summary>Record items for <see cref="DisplayKind.Record"/>.</summary>
+    /// <summary>The rows of a Record block.</summary>
     [Parameter] public IReadOnlyList<DisplayRecordItem>? Records { get; set; }
 
-    /// <summary>People for <see cref="DisplayKind.Person"/>.</summary>
+    /// <summary>The people of a Person block. Without the <c>group</c> variant, only the first person is shown.</summary>
     [Parameter] public IReadOnlyList<DisplayPersonItem>? People { get; set; }
 
-    /// <summary>Contact entries for <see cref="DisplayKind.Person"/> (<c>Variant="contact"</c>).</summary>
+    /// <summary>The contact lines of a Person block. They are shown under the person and are ignored by the <c>group</c> variant.</summary>
     [Parameter] public IReadOnlyList<DisplayContactItem>? Contacts { get; set; }
 
-    /// <summary>List items for <see cref="DisplayKind.List"/>.</summary>
+    /// <summary>The items of a List block.</summary>
     [Parameter] public IReadOnlyList<DisplayListItem>? ListItems { get; set; }
 
-    /// <summary>Timeline items for <see cref="DisplayKind.Timeline"/>.</summary>
+    /// <summary>The events of a Timeline block.</summary>
     [Parameter] public IReadOnlyList<DisplayTimelineItem>? TimelineItems { get; set; }
 
-    /// <summary>Date value for <see cref="DisplayKind.Date"/>.</summary>
+    /// <summary>The date of a Date block, or the start of a <c>range</c>. When <see langword="null"/>, the current date is used.</summary>
     [Parameter] public DateTimeOffset? DateValue { get; set; }
 
-    /// <summary>End date for <see cref="DisplayKind.Date"/> (<c>Variant="range"</c>).</summary>
+    /// <summary>The end of a <c>range</c> Date block, inclusive in the day count.</summary>
     [Parameter] public DateTimeOffset? EndDateValue { get; set; }
 
-    /// <summary>Reference "now" timestamp for <see cref="DisplayKind.Date"/> (<c>Variant="countdown"</c>) or <see cref="DisplayKind.Timeline"/>.</summary>
+    /// <summary>The reference time of a <c>countdown</c> Date block. When <see langword="null"/>, <see cref="DateTimeOffset.UtcNow"/> is used. Pass it for tests and for stable server rendering.</summary>
     [Parameter] public DateTimeOffset? Now { get; set; }
 
-    /// <summary>Code language (<c>"json"</c> enables token highlighting) for <see cref="DisplayKind.Code"/>.</summary>
+    /// <summary>The label of a Code block when <see cref="Title"/> is not set. It does not enable syntax highlighting.</summary>
     [Parameter] public string? Language { get; set; }
 
-    /// <summary>Number of trailing characters left visible when <see cref="DisplayKind.Code"/> is in <c>Variant="secret"</c> (<c>4</c> by default).</summary>
+    /// <summary>The number of trailing characters left visible by a <c>secret</c> Code block (<c>4</c> by default). A longer value shows eight bullets followed by those characters. A value that is not longer than this number is fully masked.</summary>
     [Parameter] public int VisibleChars { get; set; } = 4;
 
-    /// <summary>Whether to show a copy button on <see cref="DisplayKind.Code"/> (<see langword="true"/> by default).</summary>
+    /// <summary>Whether a Code block shows a copy button (<see langword="true"/> by default).</summary>
     [Parameter] public bool Copy { get; set; } = true;
 
-    /// <summary>Accordion items for <see cref="DisplayKind.Accordion"/>.</summary>
+    /// <summary>The sections of an Accordion block.</summary>
     [Parameter] public IReadOnlyList<DisplayAccordionItem>? AccordionItems { get; set; }
 
-    /// <summary>Allows multiple accordion items to be open at once (<see langword="false"/> by default).</summary>
+    /// <summary>Allows several Accordion sections to be open at once (<see langword="false"/> by default).</summary>
     [Parameter] public bool Multiple { get; set; }
 
-    /// <summary>Media source URL for <see cref="DisplayKind.Media"/>.</summary>
+    /// <summary>The image URL of a Media block.</summary>
     [Parameter] public string? Src { get; set; }
 
-    /// <summary>Media gallery image URLs for <see cref="DisplayKind.Media"/> (<c>Variant="gallery"</c>).</summary>
+    /// <summary>The image URLs of a Media block with <c>Variant="gallery"</c>.</summary>
     [Parameter] public IReadOnlyList<string>? Images { get; set; }
 
-    /// <summary>Maximum number of items initially revealed before a "Show more" button (<see langword="null"/> shows all).</summary>
+    /// <summary>The number of items shown before a Show more button, for the flat Facts, Table, Record, List and Timeline kinds (all items when <see langword="null"/>). In a <c>group</c> Person block it is the number of avatars (4 by default), and in a <c>gallery</c> Media block the number of tiles (3 by default).</summary>
     [Parameter] public int? Max { get; set; }
 
-    /// <summary>Number of additional items revealed per click on "Show more" (when <see langword="null"/>, reveals all remaining items).</summary>
+    /// <summary>The number of items each click on Show more reveals (all remaining items when <see langword="null"/>).</summary>
     [Parameter] public int? Step { get; set; }
 
+    /// <inheritdoc />
     protected override void OnParametersSet()
     {
         if (!_detailsInitialized)

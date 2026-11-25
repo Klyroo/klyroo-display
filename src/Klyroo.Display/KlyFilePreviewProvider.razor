@@ -227,12 +227,13 @@
     private double _zoom = 1.0;
     private int _rotation;
 
-    /// <summary>Optional child content wrapped by the provider.</summary>
+    /// <summary>Content rendered before the overlay. Use it to wrap your layout, or leave it empty and place the provider next to it.</summary>
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    /// <summary>Optional Markdown-to-HTML callback for <see cref="FilePreviewKind.Markdown"/> files.</summary>
+    /// <summary>Converts the Markdown of a file to HTML. The result is rendered as markup without sanitizing, so use a renderer that escapes untrusted input. When <see langword="null"/>, Markdown files are shown as source.</summary>
     [Parameter] public Func<string, string>? MarkdownRenderer { get; set; }
 
+    /// <inheritdoc />
     protected override void OnInitialized()
     {
         Preview.AttachProvider();
@@ -463,6 +464,7 @@
         }
     }
 
+    /// <summary>Unsubscribes from <see cref="FilePreviewService"/> and marks the provider as unmounted.</summary>
     public void Dispose()
     {
         Preview.Changed -= OnPreviewChanged;
