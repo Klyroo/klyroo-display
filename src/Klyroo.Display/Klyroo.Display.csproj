@@ -5,7 +5,7 @@
     <PackageId>Klyroo.Display</PackageId>
     <Description>Klyroo Display blocks (19 kinds), Audio/Video players with clip rules, and FilePreview overlay provider for Blazor Web &amp; .NET MAUI Hybrid.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591;BL0007</NoWarn>
+    <NoWarn>$(NoWarn);BL0007</NoWarn>
     <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
   <ItemGroup>
