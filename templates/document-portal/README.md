@@ -1,1 +1,1 @@
-# LuxStack Document & Media Portal Template
+# Klyroo Document & Media Portal Template

@@ -1,14 +1,14 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Lux.Display;
+namespace Klyroo.Display;
 
-public static class LuxDisplayServiceCollectionExtensions
+public static class KlyrooDisplayServiceCollectionExtensions
 {
-    public static IServiceCollection AddLuxDisplay(this IServiceCollection services)
+    public static IServiceCollection AddKlyrooDisplay(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddLuxUi();
+        services.AddKlyrooUi();
         services.TryAddScoped<FilePreviewService>();
         return services;
     }

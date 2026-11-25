@@ -1,11 +1,11 @@
-# API Reference — Lux.Display
+# API Reference — Klyroo.Display
 
-Complete public API reference extracted directly from the source code of `Lux.Display.Core` and `Lux.Display`.
+Complete public API reference extracted directly from the source code of `Klyroo.Display.Core` and `Klyroo.Display`.
 
 ## Razor Components
 
-### `<LxAudioPlayer>`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/LxAudioPlayer.razor`
+### `<KlyAudioPlayer>`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/KlyAudioPlayer.razor`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
@@ -42,15 +42,15 @@ Complete public API reference extracted directly from the source code of `Lux.Di
 | `OnTimeUpdate` | `EventCallback<MediaPlayerProgress>` | — |
 | `OnDownload` | `EventCallback` | — |
 
-### `<LxDisplay>`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/LxDisplay.razor`
+### `<KlyDisplay>`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/KlyDisplay.razor`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `Kind` | `DisplayKind` | The display block kind to render. |
 | `Variant` | `string?` | Visual variant within `Kind` (for example `"hero"`, `"trend"`, `"row"` for `Stat`; `"bar"`, `"segments"`, `"ring"`, `"scale"` for `Meter`; `"block"`, `"value"`, `"secret"` for `Code`). |
 | `Surface` | `DisplaySurface?` | Surface treatment (`Plain`, `Muted`, `Bordered` or `Elevated`). When `null`, uses the default surface of `Kind`. |
-| `Tone` | `LxColor` | Primary accent tone of the block. |
+| `Tone` | `KlyColor` | Primary accent tone of the block. |
 | `Loading` | `bool` | Shows a layout-matched placeholder skeleton instead of the block content. |
 | `Title` | `string?` | Title or heading text of the block. |
 | `Value` | `string?` | Primary text, message or value of the block. |
@@ -108,16 +108,16 @@ Complete public API reference extracted directly from the source code of `Lux.Di
 | `Max` | `int?` | Maximum number of items initially revealed before a "Show more" button (`null` shows all). |
 | `Step` | `int?` | Number of additional items revealed per click on "Show more" (when `null`, reveals all remaining items). |
 
-### `<LxFilePreviewProvider>`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/LxFilePreviewProvider.razor`
+### `<KlyFilePreviewProvider>`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/KlyFilePreviewProvider.razor`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `ChildContent` | `RenderFragment?` | Optional child content wrapped by the provider. |
 | `MarkdownRenderer` | `Func<string, string>?` | Optional Markdown-to-HTML callback for `Markdown` files. |
 
-### `<LxVideoPlayer>`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/LxVideoPlayer.razor`
+### `<KlyVideoPlayer>`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/KlyVideoPlayer.razor`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
@@ -161,9 +161,9 @@ Complete public API reference extracted directly from the source code of `Lux.Di
 ## C# Types, Controllers, Models & Enums
 
 ### `enum FilePreviewKind`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewModels.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/FilePreviewModels.cs`
 
-Built-in file preview renderer kinds supported by `LxFilePreviewProvider` and `FilePreviewService`.
+Built-in file preview renderer kinds supported by `KlyFilePreviewProvider` and `FilePreviewService`.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -179,9 +179,9 @@ Built-in file preview renderer kinds supported by `LxFilePreviewProvider` and `F
 | `Other` | `enum member` | — |
 
 ### `enum FilePreviewContainer`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewModels.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/FilePreviewModels.cs`
 
-Overlay container mode for `LxFilePreviewProvider`.
+Overlay container mode for `KlyFilePreviewProvider`.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -190,12 +190,12 @@ Overlay container mode for `LxFilePreviewProvider`.
 | `Fullscreen` | `enum member` | — |
 
 ### `record FilePreviewDetail`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewModels.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/FilePreviewModels.cs`
 
 Metadata key/value detail shown in the file preview details panel.
 
 ### `class FilePreviewAction`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewModels.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/FilePreviewModels.cs`
 
 Custom action shown in the file preview header.
 
@@ -207,9 +207,9 @@ Custom action shown in the file preview header.
 | `OnSelect` | `Func<FilePreviewFile, Task>?` | — |
 
 ### `class FilePreviewFile`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewModels.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/FilePreviewModels.cs`
 
-Describes a file to preview in `LxFilePreviewProvider` via `FilePreviewService`.
+Describes a file to preview in `KlyFilePreviewProvider` via `FilePreviewService`.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -229,7 +229,7 @@ Describes a file to preview in `LxFilePreviewProvider` via `FilePreviewService`.
 | `Tracks` | `IReadOnlyList<VideoPlayerTrack>?` | Optional video caption tracks. |
 
 ### `class FilePreviewOptions`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewModels.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/FilePreviewModels.cs`
 
 Options when opening a file or gallery in `FilePreviewService`.
 
@@ -241,25 +241,25 @@ Options when opening a file or gallery in `FilePreviewService`.
 | `PdfPage` | `int?` | Initial PDF page number (`#page=N`). |
 
 ### `record ParsedCsvPreview`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewService.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/FilePreviewService.cs`
 
 Parsed CSV preview table returned by `FilePreviewService.ParseCsv`.
 
 ### `class FilePreviewService`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/FilePreviewService.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/FilePreviewService.cs`
 
-Scoped service managing active file preview overlays rendered by `LxFilePreviewProvider`. Also provides deterministic file-kind detection, CSV parsing, and size/extension formatting utilities.
+Scoped service managing active file preview overlays rendered by `KlyFilePreviewProvider`. Also provides deterministic file-kind detection, CSV parsing, and size/extension formatting utilities.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
-| `IsMounted` | `bool` | Whether a `LxFilePreviewProvider` is currently mounted in the component tree. |
+| `IsMounted` | `bool` | Whether a `KlyFilePreviewProvider` is currently mounted in the component tree. |
 | `IsOpen` | `bool` | Whether the file preview overlay is currently open. |
 | `Files` | `IReadOnlyList<FilePreviewFile>` | Files in the active gallery. |
 | `CurrentIndex` | `int` | Zero-based index of the currently shown file in `Files`. |
 | `Options` | `FilePreviewOptions` | Current options for the active preview session. |
 | `CurrentFile` | `FilePreviewFile?` | Currently active file, or `null` when closed. |
-| `Open(FilePreviewFile file, FilePreviewOptions? options = null)` | `void` | Opens a single file in `LxFilePreviewProvider`. |
-| `OpenGallery(IReadOnlyList<FilePreviewFile> files, FilePreviewOptions? options = null)` | `void` | Opens a gallery of files in `LxFilePreviewProvider`. |
+| `Open(FilePreviewFile file, FilePreviewOptions? options = null)` | `void` | Opens a single file in `KlyFilePreviewProvider`. |
+| `OpenGallery(IReadOnlyList<FilePreviewFile> files, FilePreviewOptions? options = null)` | `void` | Opens a gallery of files in `KlyFilePreviewProvider`. |
 | `Close()` | `void` | Closes the active file preview overlay. |
 | `Next()` | `void` | Moves to the next file in the gallery. |
 | `Previous()` | `void` | Moves to the previous file in the gallery. |
@@ -275,9 +275,9 @@ Scoped service managing active file preview overlays rendered by `LxFilePreviewP
 | `ParseCsv(string? content, string? fileName = null, int maxRows = 1000)` | `ParsedCsvPreview` | Parses CSV or TSV content according to RFC 4180 (quoted fields, escaped quotes, embedded newlines) and auto-detects the delimiter among `,`, `;`, `\t`, and `|`. |
 
 ### `enum MediaPlayerControl`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/MediaModels.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/MediaModels.cs`
 
-Controls that can be selectively hidden on `LxAudioPlayer` and `LxVideoPlayer`.
+Controls that can be selectively hidden on `KlyAudioPlayer` and `KlyVideoPlayer`.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -290,19 +290,19 @@ Controls that can be selectively hidden on `LxAudioPlayer` and `LxVideoPlayer`.
 | `Download` | `enum member` | — |
 
 ### `record VideoPlayerTrack`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/MediaModels.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/MediaModels.cs`
 
-A subtitle or caption track for `LxVideoPlayer`.
+A subtitle or caption track for `KlyVideoPlayer`.
 
 ### `record MediaPlayerProgress`
-*Package*: `Lux.Display.Core` · *Source*: `src/Lux.Display.Core/MediaModels.cs`
+*Package*: `Klyroo.Display.Core` · *Source*: `src/Klyroo.Display.Core/MediaModels.cs`
 
-Playback progress snapshot reported by `LxAudioPlayer` and `LxVideoPlayer`. Seconds elapsed relative to the clip start. Total clip duration in seconds. Raw media element time in seconds.
+Playback progress snapshot reported by `KlyAudioPlayer` and `KlyVideoPlayer`. Seconds elapsed relative to the clip start. Total clip duration in seconds. Raw media element time in seconds.
 
 ### `enum DisplayKind`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
-The 19 read-only display block kinds supported by `LxDisplay`.
+The 19 read-only display block kinds supported by `KlyDisplay`.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -327,9 +327,9 @@ The 19 read-only display block kinds supported by `LxDisplay`.
 | `Accordion` | `enum member` | — |
 
 ### `enum DisplaySurface`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
-Container surface treatment of a `LxDisplay` block.
+Container surface treatment of a `KlyDisplay` block.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -339,14 +339,14 @@ Container surface treatment of a `LxDisplay` block.
 | `Elevated` | `enum member` | — |
 
 ### `record DisplayChip`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
-A chip/badge displayed inside a `LxDisplay` block.
+A chip/badge displayed inside a `KlyDisplay` block.
 
 ### `class DisplayAction`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
-An action button or link displayed inside a `LxDisplay` block.
+An action button or link displayed inside a `KlyDisplay` block.
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
@@ -355,11 +355,11 @@ An action button or link displayed inside a `LxDisplay` block.
 | `Href` | `string?` | — |
 | `Target` | `string?` | — |
 | `OnClick` | `EventCallback` | — |
-| `Color` | `LxColor` | — |
+| `Color` | `KlyColor` | — |
 | `Variant` | `ButtonVariant` | — |
 
 ### `class DisplayFact`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One key/value entry in a `Facts` block.
 
@@ -369,7 +369,7 @@ One key/value entry in a `Facts` block.
 | `Value` | `string?` | — |
 | `Hint` | `string?` | — |
 | `Chip` | `DisplayChip?` | — |
-| `Tone` | `LxColor?` | — |
+| `Tone` | `KlyColor?` | — |
 | `Copy` | `bool` | — |
 | `CopyText` | `string?` | — |
 | `Mono` | `bool` | — |
@@ -379,42 +379,42 @@ One key/value entry in a `Facts` block.
 | `Loading` | `bool` | — |
 
 ### `record DisplayFactGroup`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 A named group of `DisplayFact` items in a `Facts` block.
 
 ### `record DisplayStatItem`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One sub-metric in the `row` variant of a `Stat` block.
 
 ### `record DisplayBreakdownLine`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One line item in a `Breakdown` block.
 
 ### `record DisplayMeterPart`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One segment or part in a `Meter` block.
 
 ### `record DisplayChartPoint`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One data point in a `Chart` block.
 
 ### `record DisplayTableColumn`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One column definition in a `Table` block.
 
 ### `record DisplayDiffItem`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One field difference in a `Diff` block.
 
 ### `class DisplayRecordItem`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One entity record in a `Record` block.
 
@@ -428,7 +428,7 @@ One entity record in a `Record` block.
 | `Icon` | `string?` | — |
 | `AvatarText` | `string?` | — |
 | `ImageSrc` | `string?` | — |
-| `Tone` | `LxColor?` | — |
+| `Tone` | `KlyColor?` | — |
 | `Badges` | `IReadOnlyList<DisplayChip>?` | — |
 | `Chip` | `DisplayChip?` | — |
 | `Trailing` | `string?` | — |
@@ -437,17 +437,17 @@ One entity record in a `Record` block.
 | `OnClick` | `EventCallback` | — |
 
 ### `record DisplayPersonItem`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One person in a `Person` block.
 
 ### `record DisplayContactItem`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One contact channel in the `contact` variant of a `Person` block.
 
 ### `class DisplayListItem`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One entry in a `List` block.
 
@@ -456,7 +456,7 @@ One entry in a `List` block.
 | `Text` | `string` | — |
 | `Description` | `string?` | — |
 | `Icon` | `string?` | — |
-| `Tone` | `LxColor?` | — |
+| `Tone` | `KlyColor?` | — |
 | `Done` | `bool` | — |
 | `Current` | `bool` | — |
 | `Meta` | `string?` | — |
@@ -466,7 +466,7 @@ One entry in a `List` block.
 | `MimeType` | `string?` | — |
 
 ### `enum DisplayTimelineState`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 State of a step in a `Timeline` block.
 
@@ -477,18 +477,18 @@ State of a step in a `Timeline` block.
 | `Upcoming` | `enum member` | — |
 
 ### `record DisplayTimelineItem`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One event in a `Timeline` block.
 
 ### `record DisplayAccordionItem`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/DisplayModels.cs`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/DisplayModels.cs`
 
 One collapsible section in a `Accordion` block.
 
-### `class LuxDisplayServiceCollectionExtensions`
-*Package*: `Lux.Display` · *Source*: `src/Lux.Display/LuxDisplayServiceCollectionExtensions.cs`
+### `class KlyrooDisplayServiceCollectionExtensions`
+*Package*: `Klyroo.Display` · *Source*: `src/Klyroo.Display/KlyrooDisplayServiceCollectionExtensions.cs`
 
 | Member | Type | Description |
 | :--- | :--- | :--- |
-| `AddLuxDisplay(this IServiceCollection services)` | `IServiceCollection` | — |
+| `AddKlyrooDisplay(this IServiceCollection services)` | `IServiceCollection` | — |

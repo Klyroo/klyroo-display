@@ -1,15 +1,15 @@
 {
   "$schema": "http://json.schemastore.org/template",
-  "author": "LuxStack contributors",
-  "classifications": [ "Web", "Blazor", "MAUI", "LuxStack" ],
-  "identity": "Lux.Display.Portal",
-  "name": "LuxStack Document & Media Portal",
-  "shortName": "lux-display-portal",
-  "sourceName": "LuxApp",
+  "author": "Klyroo contributors",
+  "classifications": [ "Web", "Blazor", "MAUI", "Klyroo" ],
+  "identity": "Klyroo.Display.Portal",
+  "name": "Klyroo Document & Media Portal",
+  "shortName": "klyroo-display-portal",
+  "sourceName": "KlyrooApp",
   "preferNameDirectory": true,
   "tags": {
     "language": "C#",
     "type": "project",
-    "luxstack": "display"
+    "klyroo": "display"
   }
 }

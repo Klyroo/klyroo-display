@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Lux.Display;
+namespace Klyroo.Display;
 
 /// <summary>Parsed CSV preview table returned by <c>FilePreviewService.ParseCsv</c>.</summary>
 public sealed record ParsedCsvPreview(
@@ -12,7 +12,7 @@ public sealed record ParsedCsvPreview(
     bool Truncated);
 
 /// <summary>
-/// Scoped service managing active file preview overlays rendered by <c>LxFilePreviewProvider</c>.
+/// Scoped service managing active file preview overlays rendered by <c>KlyFilePreviewProvider</c>.
 /// Also provides deterministic file-kind detection, CSV parsing, and size/extension formatting utilities.
 /// </summary>
 public sealed class FilePreviewService
@@ -66,7 +66,7 @@ public sealed class FilePreviewService
     /// <summary>Raised whenever the open state, active file list, or active index changes.</summary>
     public event Action? Changed;
 
-    /// <summary>Whether a <c>LxFilePreviewProvider</c> is currently mounted in the component tree.</summary>
+    /// <summary>Whether a <c>KlyFilePreviewProvider</c> is currently mounted in the component tree.</summary>
     public bool IsMounted { get; private set; }
 
     /// <summary>Whether the file preview overlay is currently open.</summary>
@@ -95,14 +95,14 @@ public sealed class FilePreviewService
         IsMounted = false;
     }
 
-    /// <summary>Opens a single file in <c>LxFilePreviewProvider</c>.</summary>
+    /// <summary>Opens a single file in <c>KlyFilePreviewProvider</c>.</summary>
     public void Open(FilePreviewFile file, FilePreviewOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(file);
         OpenGallery([file], options);
     }
 
-    /// <summary>Opens a gallery of files in <c>LxFilePreviewProvider</c>.</summary>
+    /// <summary>Opens a gallery of files in <c>KlyFilePreviewProvider</c>.</summary>
     public void OpenGallery(IReadOnlyList<FilePreviewFile> files, FilePreviewOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(files);

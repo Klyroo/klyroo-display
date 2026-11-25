@@ -1,8 +1,8 @@
-# .NET MAUI & NativeAOT Guide — Lux.Display
+# .NET MAUI & NativeAOT Guide — Klyroo.Display
 
 ## .NET MAUI Blazor Hybrid (iOS, Android, macOS Catalyst, Windows)
 
-`Lux.Display` declares explicit `<SupportedPlatform>` entries for `browser`, `ios`, `android`, `maccatalyst`, and `windows`, so it compiles cleanly in multi-targeted `.NET MAUI` projects with zero platform-compatibility analyzer warnings.
+`Klyroo.Display` declares explicit `<SupportedPlatform>` entries for `browser`, `ios`, `android`, `maccatalyst`, and `windows`, so it compiles cleanly in multi-targeted `.NET MAUI` projects with zero platform-compatibility analyzer warnings.
 
 ### 1. Register in `MauiProgram.cs`
 
@@ -11,30 +11,30 @@ var builder = MauiApp.CreateBuilder();
 builder.UseMauiApp<App>();
 builder.Services.AddMauiBlazorWebView();
 
-// Register Lux.Display
-builder.Services.AddLuxDisplay();
+// Register Klyroo.Display
+builder.Services.AddKlyrooDisplay();
 ```
 
 ### 2. Reference Stylesheets in `wwwroot/index.html`
 
 ```html
-<link rel="stylesheet" href="_content/Lux.UI/lux.preflight.css" />
-<link rel="stylesheet" href="_content/Lux.UI/lux.css" />
+<link rel="stylesheet" href="_content/Klyroo.UI/klyroo.preflight.css" />
+<link rel="stylesheet" href="_content/Klyroo.UI/klyroo.css" />
 ```
 
 ## Native C# .NET MAUI (Without BlazorWebView)
 
-If your MAUI application uses XAML or C# Markup instead of `BlazorWebView`, install only **`Lux.Display.Core`**:
+If your MAUI application uses XAML or C# Markup instead of `BlazorWebView`, install only **`Klyroo.Display.Core`**:
 
 ```bash
-dotnet add package Lux.Display.Core
+dotnet add package Klyroo.Display.Core
 ```
 
-Because `Lux.Display.Core` has zero ASP.NET Core or Razor dependencies, you can drive your MAUI ViewModels directly from its headless controllers, schemas, and parsers.
+Because `Klyroo.Display.Core` has zero ASP.NET Core or Razor dependencies, you can drive your MAUI ViewModels directly from its headless controllers, schemas, and parsers.
 
 ## NativeAOT Publishing
 
-`Lux.Display.Core` is verified with `<IsAotCompatible>true</IsAotCompatible>` and `<IsTrimmable>true</IsTrimmable>`:
+`Klyroo.Display.Core` is verified with `<IsAotCompatible>true</IsAotCompatible>` and `<IsTrimmable>true</IsTrimmable>`:
 
 ```bash
 dotnet publish -c Release -p:PublishAot=true

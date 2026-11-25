@@ -12,37 +12,37 @@ web
 
 ## Product Purpose
 
-`lux-display` provides a headless NativeAOT presentation & file-preview core (`Lux.Display.Core`) paired with 19 read-only `<LxDisplay>` blocks, constrained audio/video players, and a modal multi-format file previewer (`Lux.Display`).
+`klyroo-display` provides a headless NativeAOT presentation & file-preview core (`Klyroo.Display.Core`) paired with 19 read-only `<KlyDisplay>` blocks, constrained audio/video players, and a modal multi-format file previewer (`Klyroo.Display`).
 
 Success means teams can render structured customer dossiers, before/after diffs, quota meters, masked API keys, constrained exam media players, and CSV/PDF/image lightboxes consistently without assembling brittle one-off components.
 
 ## Positioning
 
-Unlike general UI kits that leave read-only dossiers, secret masking, quota-limited media playback (`Start`/`End` clips, `MaxPlays`, `Seekable=false`), and multi-format CSV/PDF/media lightboxes to custom app code, `Lux.Display` packages all 19 read-only patterns plus headless MIME/CSV parsing into a NativeAOT two-layer split under MIT.
+Unlike general UI kits that leave read-only dossiers, secret masking, quota-limited media playback (`Start`/`End` clips, `MaxPlays`, `Seekable=false`), and multi-format CSV/PDF/media lightboxes to custom app code, `Klyroo.Display` packages all 19 read-only patterns plus headless MIME/CSV parsing into a NativeAOT two-layer split under MIT.
 
 ## Operating Context
 
-- **Packages**: `Lux.Display.Core` (headless MIME/extension detection, RFC 4180 CSV parser, display models, `FilePreviewFile`) and `Lux.Display` (`LxDisplay`, constrained media players, `FilePreviewService` modal lightbox, `lux-display.css`).
-- **Showcase**: Powers the `Inspector` tab (Facts, Seat Quota Meter, Masked Webhook Signing Key, Lifecycle Timeline) and `Preview CSV` modal lightbox in `Lux.Stack.Site` `/showcase`.
+- **Packages**: `Klyroo.Display.Core` (headless MIME/extension detection, RFC 4180 CSV parser, display models, `FilePreviewFile`) and `Klyroo.Display` (`KlyDisplay`, constrained media players, `FilePreviewService` modal lightbox, `klyroo-display.css`).
+- **Showcase**: Powers the `Inspector` tab (Facts, Seat Quota Meter, Masked Webhook Signing Key, Lifecycle Timeline) and `Preview CSV` modal lightbox in `Klyroo.Stack.Site` `/showcase`.
 
 ## Capabilities and Constraints
 
-- `Lux.Display.Core` is 100% headless with `<IsAotCompatible>true</IsAotCompatible>` and `<IsTrimmable>true</IsTrimmable>`.
+- `Klyroo.Display.Core` is 100% headless with `<IsAotCompatible>true</IsAotCompatible>` and `<IsTrimmable>true</IsTrimmable>`.
 - 19 `DisplayKind` blocks (`Heading`, `Text`, `Alert`, `Callout`, `Facts`, `Stat`, `Breakdown`, `Meter`, `Diff`, `Code` with `secret` masking, `Timeline`, `Empty`, `Accordion`, etc.).
 - Constrained audio/video playback enforcing clip bounds (`Start`/`End`), `MaxPlays` quotas, and optional seek locking.
-- Ships precompiled zero-friction CSS (`lux-display.css`) alongside native Tailwind CSS v4 support.
-- 100% MIT open-source license; strict `Lux.Display*` / `LxDisplay*` / `--lux-*` naming.
+- Ships precompiled zero-friction CSS (`klyroo-display.css`) alongside native Tailwind CSS v4 support.
+- 100% MIT open-source license; strict `Klyroo.Display*` / `KlyDisplay*` / `--klyroo-*` naming.
 
 ## Brand Commitments
 
-- **Name**: `Lux.Display` (`lux-display`), part of the **LuxStack** ecosystem.
+- **Name**: `Klyroo.Display` (`klyroo-display`), part of the **Klyroo** ecosystem.
 - **Voice**: Structured, clear, and security-conscious for read-only inspection surfaces.
 
 ## Evidence on Hand
 
-- Passing unit and bUnit test suite (`tests/Lux.Display.Tests`) plus NativeAOT publish verification in CI.
-- Live Account Dossier inspector and CSV lightbox in `Lux.Stack.Site` `/showcase` and product docs at `/display`.
-- Verified precompiled standalone CSS (`lux-display.css`).
+- Passing unit and bUnit test suite (`tests/Klyroo.Display.Tests`) plus NativeAOT publish verification in CI.
+- Live Account Dossier inspector and CSV lightbox in `Klyroo.Stack.Site` `/showcase` and product docs at `/display`.
+- Verified precompiled standalone CSS (`klyroo-display.css`).
 - **Explicit absences (do not fabricate)**: No NuGet download stats, customer logos, or third-party testimonials exist yet.
 
 ## Product Principles

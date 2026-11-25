@@ -1,8 +1,8 @@
 using System.Globalization;
-using Lux.Display;
+using Klyroo.Display;
 using Xunit;
 
-namespace Lux.Display.Tests;
+namespace Klyroo.Display.Tests;
 
 public sealed class ComprehensiveDisplayTests
 {

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Klyroo.Display</RootNamespace>
+    <PackageId>Klyroo.Display.Core</PackageId>
+    <Description>Klyroo Display Core: Headless file preview service, MIME/extension kind detector, RFC 4180 CSV parser, and media rule models. Zero UI dependency, NativeAOT compatible.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Klyroo.Display" />
+    <InternalsVisibleTo Include="Klyroo.Display.Tests" />
+  </ItemGroup>
+</Project>

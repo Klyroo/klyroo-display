@@ -1,10 +1,10 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Lux.Display.Core/Lux.Display.Core.csproj" />
-    <Project Path="src/Lux.Display/Lux.Display.csproj" />
+    <Project Path="src/Klyroo.Display.Core/Klyroo.Display.Core.csproj" />
+    <Project Path="src/Klyroo.Display/Klyroo.Display.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Lux.Display.Tests/Lux.Display.Tests.csproj" />
+    <Project Path="tests/Klyroo.Display.Tests/Klyroo.Display.Tests.csproj" />
   </Folder>
   <Folder Name="/examples/">
     <Project Path="examples/FilePreviewCoreExample/FilePreviewCoreExample.csproj" />

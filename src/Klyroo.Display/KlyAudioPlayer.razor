@@ -1,70 +1,26 @@
-@namespace Lux.Display
+@namespace Klyroo.Display
 @using System.Globalization
-@inherits LxComponentBase
+@inherits KlyComponentBase
 
-<div class="@RootClass" role="region" aria-label="@(Title ?? "Video player")" tabindex="@(Keyboard ? 0 : -1)"
-     style="@($"aspect-ratio:{AspectRatio}")"
-     @onkeydown="OnKeyDown" data-slot="video-player" data-locked="@(IsLocked ? "true" : null)" @attributes="AdditionalAttributes">
-    <video src="@Src" poster="@Poster" preload="@Preload" muted="@Muted" playsinline="@PlaysInline"
-           loop="@(Loop && !IsRestricted)"
-           disablepictureinpicture="@(!Seekable)"
-           class="h-full w-full object-contain"
-           data-slot="video-element"
-           @onclick="TogglePlayAsync">
-        @if (Tracks is { Count: > 0 })
-        {
-            @foreach (var track in Tracks)
-            {
-                <track src="@track.Src" srclang="@track.SrcLang" label="@track.Label" kind="@track.Kind" default="@track.Default" />
-            }
-        }
-    </video>
+<div class="@RootClass" role="region" aria-label="@(Title ?? "Audio player")" tabindex="@(Keyboard ? 0 : -1)"
+     @onkeydown="OnKeyDown" data-slot="audio-player" data-locked="@(IsLocked ? "true" : null)" @attributes="AdditionalAttributes">
+    <audio src="@Src" preload="@Preload" muted="@Muted" loop="@(Loop && !IsRestricted)" class="hidden" data-slot="audio-element"></audio>
 
-    @if (!_playing)
+    @if (IsLocked)
     {
-        <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40 p-4 text-center text-white" data-slot="video-overlay">
-            @if (IsLocked)
-            {
-                <span class="inline-flex size-12 items-center justify-center rounded-full bg-black/70 text-white" data-slot="video-locked-badge">
-                    @RenderIcon("lock", "size-5")
-                </span>
-                <span class="text-sm font-semibold" data-slot="video-locked-text">No plays left</span>
-            }
-            else
-            {
-                <button type="button"
-                        class="pointer-events-auto inline-flex size-12 items-center justify-center rounded-full bg-(--lux-primary) text-(--lux-primary-contrast) shadow-md hover:opacity-95 disabled:opacity-40"
-                        disabled="@Disabled"
-                        aria-label="Play the video"
-                        data-slot="video-start"
-                        @onclick="TogglePlayAsync">
-                    @RenderIcon("play", "size-5")
-                </button>
-                @if (MaxPlays > 0)
-                {
-                    <span class="rounded-full bg-black/65 px-2.5 py-0.5 text-xs font-medium tabular-nums" data-slot="video-plays-badge">
-                        @(RemainingPlays == 1 ? "1 play left" : $"{RemainingPlays} plays left")
-                    </span>
-                }
-            }
-        </div>
-    }
-
-    <div class="absolute inset-x-0 bottom-0 flex flex-wrap items-center gap-2.5 bg-gradient-to-t from-black/80 via-black/50 to-transparent px-3 pb-2.5 pt-6 text-white" data-slot="media-controls">
-        @if (IsLocked)
-        {
-            <span class="inline-flex items-center gap-1.5 text-xs font-medium" data-slot="media-locked">
-                @RenderIcon("lock", "size-4")
+        <div class="flex items-center justify-between gap-3 px-3 py-1.5 text-xs font-medium text-(--klyroo-text-muted)" data-slot="media-locked">
+            <span class="inline-flex items-center gap-1.5">
+                @RenderIcon("lock", "size-4 text-(--klyroo-warning-text)")
                 <span>No plays left</span>
             </span>
-            <span class="ms-auto font-mono text-xs tabular-nums" data-slot="media-time">
-                @LxAudioPlayer.FormatTime(ClipPosition) / @LxAudioPlayer.FormatTime(ClipLength)
-            </span>
-        }
-        else
-        {
+            <span class="tabular-nums" data-slot="media-time">@FormatTime(ClipPosition) / @FormatTime(ClipLength)</span>
+        </div>
+    }
+    else
+    {
+        <div class="flex flex-wrap items-center gap-2.5 px-3 py-1.5" data-slot="media-controls">
             <button type="button"
-                    class="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 disabled:opacity-40"
+                    class="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-(--klyroo-primary) text-(--klyroo-primary-contrast) hover:opacity-90 disabled:opacity-40"
                     disabled="@Disabled"
                     aria-label="@(_playing ? "Pause" : "Play")"
                     data-slot="media-play"
@@ -74,8 +30,8 @@
 
             @if (!IsHidden(MediaPlayerControl.Time))
             {
-                <span class="shrink-0 font-mono text-xs tabular-nums text-white/90" data-slot="media-time">
-                    @LxAudioPlayer.FormatTime(ClipPosition) / @LxAudioPlayer.FormatTime(ClipLength)
+                <span class="shrink-0 font-mono text-xs tabular-nums text-(--klyroo-text-muted)" data-slot="media-time">
+                    @FormatTime(ClipPosition) / @FormatTime(ClipLength)
                 </span>
             }
 
@@ -86,25 +42,25 @@
                            step="0.1" value="@ClipPosition.ToString("0.##", CultureInfo.InvariantCulture)"
                            disabled="@Disabled"
                            aria-label="Seek"
-                           class="h-1.5 w-full cursor-pointer accent-(--lux-primary)"
+                           class="h-1.5 w-full cursor-pointer accent-(--klyroo-primary)"
                            data-slot="media-seek"
                            @oninput="OnSeekInputAsync" />
                 }
                 else
                 {
                     var pct = ClipLength > 0 ? Math.Clamp(ClipPosition / ClipLength * 100.0, 0, 100) : 0;
-                    <div class="h-1.5 w-full overflow-hidden rounded-full bg-white/25"
+                    <div class="h-1.5 w-full overflow-hidden rounded-full bg-(--klyroo-bg-muted)"
                          role="progressbar" aria-label="Playback progress"
                          aria-valuenow="@Math.Round(pct)" aria-valuemin="0" aria-valuemax="100"
                          data-slot="media-progress">
-                        <div class="h-full bg-(--lux-primary)" style="@($"width:{pct.ToString("0.#", CultureInfo.InvariantCulture)}%")"></div>
+                        <div class="h-full bg-(--klyroo-primary)" style="@($"width:{pct.ToString("0.#", CultureInfo.InvariantCulture)}%")"></div>
                     </div>
                 }
             </div>
 
             @if (MaxPlays > 0)
             {
-                <span class="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold tabular-nums"
+                <span class="inline-flex items-center gap-1 rounded-full bg-(--klyroo-bg-muted) px-2 py-0.5 text-[11px] font-semibold tabular-nums text-(--klyroo-text-muted)"
                       title="@($"{RemainingPlays} plays left")" data-slot="media-plays-left">
                     @RemainingPlays
                 </span>
@@ -113,7 +69,7 @@
             @if (!IsHidden(MediaPlayerControl.Volume))
             {
                 <button type="button"
-                        class="inline-flex size-7 items-center justify-center rounded-full text-white/90 hover:bg-white/15"
+                        class="inline-flex size-7 items-center justify-center rounded-full text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
                         aria-label="@(Muted ? "Unmute" : "Mute")"
                         aria-pressed="@(Muted ? "true" : "false")"
                         data-slot="media-mute"
@@ -125,7 +81,7 @@
             @if (!IsHidden(MediaPlayerControl.Rate) && Rates is { Count: > 1 })
             {
                 <button type="button"
-                        class="inline-flex h-7 items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums text-white/90 hover:bg-white/15"
+                        class="inline-flex h-7 items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
                         aria-label="Playback speed"
                         data-slot="media-rate"
                         @onclick="CycleRateAsync">
@@ -133,74 +89,73 @@
                 </button>
             }
 
-            @if (!IsHidden(MediaPlayerControl.Captions) && Tracks is { Count: > 0 })
-            {
-                <button type="button"
-                        class="inline-flex h-7 items-center justify-center rounded-full px-2 text-xs font-semibold text-white/90 hover:bg-white/15"
-                        aria-label="Subtitles"
-                        aria-pressed="@(_activeTrackIndex >= 0 ? "true" : "false")"
-                        data-slot="media-captions"
-                        @onclick="CycleCaptions">
-                    CC
-                </button>
-            }
-
             @if (!IsHidden(MediaPlayerControl.Download) && (Download || !string.IsNullOrEmpty(DownloadUrl)))
             {
                 <a href="@(DownloadUrl ?? Src)" download="@(DownloadFileName ?? true.ToString())"
-                   class="inline-flex size-7 items-center justify-center rounded-full text-white/90 hover:bg-white/15"
+                   class="inline-flex size-7 items-center justify-center rounded-full text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
                    aria-label="Download" data-slot="media-download"
                    @onclick="OnDownloadClickAsync">
                     @RenderIcon("download", "size-4")
                 </a>
             }
-        }
-    </div>
+        </div>
+    }
 </div>
 
 @code {
     private bool _playing;
     private bool _playActive;
     private double _currentTime;
-    private int _activeTrackIndex = -1;
 
     [Parameter] public required string Src { get; set; }
-    [Parameter] public string? Poster { get; set; }
     [Parameter] public string? Title { get; set; }
-    [Parameter] public string AspectRatio { get; set; } = "16 / 9";
     [Parameter] public string Preload { get; set; } = "metadata";
     [Parameter] public bool Autoplay { get; set; }
     [Parameter] public bool Loop { get; set; }
-    [Parameter] public bool PlaysInline { get; set; } = true;
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public bool Compact { get; set; }
     [Parameter] public bool Keyboard { get; set; } = true;
 
+    /// <summary>Clip start offset in seconds.</summary>
     [Parameter] public double Start { get; set; }
+
+    /// <summary>Optional clip end offset in seconds.</summary>
     [Parameter] public double? End { get; set; }
+
+    /// <summary>Total duration in seconds (defaults to 60s in headless/SSR preview mode until metadata loads).</summary>
     [Parameter] public double Duration { get; set; } = 60;
+
+    /// <summary>Whether the user can scrub the timeline.</summary>
     [Parameter] public bool Seekable { get; set; } = true;
+
+    /// <summary>Maximum number of allowed plays (<c>0</c> = unlimited).</summary>
     [Parameter] public int MaxPlays { get; set; }
 
+    /// <summary>Number of plays consumed so far.</summary>
     [Parameter] public int Plays { get; set; }
     [Parameter] public EventCallback<int> PlaysChanged { get; set; }
 
+    /// <summary>Playback rate (<c>1.0</c> by default).</summary>
     [Parameter] public double Rate { get; set; } = 1.0;
     [Parameter] public EventCallback<double> RateChanged { get; set; }
 
+    /// <summary>Available playback rates.</summary>
     [Parameter] public IReadOnlyList<double>? Rates { get; set; } = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
+    /// <summary>Audio volume between <c>0</c> and <c>1</c>.</summary>
     [Parameter] public double Volume { get; set; } = 1.0;
     [Parameter] public EventCallback<double> VolumeChanged { get; set; }
 
+    /// <summary>Whether audio is muted.</summary>
     [Parameter] public bool Muted { get; set; }
     [Parameter] public EventCallback<bool> MutedChanged { get; set; }
 
+    /// <summary>Enables the download button.</summary>
     [Parameter] public bool Download { get; set; }
     [Parameter] public string? DownloadUrl { get; set; }
     [Parameter] public string? DownloadFileName { get; set; }
 
-    [Parameter] public IReadOnlyList<VideoPlayerTrack>? Tracks { get; set; }
+    /// <summary>Controls to hide from the bar.</summary>
     [Parameter] public IReadOnlyList<MediaPlayerControl>? Hide { get; set; }
 
     [Parameter] public EventCallback OnPlay { get; set; }
@@ -218,19 +173,12 @@
     public double ClipPosition => Math.Clamp(_currentTime - Start, 0, ClipLength);
 
     private string RootClass =>
-        $"relative overflow-hidden rounded-(--lux-radius-md) bg-black text-white shadow-sm {Class}".Trim();
+        $"rounded-full border border-(--klyroo-border) bg-(--klyroo-bg-elevated) text-(--klyroo-text) shadow-xs {Class}".Trim();
 
     protected override void OnParametersSet()
     {
         if (_currentTime < Start) _currentTime = Start;
         if (Disabled && _playing) _playing = false;
-        if (_activeTrackIndex == -1 && Tracks is { Count: > 0 })
-        {
-            for (var i = 0; i < Tracks.Count; i++)
-            {
-                if (Tracks[i].Default) { _activeTrackIndex = i; break; }
-            }
-        }
     }
 
     public async Task TogglePlayAsync()
@@ -263,6 +211,19 @@
         StateHasChanged();
     }
 
+    public async Task CompletePlayAsync()
+    {
+        _playing = false;
+        _playActive = false;
+        _currentTime = ClipEnd;
+        await OnEnded.InvokeAsync();
+        if (MaxPlays > 0 && Plays >= MaxPlays)
+        {
+            await OnLimitReached.InvokeAsync();
+        }
+        StateHasChanged();
+    }
+
     public async Task SeekAsync(double clipOffsetSeconds)
     {
         if (!Seekable || Disabled || IsLocked) return;
@@ -271,13 +232,8 @@
         await OnTimeUpdate.InvokeAsync(new MediaPlayerProgress(ClipPosition, ClipLength, _currentTime));
         if (_currentTime >= ClipEnd - 0.05 && ClipLength > 0)
         {
-            _playing = false;
-            _playActive = false;
-            await OnEnded.InvokeAsync();
-            if (MaxPlays > 0 && Plays >= MaxPlays)
-            {
-                await OnLimitReached.InvokeAsync();
-            }
+            await CompletePlayAsync();
+            return;
         }
         StateHasChanged();
     }
@@ -296,14 +252,9 @@
         {
             if (Math.Abs(Rates[i] - Rate) < 0.001) { idx = i; break; }
         }
-        Rate = Rates[(idx + 1) % Rates.Count];
+        var next = Rates[(idx + 1) % Rates.Count];
+        Rate = next;
         await RateChanged.InvokeAsync(Rate);
-    }
-
-    private void CycleCaptions()
-    {
-        if (Tracks is not { Count: > 0 }) return;
-        _activeTrackIndex = _activeTrackIndex + 1 >= Tracks.Count ? -1 : _activeTrackIndex + 1;
     }
 
     private async Task OnSeekInputAsync(ChangeEventArgs e)
@@ -317,8 +268,14 @@
     private async Task OnKeyDown(KeyboardEventArgs e)
     {
         if (!Keyboard) return;
-        if (e.Key is " " or "k" or "K") await TogglePlayAsync();
-        else if (e.Key is "m" or "M") await ToggleMuteAsync();
+        if (e.Key is " " or "k" or "K")
+        {
+            await TogglePlayAsync();
+        }
+        else if (e.Key is "m" or "M")
+        {
+            await ToggleMuteAsync();
+        }
     }
 
     private async Task OnDownloadClickAsync()
@@ -328,6 +285,15 @@
 
     private bool IsHidden(MediaPlayerControl control) =>
         Hide is not null && Hide.Contains(control);
+
+    internal static string FormatTime(double seconds)
+    {
+        if (double.IsNaN(seconds) || double.IsInfinity(seconds) || seconds < 0) seconds = 0;
+        var ts = TimeSpan.FromSeconds(Math.Round(seconds));
+        return ts.TotalHours >= 1
+            ? string.Create(CultureInfo.InvariantCulture, $"{(int)ts.TotalHours}:{ts.Minutes:D2}:{ts.Seconds:D2}")
+            : string.Create(CultureInfo.InvariantCulture, $"{ts.Minutes}:{ts.Seconds:D2}");
+    }
 
     private new static RenderFragment RenderIcon(string kind, string sizeClass) =>
         @<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="@sizeClass" aria-hidden="true">
