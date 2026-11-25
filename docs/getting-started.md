@@ -56,6 +56,8 @@ preview.Close();
 `AddKlyrooDisplay` registers `FilePreviewService` as a scoped service and calls `AddKlyrooUi()` for you.
 
 ```csharp
+using Klyroo.Display;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddKlyrooDisplay();
@@ -84,9 +86,12 @@ The first two come from Klyroo.UI and define the theme tokens (`--klyroo-*`) and
 
 ## 5. Show the order
 
-Create a page that renders a heading and a list of facts, and a button that opens the invoice:
+Create `Components/Pages/Order.razor`, a page that renders a heading and a list of facts, and a button that opens the invoice:
 
 ```razor
+@page "/orders/1042"
+@inject FilePreviewService Preview
+
 <KlyDisplay Kind="DisplayKind.Heading" Title="Order 1042" Count="3 items" Description="Placed on 24 November 2026" />
 
 <KlyDisplay Kind="DisplayKind.Facts" Facts="_facts" />
@@ -111,14 +116,22 @@ A few things to notice:
 
 - `Kind` chooses the block, and each kind reads its own parameters: `Count` and `Description` for the heading, `Facts` for the facts block.
 - A fact with no value, like `Shipping address`, renders a dash instead of an empty row.
-- `Copy = true` adds a copy button. It copies through the browser clipboard, so it needs the interactive render mode set by `@rendermode`.
+- `Copy = true` adds a copy button. It copies through the browser clipboard, so the page must render interactively (step 6 sets that up).
 - `Preview.Open` only changes state. Nothing appears until a `KlyFilePreviewProvider` is mounted, which is the next step.
 
 ## 6. Mount the file preview provider
 
-Add the provider once, in a layout that renders interactively:
+Make the app interactive in `App.razor`:
 
 ```razor
+<Routes @rendermode="InteractiveServer" />
+```
+
+Then add the provider once, in `Components/Layout/MainLayout.razor`:
+
+```razor
+@inherits LayoutComponentBase
+
 <main>
     @Body
 </main>

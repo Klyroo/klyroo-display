@@ -40,6 +40,8 @@ dotnet add package Klyroo.Display.Core --prerelease
 Register the services in `Program.cs`, and in the client project too when you use WebAssembly or Auto:
 
 ```csharp
+using Klyroo.Display;
+
 builder.Services.AddKlyrooDisplay();
 ```
 
