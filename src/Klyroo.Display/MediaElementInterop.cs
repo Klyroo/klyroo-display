@@ -28,14 +28,49 @@ internal sealed class MediaElementInterop(IMediaElementHost host) : IAsyncDispos
     private DotNetObjectReference<MediaElementInterop>? _reference;
     private ElementReference _element;
     private MediaElementOptions _options;
+    private bool _disposed;
+    private bool _playPending;
+    private double? _pendingFrom;
 
     public async Task AttachAsync(IJSRuntime js, ElementReference element, MediaElementOptions options)
     {
-        _module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+        IJSObjectReference module;
+        try
+        {
+            module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+        }
+        catch (JSDisconnectedException)
+        {
+            return;
+        }
+        if (_disposed)
+        {
+            // The player was removed while the module loaded: its element is gone.
+            await DisposeModuleAsync(module);
+            return;
+        }
+
         _reference = DotNetObjectReference.Create(this);
         _element = element;
         _options = options;
-        await _module.InvokeVoidAsync("attach", element, _reference, ToScript(options));
+        await module.InvokeVoidAsync("attach", element, _reference, ToScript(options));
+        _module = module;
+        if (_disposed)
+        {
+            // Removed during the attach call: DisposeAsync ran before _module was set.
+            _module = null;
+            await DisposeModuleAsync(module);
+            _reference.Dispose();
+            _reference = null;
+            return;
+        }
+
+        // A Play pressed before the module was ready.
+        if (_playPending)
+        {
+            _playPending = false;
+            await module.InvokeVoidAsync("play", element, _pendingFrom);
+        }
     }
 
     public async Task UpdateAsync(MediaElementOptions options)
@@ -45,9 +80,22 @@ internal sealed class MediaElementInterop(IMediaElementHost host) : IAsyncDispos
         await _module.InvokeVoidAsync("update", _element, ToScript(options));
     }
 
-    public Task PlayAsync(double? from) => InvokeAsync("play", from);
+    public Task PlayAsync(double? from)
+    {
+        if (_module is null && !_disposed)
+        {
+            // Keep the earliest start point: a resume does not move a play that has not started yet.
+            _pendingFrom = _playPending ? _pendingFrom ?? from : from;
+            _playPending = true;
+        }
+        return InvokeAsync("play", from);
+    }
 
-    public Task PauseAsync() => InvokeAsync("pause");
+    public Task PauseAsync()
+    {
+        _playPending = false;
+        return InvokeAsync("pause");
+    }
 
     public Task SeekAsync(double time) => InvokeAsync("seek", time);
 
@@ -68,21 +116,33 @@ internal sealed class MediaElementInterop(IMediaElementHost host) : IAsyncDispos
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
         if (_module is not null)
         {
             try
             {
                 await _module.InvokeVoidAsync("detach", _element);
-                await _module.DisposeAsync();
             }
             catch (JSDisconnectedException)
             {
                 // The circuit is gone, and the element with it.
             }
+            await DisposeModuleAsync(_module);
             _module = null;
         }
         _reference?.Dispose();
         _reference = null;
+    }
+
+    private static async Task DisposeModuleAsync(IJSObjectReference module)
+    {
+        try
+        {
+            await module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+        }
     }
 
     private async Task InvokeAsync(string identifier, params object?[] args)

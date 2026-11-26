@@ -105,4 +105,36 @@ public sealed class MediaPlaybackTests : BunitContext
         Assert.Equal(1, preview.CurrentIndex);
         Assert.Equal("/files/invoice.pdf", preview.Files[preview.CurrentIndex].Src);
     }
+
+    [Fact]
+    public async Task Seeking_to_the_clip_end_while_playing_ends_the_play_once()
+    {
+        var ended = 0;
+        var cut = Render<KlyAudioPlayer>(p => p
+            .Add(x => x.Src, "/media/brief.mp3")
+            .Add(x => x.End, 30)
+            .Add(x => x.OnEnded, () => ended++));
+
+        await cut.InvokeAsync(() => cut.Instance.TogglePlayAsync());
+        await cut.InvokeAsync(() => cut.Instance.SeekAsync(30));
+        // The element may still report its own end afterwards.
+        await cut.InvokeAsync(() => CallFromMediaAsync("Ended"));
+
+        Assert.Equal(1, ended);
+        Assert.NotEmpty(_media.Invocations["pause"]);
+    }
+
+    [Fact]
+    public async Task Changing_the_source_stops_the_play_in_progress()
+    {
+        var cut = Render<KlyAudioPlayer>(p => p.Add(x => x.Src, "/media/a.mp3"));
+        await cut.InvokeAsync(() => CallFromMediaAsync("DurationChange", 200d));
+        await cut.InvokeAsync(() => cut.Instance.TogglePlayAsync());
+        Assert.Equal("Pause", cut.Find("[data-slot=media-play]").GetAttribute("aria-label"));
+
+        cut.Render(p => p.Add(x => x.Src, "/media/b.mp3"));
+
+        Assert.Equal("Play", cut.Find("[data-slot=media-play]").GetAttribute("aria-label"));
+        Assert.Equal(60, cut.Instance.ClipLength);
+    }
 }

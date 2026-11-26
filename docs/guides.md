@@ -289,7 +289,7 @@ public sealed class CsvPreviewTests
 }
 ```
 
-For components, use [bUnit](https://bunit.dev). Register `AddKlyrooDisplay()` on `Services` before rendering, and select elements by their `data-slot` attributes, which the blocks and controls expose:
+For components, use [bUnit](https://bunit.dev). Register `AddKlyrooDisplay()` on `Services` before rendering. A test that renders a player also needs `JSInterop.SetupModule("./_content/Klyroo.Display/klyroo-display-media.js").Mode = JSRuntimeMode.Loose;`, because the players import that module once interactive. Select elements by their `data-slot` attributes, which the blocks and controls expose:
 
 ```csharp
 using Bunit;

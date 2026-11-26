@@ -114,6 +114,7 @@
     private MediaElementInterop? _interop;
     private double? _mediaDuration;
     private bool _pauseMedia;
+    private string? _loadedSrc;
 
     /// <summary>The URL of the media file.</summary>
     [Parameter] public required string Src { get; set; }
@@ -211,6 +212,15 @@
     /// <inheritdoc />
     protected override void OnParametersSet()
     {
+        if (_loadedSrc is not null && _loadedSrc != Src)
+        {
+            // A new file: the element reloads and stops, so the play in progress ends without spending anything more.
+            _playing = false;
+            _playActive = false;
+            _mediaDuration = null;
+            _currentTime = Start;
+        }
+        _loadedSrc = Src;
         if (_currentTime < Start) _currentTime = Start;
         if (Disabled && _playing)
         {
@@ -229,6 +239,8 @@
         if (firstRender)
         {
             await _interop.AttachAsync(JS, _media, MediaOptions);
+            // Parameters may have changed while the module loaded.
+            await _interop.UpdateAsync(MediaOptions);
             if (Autoplay) await TogglePlayAsync();
             return;
         }
@@ -343,6 +355,13 @@
         if (!Seekable || Disabled || IsLocked) return;
         var clamped = Math.Clamp(clipOffsetSeconds, 0, ClipLength);
         _currentTime = Start + clamped;
+        var reachesEnd = _currentTime >= ClipEnd - 0.05 && ClipLength > 0;
+        if (reachesEnd && _playing)
+        {
+            // Pause first, so the element does not also report the end while OnTimeUpdate runs.
+            _playing = false;
+            if (_interop is not null) await _interop.PauseAsync();
+        }
         if (_interop is not null) await _interop.SeekAsync(_currentTime);
         await OnTimeUpdate.InvokeAsync(new MediaPlayerProgress(ClipPosition, ClipLength, _currentTime));
         if (_currentTime >= ClipEnd - 0.05 && ClipLength > 0)

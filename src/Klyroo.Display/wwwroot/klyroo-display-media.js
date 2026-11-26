@@ -58,7 +58,10 @@ export function attach(media, dotnet, options) {
     },
     play: () => {
       report(state, 'PlayingChange', true);
-      reachEnd();
+      // Started at or past End (a media key after the clip ended): the component starts a new play from Start, so
+      // ending it here would spend that play without a sound.
+      const { end } = state.options;
+      if (end === null || end === undefined || media.currentTime < end) reachEnd();
     },
     pause: () => {
       // A natural end also fires "pause"; the "ended" event reports it.
@@ -84,15 +87,16 @@ export function update(media, options) {
   apply(media, state);
 }
 
-/** Plays, from `from` seconds when given. A refused play (autoplay policy, unsupported source) is reported. */
-export async function play(media, from) {
+/**
+ * Plays, from `from` seconds when given. It returns at once: the play promise stays pending while the media buffers.
+ * A refused play (autoplay policy, unsupported source) is reported; a play cut short by a pause is not.
+ */
+export function play(media, from) {
   const state = states.get(media);
   if (from !== null && from !== undefined) media.currentTime = from;
-  try {
-    await media.play();
-  } catch {
-    if (state) report(state, 'PlayFailed');
-  }
+  media.play().catch((error) => {
+    if (state && error?.name !== 'AbortError' && media.paused) report(state, 'PlayFailed');
+  });
 }
 
 export function pause(media) {
