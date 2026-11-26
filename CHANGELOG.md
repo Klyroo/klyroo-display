@@ -23,6 +23,7 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Added
 
+- A documentation site at https://klyroo.github.io/klyroo-display/, built from `README.md` and `docs/` and published by `.github/workflows/docs.yml` (the build is `docs-site/` of klyroo-stack). `docs/site.yml` sets the title, tagline, install command, NuGet packages, order of the pages and accent color; the Markdown files themselves are read as they are.
 - A warning in the log (`ILogger<KlyDisplay>`) when `Variant` is not a variant of the `Kind`, which renders the default layout (a typo such as `"linee"` used to fail silently). It is on in Development (`ASPNETCORE_ENVIRONMENT`), logged once per component and variant, and `KlyrooDisplayOptions.WarnOnUnknownVariant` turns it on or off, for WebAssembly and MAUI apps for example.
 - The seek slider of `KlyAudioPlayer` and `KlyVideoPlayer`, and the progress bar of a non-seekable player, have an `aria-valuetext` such as "0:37 of 1:00", so a screen reader announces the position in the clip instead of a bare number. The text is `DisplayTexts.SeekValueText`, translated in all twelve locales.
 - `KlyDisplay.ChartFormat` (`Func<double, string>`) formats the values of a Chart: funnel steps, axis ticks, tooltip and data table. Without it values use the format culture of the locale in effect, with thousands separators, instead of the raw number. `DisplayTexts.ChartValue` names the series of an untitled chart, in all twelve locales.
