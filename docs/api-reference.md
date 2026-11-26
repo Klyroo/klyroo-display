@@ -582,7 +582,7 @@ A button or link shown in a block, rendered as a small `KlyButton`.
 | `Icon` (init) | `string?` | An icon name shown before the label. |
 | `Label` (init) | `string` | The button text. |
 | `OnClick` (init) | `EventCallback` | The callback invoked when the button is clicked. It only runs once the page is interactive. |
-| `Target` (init) | `string?` | The `target` of the link, such as `"_blank"`. It applies only with `DisplayAction.Href`. |
+| `Target` (init) | `KlyLinkTarget?` | The `target` of the link, such as `KlyLinkTarget.Blank`. It applies only with `DisplayAction.Href`. |
 | `Variant` (init) | `ButtonVariant` | The button style (outline by default). |
 
 #### `DisplayFact`

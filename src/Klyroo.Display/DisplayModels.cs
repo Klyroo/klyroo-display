@@ -108,8 +108,8 @@ public sealed class DisplayAction
     /// <summary>The link target. When set, the button navigates instead of only raising <see cref="OnClick"/>.</summary>
     public string? Href { get; init; }
 
-    /// <summary>The <c>target</c> of the link, such as <c>"_blank"</c>. It applies only with <see cref="Href"/>.</summary>
-    public string? Target { get; init; }
+    /// <summary>The <c>target</c> of the link, such as <see cref="KlyLinkTarget.Blank"/>. It applies only with <see cref="Href"/>.</summary>
+    public KlyLinkTarget? Target { get; init; }
 
     /// <summary>The callback invoked when the button is clicked. It only runs once the page is interactive.</summary>
     public EventCallback OnClick { get; init; }

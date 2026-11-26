@@ -322,7 +322,7 @@ public sealed class DisplayMembersTests : BunitContext
         var cut = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Heading)
             .Add(x => x.Title, "Docs")
-            .Add(x => x.Action, new DisplayAction { Label = "Open", Href = "https://example.com", Target = "_blank" }));
+            .Add(x => x.Action, new DisplayAction { Label = "Open", Href = "https://example.com", Target = KlyLinkTarget.Blank }));
 
         Assert.Equal("_blank", cut.Find("a[data-slot=display-action]").GetAttribute("target"));
     }
