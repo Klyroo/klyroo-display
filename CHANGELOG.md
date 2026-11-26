@@ -8,6 +8,7 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Added
 
+- Syntax highlighting. `CodeHighlighter` in `Klyroo.Display.Core` (`Tokenize`, `ResolveLanguage`, `ResolveFileName`, `CanHighlight`, with `CodeToken` and `CodeTokenKind`) is a hand-written scanner without dependencies or regular expressions, safe for trimming and NativeAOT, for C#, JavaScript, TypeScript, JSON, HTML (Razor expressions, `script` and `style`), XML, CSS, SCSS, Less, SQL, Python, Bash and YAML. It never throws, its tokens concatenate to the input, and it leaves a code over 100,000 characters or 5,000 lines, or in another language, as plain text. The Code block of `KlyDisplay` highlights its `Language` (`Highlight` turns it off, the `secret` variant is never highlighted), and `KlyFilePreviewProvider` highlights text files from their extension. Each colored token is a `span` with `data-token` and a class that uses a Klyroo.UI semantic text color.
 - `DisplayTexts`, the built-in texts of every component (labels, counters, accessible names), with one set per locale of Klyroo.UI in `DisplayLocales` (English and French reviewed, the ten others drafts). A component shows the set of its current Klyroo.UI locale. `KlyrooDisplayOptions.Texts(localeCode, change)` changes the set of a locale, and a locale added to Klyroo.UI starts from the set of the language it resolves to.
 - `KlyAudioPlayer` and `KlyVideoPlayer` have a volume slider that raises `VolumeChanged` (hidden with `MediaPlayerControl.Volume`, like the mute button), `SetVolumeAsync`, and a denser bar with `Compact`.
 - `KlyVideoPlayer` has picture-in-picture and fullscreen buttons (`MediaPlayerControl.PictureInPicture` and `Fullscreen`), shown once the browser reports support, with `TogglePictureInPictureAsync` and `ToggleFullscreenAsync`. Picture-in-picture stays hidden when `Seekable` is `false`.
@@ -18,6 +19,7 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Changed
 
+- `KlyDisplay.Language` now selects the syntax highlighting, as well as labelling a Code block. A Code block with a supported `Language` renders colored `span` elements inside `code`; set `Highlight="false"` to keep the previous plain output.
 - `AddKlyrooDisplay` takes an optional `Action<KlyrooDisplayOptions>`. Code compiled against the previous signature must be recompiled.
 - The player keys (Space, K, M) are handled by the media module on the player root, and only when the root itself has the focus. The players no longer have a Blazor `onkeydown` handler.
 - The countdown text for a past date says "1 day overdue" in the singular, and the range length says "1 day".

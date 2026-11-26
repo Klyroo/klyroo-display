@@ -49,6 +49,22 @@ The block shows eight bullets followed by the last `VisibleChars` characters (4 
 
 The mask is a display feature and does not protect the value. In Interactive Server the value stays in server memory, but in WebAssembly it is in the browser's memory, and the copy button copies the real value. Do not send a secret to a client that must not hold it.
 
+## Highlight a code sample
+
+Goal: show a snippet with syntax colors and a copy button.
+
+```razor
+<KlyDisplay Kind="DisplayKind.Code" Language="csharp" Value="@Snippet" />
+
+@code {
+    private const string Snippet = "public record Order(int Id) { public string Label => $\"Order {Id}\"; }";
+}
+```
+
+`Language` takes a name, an alias or a file extension: `csharp`, `javascript`, `typescript`, `json`, `html`, `xml`, `css`, `scss`, `less`, `sql`, `python`, `bash` and `yaml` (`cs`, `ts`, `yml`, `sh`... also work), and `CodeHighlighter.Languages` lists the canonical names. The text of the block stays plain text: selecting it and the copy button give the code as it is. An unsupported language, `Highlight="false"`, the `secret` variant, and a code over 100,000 characters or 5,000 lines render without colors. The file preview does the same for text files, from the extension of the file name.
+
+You can call the scanner yourself, without any UI, with `CodeHighlighter.Tokenize(code, "sql")`: it returns tokens with a `Kind` and a `Text`, and the texts concatenate to exactly the code.
+
 ## Show progress and a deadline
 
 Goal: a row of order stages with the current one marked, and a countdown to a due date.

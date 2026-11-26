@@ -428,9 +428,35 @@
         </div>;
     }
 
+    private string? _codeSource;
+    private string? _codeLanguage;
+    private RenderFragment? _codeFragment;
+
+    // The text of a file with a supported code extension is highlighted. The last result is kept: toggling the line wrapping or moving the
+    // zoom re-renders the stage, and a large file should not be scanned each time.
+    private RenderFragment? HighlightedText(FilePreviewFile file, string raw)
+    {
+        var language = CodeHighlighter.ResolveFileName(file.Name ?? FilePreviewService.FileNameFromUrl(file.Src));
+        if (language is null || !CodeHighlighter.CanHighlight(raw, language))
+        {
+            _codeSource = null;
+            _codeFragment = null;
+            _codeLanguage = null;
+            return null;
+        }
+        if (_codeFragment is null || !string.Equals(_codeSource, raw, StringComparison.Ordinal) || _codeLanguage != language)
+        {
+            _codeSource = raw;
+            _codeLanguage = language;
+            _codeFragment = CodeRendering.Fragment(CodeHighlighter.Tokenize(raw, language));
+        }
+        return _codeFragment;
+    }
+
     private RenderFragment RenderTextStage(FilePreviewFile file)
     {
         var raw = file.Content ?? "";
+        var highlighted = HighlightedText(file, raw);
         return @<div class="flex h-full w-full flex-col gap-2" data-slot="renderer-text">
             <div class="flex items-center justify-between gap-2 text-xs text-(--klyroo-text-muted)">
                 <span data-slot="text-line-count">@Texts.LineCount(CountLines(raw))</span>
@@ -440,7 +466,7 @@
                     @Texts.WrapLines
                 </button>
             </div>
-            <pre class="m-0 flex-1 overflow-auto rounded-(--klyroo-radius) bg-(--klyroo-bg-muted) p-4 font-mono text-xs text-(--klyroo-text-highlighted) @(_wrapLines ? "whitespace-pre-wrap" : "whitespace-pre")" data-slot="text-content"><code>@raw</code></pre>
+            <pre class="m-0 flex-1 overflow-auto rounded-(--klyroo-radius) bg-(--klyroo-bg-muted) p-4 font-mono text-xs text-(--klyroo-text-highlighted) @(_wrapLines ? "whitespace-pre-wrap" : "whitespace-pre")" data-slot="text-content" data-language="@(highlighted is null ? null : _codeLanguage)"><code>@if (highlighted is null) { @raw } else { @highlighted }</code></pre>
         </div>;
     }
 

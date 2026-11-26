@@ -4,7 +4,31 @@
 
 ## Klyroo.Display.Core
 
-Classes (4) · Records (4) · Enums (3)
+Static classes and extensions (1) · Classes (4) · Records (4) · Structs (1) · Enums (4)
+
+### Static classes and extensions
+
+#### `CodeHighlighter`
+
+`Klyroo.Display` · service
+
+A dependency-free syntax highlighter: it splits source code into `CodeToken` slices of a category, with hand-written scanners (no regular expressions, no reflection), so it is safe to trim and to compile ahead of time.
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `const MaxLength = 100000` | `int` | The longest code, in characters, that is highlighted (`100000`). A longer code is returned as one plain token. |
+| `const MaxLines = 5000` | `int` | The largest number of lines of a code that is highlighted (`5000`). A longer code is returned as one plain token. |
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `static Languages` | `IReadOnlyList<string>` | The canonical names of the supported languages, in alphabetical order. |
+
+| Method | Returns | Description |
+| :--- | :--- | :--- |
+| `static CanHighlight(string? code, string? language)` | `bool` | Whether `CodeHighlighter.Tokenize` would highlight this code: the language is supported and the code is within the size caps. |
+| `static ResolveFileName(string? fileNameOrUrl)` | `string?` | Maps a file name or URL to the canonical name of a supported language, from its extension. |
+| `static ResolveLanguage(string? languageOrExtension)` | `string?` | Maps a language name, an alias or a file extension to the canonical name of a supported language. |
+| `static Tokenize(string? code, string? language)` | `IReadOnlyList<CodeToken>` | Splits source code into tokens. |
 
 ### Classes
 
@@ -175,7 +199,43 @@ A subtitle or caption track of a video, rendered as a `track` element.
 | `Src` (init) | `string` | The URL of the WebVTT file. |
 | `SrcLang` (init) | `string` | The BCP 47 language code of the track, for example `"fr"`. |
 
+### Structs
+
+#### `CodeToken`
+
+`Klyroo.Display` · struct
+
+A slice of source code and its category. The texts of the tokens of a code, in order, concatenate to exactly that code.
+
+| Constructor | Description |
+| :--- | :--- |
+| `CodeToken(CodeTokenKind Kind, string Text)` | A slice of source code and its category. The texts of the tokens of a code, in order, concatenate to exactly that code. |
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `Kind` (init) | `CodeTokenKind` | The category of the slice. |
+| `Text` (init) | `string` | The slice. It is never empty. |
+
 ### Enums
+
+#### `CodeTokenKind`
+
+`Klyroo.Display` · enum
+
+The category of a `CodeToken`. A theme gives each category a color.
+
+| Value | Description |
+| :--- | :--- |
+| `Plain` | Text with no special meaning: identifiers, whitespace, and everything in a language that is not highlighted. |
+| `Keyword` | A reserved word, a literal such as `true` or `null`, a preprocessor directive, an at-rule or a document declaration. |
+| `String` | A string or character literal, a regular expression literal, a heredoc body or an attribute value. |
+| `Number` | A numeric literal, with its suffix or unit, and a hexadecimal color. |
+| `Comment` | A line or block comment. |
+| `Type` | The name of a type or class, or a class or identifier selector. |
+| `Function` | The name of a function or method, at its call or declaration. |
+| `Property` | A member, attribute, object key, decorator, CSS property or shell variable. |
+| `Tag` | A markup tag name or a CSS element selector. |
+| `Punctuation` | An operator or a punctuation mark, grouped in runs. |
 
 #### `FilePreviewContainer`
 
@@ -323,10 +383,11 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `FactGroups` | `IReadOnlyList<DisplayFactGroup>?` | The titled groups of a Facts block. When set, they replace `KlyDisplay.Facts`, and `KlyDisplay.Max` does not apply. |
 | `Facts` | `IReadOnlyList<DisplayFact>?` | The rows of a Facts block. They are ignored when `KlyDisplay.FactGroups` is set. |
 | `HeadingLevel` | `int` | The level of the heading element of a Heading block, from `1` (`h1`) to `6` (`h6`); `3` by default, and values outside are clamped. Choose it from the page outline: the look does not change with the level. The `eyebrow` variant renders no heading element. |
+| `Highlight` | `bool` | Whether a Code block is highlighted according to `KlyDisplay.Language` (`true` by default). Set it to `false` to render plain text. A code longer than `CodeHighlighter.MaxLength` characters or `CodeHighlighter.MaxLines` lines is never highlighted. |
 | `Icon` | `string?` | The name of the leading icon of a Heading, Alert or Empty block. For an Alert, an empty string hides the icon. |
 | `Images` | `IReadOnlyList<string>?` | The image URLs of a Media block with `Variant="gallery"`. |
 | `Kind` | `DisplayKind` | The kind of block to render (`DisplayKind.Facts` by default). |
-| `Language` | `string?` | The label of a Code block when `KlyDisplay.Title` is not set. It does not enable syntax highlighting. |
+| `Language` | `string?` | The language of a Code block: it selects the syntax highlighting, and it is the label of the block when `KlyDisplay.Title` is not set. It accepts a name, an alias or a file extension (`csharp`, `cs`, `ts`, `json`, `html`, `xml`, `css`, `scss`, `less`, `sql`, `python`, `bash`, `yaml` and the others `CodeHighlighter.Languages` lists). A language that is not supported, or none, renders plain text. A `secret` block is never highlighted. |
 | `ListItems` | `IReadOnlyList<DisplayListItem>?` | The items of a List block. |
 | `Loading` | `bool` | Shows a skeleton placeholder instead of the block. |
 | `Max` | `int?` | The number of items shown before a Show more button, for the flat Facts, Table, Record, List and Timeline kinds (all items when `null`). In a `group` Person block it is the number of avatars (4 by default), and in a `gallery` Media block the number of tiles (3 by default). |

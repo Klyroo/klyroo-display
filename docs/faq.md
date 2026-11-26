@@ -85,6 +85,10 @@ No. `klyroo-display.css` is a compiled stylesheet. If your app compiles Tailwind
 
 No. The table is a plain table of text cells, and the charts are small bars, a line and a funnel without axes, with the values only in tooltips. Use it for summaries next to richer components.
 
+### Why is my code not colored?
+
+The block colors a code only when `Language` names a supported language (`csharp`, `javascript`, `typescript`, `json`, `html`, `xml`, `css`, `scss`, `less`, `sql`, `python`, `bash`, `yaml`, or an alias such as `cs`, `ts` or `yml`), `Highlight` is not `false`, the variant is not `secret`, and the code is within 100,000 characters and 5,000 lines. Otherwise it renders as plain text. The file preview colors a text file from its extension, so a `Name` or `Src` without a supported extension (`Dockerfile`, `.txt`) stays plain. If colors are missing for a supported language, check that `klyroo-display.css` is loaded, see [The block renders but has no styling](#the-block-renders-but-has-no-styling).
+
 ### Does the secret variant protect a secret?
 
 No. It masks the value on screen. The real value is held by the component, and the copy button copies it, so only render secrets that the user is allowed to see.

@@ -243,8 +243,11 @@
     /// <summary>The reference time of a <c>countdown</c> Date block. When <see langword="null"/>, <see cref="DateTimeOffset.UtcNow"/> is used. Pass it for tests and for stable server rendering.</summary>
     [Parameter] public DateTimeOffset? Now { get; set; }
 
-    /// <summary>The label of a Code block when <see cref="Title"/> is not set. It does not enable syntax highlighting.</summary>
+    /// <summary>The language of a Code block: it selects the syntax highlighting, and it is the label of the block when <see cref="Title"/> is not set. It accepts a name, an alias or a file extension (<c>csharp</c>, <c>cs</c>, <c>ts</c>, <c>json</c>, <c>html</c>, <c>xml</c>, <c>css</c>, <c>scss</c>, <c>less</c>, <c>sql</c>, <c>python</c>, <c>bash</c>, <c>yaml</c> and the others <see cref="CodeHighlighter.Languages"/> lists). A language that is not supported, or none, renders plain text. A <c>secret</c> block is never highlighted.</summary>
     [Parameter] public string? Language { get; set; }
+
+    /// <summary>Whether a Code block is highlighted according to <see cref="Language"/> (<see langword="true"/> by default). Set it to <see langword="false"/> to render plain text. A code longer than <see cref="CodeHighlighter.MaxLength"/> characters or <see cref="CodeHighlighter.MaxLines"/> lines is never highlighted.</summary>
+    [Parameter] public bool Highlight { get; set; } = true;
 
     /// <summary>The number of trailing characters left visible by a <c>secret</c> Code block (<c>4</c> by default). A longer value shows eight bullets followed by those characters. A value that is not longer than this number is fully masked.</summary>
     [Parameter] public int VisibleChars { get; set; } = 4;
@@ -1587,6 +1590,7 @@
         var raw = Value ?? "";
         var isSecret = string.Equals(Variant, "secret", StringComparison.OrdinalIgnoreCase);
         var shown = isSecret && !_secretRevealed ? MaskSecret(raw, VisibleChars) : raw;
+        var highlighted = HighlightedCode(raw, isSecret);
         return @<div class="flex flex-col gap-2" data-slot="display-code" data-variant="@(Variant ?? "block")">
             <div class="flex items-center justify-between gap-2">
                 <span class="text-xs font-semibold uppercase text-(--klyroo-text-muted)" data-slot="code-label">@(Title ?? Language ?? (isSecret ? Texts.Secret : Texts.Code))</span>
@@ -1610,8 +1614,33 @@
                     }
                 </div>
             </div>
-            <pre class="m-0 overflow-x-auto rounded-(--klyroo-radius) bg-(--klyroo-bg-muted) p-3 font-mono text-xs text-(--klyroo-text-highlighted)" data-slot="code-value"><code>@shown</code></pre>
+            <pre class="m-0 overflow-x-auto rounded-(--klyroo-radius) bg-(--klyroo-bg-muted) p-3 font-mono text-xs text-(--klyroo-text-highlighted)" data-slot="code-value" data-language="@(highlighted is null ? null : _codeLanguage)"><code>@if (highlighted is null) { @shown } else { @highlighted }</code></pre>
         </div>;
+    }
+
+    private string? _codeSource;
+    private string? _codeLanguage;
+    private RenderFragment? _codeFragment;
+
+    // The highlighted markup of a code, or null for plain text. A secret is never highlighted. The last result is kept so a re-render
+    // (a click on the copy button, a parent update) does not scan a large code again.
+    private RenderFragment? HighlightedCode(string raw, bool isSecret)
+    {
+        if (isSecret || !Highlight || !CodeHighlighter.CanHighlight(raw, Language))
+        {
+            _codeSource = null;
+            _codeFragment = null;
+            _codeLanguage = null;
+            return null;
+        }
+        var language = CodeHighlighter.ResolveLanguage(Language);
+        if (_codeFragment is null || !string.Equals(_codeSource, raw, StringComparison.Ordinal) || _codeLanguage != language)
+        {
+            _codeSource = raw;
+            _codeLanguage = language;
+            _codeFragment = CodeRendering.Fragment(CodeHighlighter.Tokenize(raw, language));
+        }
+        return _codeFragment;
     }
 
     private static string MaskSecret(string raw, int visible)
