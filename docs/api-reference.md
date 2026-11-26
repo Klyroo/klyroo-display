@@ -365,6 +365,7 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `BreakdownLines` | `IReadOnlyList<DisplayBreakdownLine>?` | The lines of a Breakdown block. |
 | `BreakdownTotal` | `DisplayBreakdownLine?` | The total row of a Breakdown block, shown below the lines. |
 | `ChartData` | `IReadOnlyList<DisplayChartPoint>?` | The bars of a Chart block, the points of a `line` Chart, or the steps of a `funnel` Chart. |
+| `ChartFormat` | `Func<double, string>?` | Formats the values of a Chart block (funnel steps, axis ticks, tooltips and the data table). Defaults to the format culture of the locale in effect, with up to two decimals and thousands separators. |
 | `Chip` | `DisplayChip?` | The badge of the single person shown by a Person block when `KlyDisplay.People` is empty. |
 | `CompareColumns` | `(string, string)?` | The headers of the two amount columns of a Breakdown, for example `("2026", "2025")`: `DisplayBreakdownLine.Value` goes under `First` and `DisplayBreakdownLine.CompareValue` under `Second`, for the lines and the total. A line without a second amount shows a dash. |
 | `Contacts` | `IReadOnlyList<DisplayContactItem>?` | The contact lines of a Person block. They are shown under the person and are ignored by the `group` variant. |
@@ -645,6 +646,10 @@ Configuration of Klyroo.Display: the built-in texts of each locale. It is an ext
 | :--- | :--- |
 | `KlyrooDisplayOptions()` | Creates the options with the built-in texts of `DisplayLocales`. |
 
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `WarnOnUnknownVariant` (get, set) | `bool?` | Logs a warning (`ILogger<KlyDisplay>`, once per component) when `KlyDisplay.Variant` is not a variant of its `KlyDisplay.Kind`, which renders the default layout. `null` (the default) turns it on when the `ASPNETCORE_ENVIRONMENT` (or `DOTNET_ENVIRONMENT`) variable is `Development`, as in Blazor Web and Server apps. A WebAssembly or MAUI app does not have that variable: set this to `builder.HostEnvironment.IsDevelopment()` there. `false` turns the warning off. |
+
 | Method | Returns | Description |
 | :--- | :--- | :--- |
 | `Texts(string localeCode, Func<DisplayTexts, DisplayTexts> change)` | `KlyrooDisplayOptions` | Changes the texts of a locale, like `KlyLocales.Extend` does for Klyroo.UI: `change` receives the set the locale resolves to and returns the one to use, usually `t => t with { ... }`. `localeCode` is a code of `KlyLocales.All` ("fr"), or the code of a locale you added ("en-AU", "tlh"): a locale without a set of its own starts from the set `KlyLocales.ResolveCode` picks for it, then its changes apply. The texts become read-only the first time a component resolves one. |
@@ -860,6 +865,7 @@ The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyF
 | `AllDay` (init) | `string` | The time of a `schedule` Timeline event that lasts whole days (`"All day"`). |
 | `AudioPlayer` (init) | `string` | The accessible name of an audio player without a title (`"Audio player"`). |
 | `Captions` (init) | `string` | The captions button of the video player (`"Subtitles"`). |
+| `ChartValue` (init) | `string` | The name of the series of a Chart block without a title, used in the tooltip and the data table (`"Value"`). |
 | `ClosePreview` (init) | `string` | The close button of the preview (`"Close preview"`). |
 | `Code` (init) | `string` | The label of a Code block without a title or language (`"Code"`). |
 | `Conceal` (init) | `string` | The button that masks a revealed `secret` Code block again (`"Conceal"`). |
@@ -911,6 +917,7 @@ The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyF
 | `Rotate` (init) | `string` | The rotate button of an image (`"Rotate 90 degrees"`). |
 | `Secret` (init) | `string` | The label of a `secret` Code block without a title or language (`"Secret"`). |
 | `Seek` (init) | `string` | The timeline slider (`"Seek"`). |
+| `SeekValueText` (init) | `Func<string, string, string>` | The spoken value of the timeline slider and of the progress bar of a non-seekable player, given the position and the length of the clip (`"0:37 of 1:00"`). |
 | `ShowDetails` (init) | `string` | The toggle that opens the details of an Alert (`"Show details"`). |
 | `ShowLess` (init) | `string` | The toggle that clamps an expanded Text block again (`"Show less"`). |
 | `ShowMore` (init) | `Func<int, string>` | The Show more button of a list, given the number of items the next click reveals (`"Show more · 3"`). |
