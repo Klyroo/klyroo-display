@@ -11,7 +11,7 @@ Most screens show information more often than they edit it: an order summary, a 
 ## Features
 
 - **One component, 19 block kinds**: `KlyDisplay` renders headings, text, alerts, facts, statistics, breakdowns, meters, charts, tables, diffs, records, people, lists, timelines, dates, images, code values, empty states and accordions.
-- **Variants and surfaces**: a `Variant` string selects a layout within a kind (for example `row` for a statistic, `ring` for a meter, `line` for a chart or `log` and `schedule` for a timeline), and `DisplaySurface` sets the border, background and shadow. Item tones follow the Klyroo.UI theme colors.
+- **Variants and surfaces**: a `DisplayVariant` selects a layout within a kind (for example `Row` for a statistic, `Ring` for a meter, `Line` for a chart or `Log` and `Schedule` for a timeline), and `DisplaySurface` sets the border, background and shadow. Item tones follow the Klyroo.UI theme colors.
 - **Syntax highlighting**: the code block colors C#, JavaScript, TypeScript, JSON, HTML, XML, CSS, SCSS, Less, SQL, Python, Bash and YAML from its `Language`, and the file preview does the same from the file extension. The scanner is `CodeHighlighter` in `Klyroo.Display.Core`: dependency-free, trim and AOT safe, and it never throws.
 - **Secret values**: the `secret` variant of the code block masks all but the last characters, with a Reveal toggle and a copy button.
 - **Schedule timeline**: the `schedule` variant of the timeline lays events out as an agenda, grouped by day, with a time range, a length, all-day events and an unscheduled group, all in the texts and date formats of the current locale.
@@ -97,7 +97,7 @@ In a Blazor page:
 <KlyDisplay Kind="DisplayKind.Stat" Title="Monthly revenue" Value="148,900" Unit="EUR"
             Delta="+14.2%" Trend="_trend" />
 
-<KlyDisplay Kind="DisplayKind.Code" Variant="secret" Title="API key" Value="sk_test_9876543210" />
+<KlyDisplay Kind="DisplayKind.Code" Variant="DisplayVariant.Secret" Title="API key" Value="sk_test_9876543210" />
 
 @code {
     private readonly double[] _trend = [102, 118, 134, 149];

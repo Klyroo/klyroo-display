@@ -229,17 +229,84 @@ public sealed record DisplayChartPoint(
     double Value,
     KlyColor? Tone = null);
 
+/// <summary>The layout of a <see cref="KlyDisplay"/> within its <see cref="DisplayKind"/>. A variant belongs to one kind (the comments name it); on another kind it renders the default layout and, in Development, logs a warning.</summary>
+public enum DisplayVariant
+{
+    /// <summary>The default layout of the kind.</summary>
+    Default,
+    /// <summary>Heading: the text above the title.</summary>
+    Eyebrow,
+    /// <summary>Text: a block quote.</summary>
+    Quote,
+    /// <summary>Stat: several metrics in a row.</summary>
+    Row,
+    /// <summary>Breakdown: a collapsible block.</summary>
+    Collapsible,
+    /// <summary>Meter: a ring.</summary>
+    Ring,
+    /// <summary>Meter: a scale of levels.</summary>
+    Scale,
+    /// <summary>Chart: a line plot.</summary>
+    Line,
+    /// <summary>Chart: a funnel.</summary>
+    Funnel,
+    /// <summary>Table: a sticky header.</summary>
+    Sticky,
+    /// <summary>Person: a group of people.</summary>
+    Group,
+    /// <summary>List: numbered steps.</summary>
+    Steps,
+    /// <summary>List: a checklist.</summary>
+    Checks,
+    /// <summary>List: files that open in the preview.</summary>
+    Files,
+    /// <summary>Timeline: a pipeline.</summary>
+    Pipeline,
+    /// <summary>Timeline: a log.</summary>
+    Log,
+    /// <summary>Timeline: an agenda grouped by day.</summary>
+    Schedule,
+    /// <summary>Date: a countdown.</summary>
+    Countdown,
+    /// <summary>Date: a range between two dates.</summary>
+    Range,
+    /// <summary>Media: a gallery of images.</summary>
+    Gallery,
+    /// <summary>Code: a value that is masked until the user reveals it.</summary>
+    Secret,
+}
+
+/// <summary>The direction of the delta of a Stat block, which only chooses its color.</summary>
+public enum DisplayDeltaDirection
+{
+    /// <summary>Green.</summary>
+    Up,
+    /// <summary>Red.</summary>
+    Down,
+    /// <summary>Neutral.</summary>
+    Flat,
+}
+
+/// <summary>The alignment of a <see cref="DisplayTableColumn"/>.</summary>
+public enum DisplayAlign
+{
+    /// <summary>At the start of the cell.</summary>
+    Start,
+    /// <summary>At the end of the cell.</summary>
+    End,
+}
+
 /// <summary>One column of a <see cref="DisplayKind.Table"/> block.</summary>
 /// <param name="Key">The key that selects this column's cell in each row.</param>
 /// <param name="Label">The header text.</param>
 /// <param name="Numeric">Aligns the column to the end and uses tabular figures.</param>
-/// <param name="Align">Set to <c>"end"</c> to align the column to the end.</param>
+/// <param name="Align">Set to <see cref="DisplayAlign.End"/> to align the column to the end.</param>
 /// <param name="Mono">Renders the cells in a monospace font.</param>
 public sealed record DisplayTableColumn(
     string Key,
     string Label,
     bool Numeric = false,
-    string? Align = null,
+    DisplayAlign Align = DisplayAlign.Start,
     bool Mono = false);
 
 /// <summary>One field of a <see cref="DisplayKind.Diff"/> block.</summary>

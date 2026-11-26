@@ -83,7 +83,7 @@ public sealed class DisplayMembersTests : BunitContext
     {
         var cut = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Stat)
-            .Add(x => x.Variant, "row")
+            .Add(x => x.Variant, DisplayVariant.Row)
             .Add(x => x.Title, "This week")
             .Add(x => x.StatItems, [new DisplayStatItem("Errors", "12", Tone: KlyColor.Error), new DisplayStatItem("Users", "340")]));
 
@@ -94,11 +94,11 @@ public sealed class DisplayMembersTests : BunitContext
     }
 
     [Fact]
-    public void Stat_with_an_unknown_variant_keeps_the_muted_surface()
+    public void Stat_with_a_variant_of_another_kind_keeps_the_muted_surface()
     {
         var cut = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Stat)
-            .Add(x => x.Variant, "hero-large")
+            .Add(x => x.Variant, DisplayVariant.Gallery)
             .Add(x => x.Value, "42"));
 
         Assert.Equal("muted", cut.Find("[data-slot=display]").GetAttribute("data-surface"));
@@ -129,7 +129,7 @@ public sealed class DisplayMembersTests : BunitContext
     {
         var cut = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Meter)
-            .Add(x => x.Variant, "ring")
+            .Add(x => x.Variant, DisplayVariant.Ring)
             .Add(x => x.Title, "Quota")
             .Add(x => x.MeterValue, 92)
             .Add(x => x.ErrorThreshold, 90));
@@ -147,7 +147,7 @@ public sealed class DisplayMembersTests : BunitContext
     {
         var cut = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Table)
-            .Add(x => x.Variant, "sticky")
+            .Add(x => x.Variant, DisplayVariant.Sticky)
             .Add(x => x.TableColumns, [new DisplayTableColumn("id", "Id")])
             .Add(x => x.TableRows, [new Dictionary<string, string?> { ["id"] = "1" }]));
 
@@ -233,7 +233,7 @@ public sealed class DisplayMembersTests : BunitContext
     {
         var cut = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Person)
-            .Add(x => x.Variant, "group")
+            .Add(x => x.Variant, DisplayVariant.Group)
             .Add(x => x.People, [new DisplayPersonItem("Ada Lovelace", "Engineer", Chip: new DisplayChip("Owner"))]));
 
         Assert.Equal("Ada Lovelace · Engineer · Owner", cut.Find("[data-slot=person-avatar]").GetAttribute("title"));
@@ -308,7 +308,7 @@ public sealed class DisplayMembersTests : BunitContext
 
         var log = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Timeline)
-            .Add(x => x.Variant, "log")
+            .Add(x => x.Variant, DisplayVariant.Log)
             .Add(x => x.TimelineItems, items));
         Assert.NotNull(log.Find("[data-slot=timeline-log]"));
         var stamps = log.FindAll("[data-slot=timeline-timestamp]");
@@ -339,9 +339,9 @@ public sealed class DisplayMembersTests : BunitContext
     }
 
     [Theory]
-    [InlineData("countdown")]
-    [InlineData("range")]
-    public void Countdown_and_range_dates_show_the_title_as_a_caption(string variant)
+    [InlineData(DisplayVariant.Countdown)]
+    [InlineData(DisplayVariant.Range)]
+    public void Countdown_and_range_dates_show_the_title_as_a_caption(DisplayVariant variant)
     {
         var cut = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Date)
@@ -383,7 +383,7 @@ public sealed class DisplayMembersTests : BunitContext
 
         var range = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Date)
-            .Add(x => x.Variant, "range")
+            .Add(x => x.Variant, DisplayVariant.Range)
             .Add(x => x.DateValue, new DateTimeOffset(2026, 12, 1, 0, 0, 0, TimeSpan.Zero))
             .Add(x => x.EndDateValue, new DateTimeOffset(2026, 12, 7, 0, 0, 0, TimeSpan.Zero)));
         Assert.Contains("(7 jours)", range.Find("[data-slot=date-title]").TextContent);

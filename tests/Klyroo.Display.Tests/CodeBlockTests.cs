@@ -100,7 +100,7 @@ public sealed class CodeBlockTests : BunitContext
     [Fact]
     public void A_secret_stays_masked_and_is_never_highlighted()
     {
-        var cut = RenderCode("sk_live_9876543210", p => p.Add(x => x.Variant, "secret").Add(x => x.Language, "csharp"));
+        var cut = RenderCode("sk_live_9876543210", p => p.Add(x => x.Variant, DisplayVariant.Secret).Add(x => x.Language, "csharp"));
 
         Assert.Empty(cut.FindAll("[data-slot=code-value] span"));
         Assert.Equal("••••••••3210", cut.Find("[data-slot=code-value]").TextContent);

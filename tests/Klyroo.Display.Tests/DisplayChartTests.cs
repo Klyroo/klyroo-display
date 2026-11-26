@@ -12,7 +12,7 @@ public sealed class DisplayChartTests : BunitContext
         Services.AddKlyrooDisplay();
     }
 
-    private IRenderedComponent<KlyDisplay> Chart(string? variant, IReadOnlyList<DisplayChartPoint> data, Func<double, string>? format = null, string? title = "Revenue") =>
+    private IRenderedComponent<KlyDisplay> Chart(DisplayVariant variant, IReadOnlyList<DisplayChartPoint> data, Func<double, string>? format = null, string? title = "Revenue") =>
         Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Chart)
             .Add(x => x.Variant, variant)
@@ -23,7 +23,7 @@ public sealed class DisplayChartTests : BunitContext
     [Fact]
     public void Bar_chart_is_a_KlyChart_with_axes_tooltip_and_a_data_table_toggle()
     {
-        var cut = Chart(null, [new("Mon", 10), new("Tue", 20)]);
+        var cut = Chart(DisplayVariant.Default, [new("Mon", 10), new("Tue", 20)]);
 
         Assert.NotNull(cut.Find("[data-slot=chart-bars] kly-chart"));
         Assert.NotEmpty(cut.FindAll("kly-chart text"));
@@ -42,7 +42,7 @@ public sealed class DisplayChartTests : BunitContext
     [Fact]
     public void Bar_chart_keeps_negative_and_zero_values_honest()
     {
-        var cut = Chart(null, [new("A", -5), new("B", 0), new("C", 10)]);
+        var cut = Chart(DisplayVariant.Default, [new("A", -5), new("B", 0), new("C", 10)]);
 
         var heights = cut.FindAll("kly-chart svg rect[rx]").Select(r => double.Parse(r.GetAttribute("height")!, System.Globalization.CultureInfo.InvariantCulture)).ToList();
         // The negative value has a real bar as tall as half the positive one; zero is at most the 1px baseline hairline.
@@ -57,20 +57,20 @@ public sealed class DisplayChartTests : BunitContext
     [Fact]
     public void Bar_chart_is_one_series_in_the_shared_tone_or_the_primary_color()
     {
-        var mixed = Chart(null, [new("A", 1, KlyColor.Error), new("B", 2, KlyColor.Success), new("C", 3, KlyColor.Error)]);
+        var mixed = Chart(DisplayVariant.Default, [new("A", 1, KlyColor.Error), new("B", 2, KlyColor.Success), new("C", 3, KlyColor.Error)]);
 
         // One series, so the data table has one value column and screen readers hear no color names.
         Assert.Equal(["primary"], mixed.FindAll("kly-chart svg g[data-series]").Select(g => g.GetAttribute("data-color")));
         Assert.Equal(2, mixed.FindAll("kly-chart table thead th").Count);
 
-        var single = Chart(null, [new("A", 1, KlyColor.Error), new("B", 2, KlyColor.Error)]);
+        var single = Chart(DisplayVariant.Default, [new("A", 1, KlyColor.Error), new("B", 2, KlyColor.Error)]);
         Assert.Equal("error", single.Find("kly-chart svg g[data-series]").GetAttribute("data-color"));
     }
 
     [Fact]
     public void A_funnel_ignores_non_finite_steps_and_scales_to_the_largest_positive_one()
     {
-        var cut = Chart("funnel", [new("A", 0.8), new("B", 0.4), new("C", double.NaN), new("D", double.PositiveInfinity)]);
+        var cut = Chart(DisplayVariant.Funnel, [new("A", 0.8), new("B", 0.4), new("C", double.NaN), new("D", double.PositiveInfinity)]);
 
         var widths = cut.FindAll("[data-slot=funnel-step] [aria-hidden=true]").Select(b => b.GetAttribute("style")).ToList();
         Assert.Equal(["width:100%", "width:50%", "width:0%", "width:0%"], widths);
@@ -79,7 +79,7 @@ public sealed class DisplayChartTests : BunitContext
     [Fact]
     public void Line_chart_is_exposed_to_assistive_technology_with_values()
     {
-        var cut = Chart("line", [new("Mon", 0), new("Tue", 50), new("Wed", 100)], title: null);
+        var cut = Chart(DisplayVariant.Line, [new("Mon", 0), new("Tue", 50), new("Wed", 100)], title: null);
 
         Assert.NotNull(cut.Find("[data-slot=chart-line] kly-chart"));
         var label = cut.Find("kly-chart [data-slot=plot]").GetAttribute("aria-label")!;
@@ -96,12 +96,12 @@ public sealed class DisplayChartTests : BunitContext
     {
         Func<double, string> euro = v => $"{v:0}EUR";
 
-        var bars = Chart(null, [new("A", 12)], euro);
+        var bars = Chart(DisplayVariant.Default, [new("A", 12)], euro);
         Assert.Contains("12EUR", bars.Find("kly-chart [data-tip]").GetAttribute("data-text"));
         Assert.Contains("12EUR", bars.Find("kly-chart table").TextContent);
         Assert.Contains(bars.FindAll("kly-chart svg text"), t => t.TextContent.EndsWith("EUR"));
 
-        var funnel = Chart("funnel", [new("Visits", 100), new("Signups", 25)], euro);
+        var funnel = Chart(DisplayVariant.Funnel, [new("Visits", 100), new("Signups", 25)], euro);
         Assert.Contains("100EUR", funnel.FindAll("[data-slot=funnel-step]")[0].TextContent);
         Assert.Contains("25EUR (25%)", funnel.FindAll("[data-slot=funnel-step]")[1].TextContent);
     }
@@ -109,7 +109,7 @@ public sealed class DisplayChartTests : BunitContext
     [Fact]
     public void Default_format_follows_the_format_culture()
     {
-        var cut = Chart("funnel", [new("Visits", 12345.5)]);
+        var cut = Chart(DisplayVariant.Funnel, [new("Visits", 12345.5)]);
         // Grouping and decimal separators of the default (English) culture.
         Assert.Contains("12,345.5", cut.Find("[data-slot=funnel-step]").TextContent);
     }
@@ -117,7 +117,7 @@ public sealed class DisplayChartTests : BunitContext
     [Fact]
     public void Funnel_zero_and_negative_steps_have_no_bar_and_positive_ones_stay_visible()
     {
-        var cut = Chart("funnel", [new("Visits", 1000), new("Tiny", 1), new("None", 0), new("Refunds", -20)]);
+        var cut = Chart(DisplayVariant.Funnel, [new("Visits", 1000), new("Tiny", 1), new("None", 0), new("Refunds", -20)]);
 
         var widths = cut.FindAll("[data-slot=funnel-step] div.h-2").Select(d => d.GetAttribute("style")!).ToList();
         Assert.Equal("width:100%", widths[0]);
@@ -129,7 +129,7 @@ public sealed class DisplayChartTests : BunitContext
     [Fact]
     public void Chart_without_data_says_so()
     {
-        var cut = Chart(null, []);
+        var cut = Chart(DisplayVariant.Default, []);
         Assert.Equal("No data", cut.Find("[data-slot=chart-empty]").TextContent);
     }
 }

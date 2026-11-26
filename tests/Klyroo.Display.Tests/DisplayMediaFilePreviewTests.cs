@@ -84,7 +84,7 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
     {
         var code = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Code)
-            .Add(x => x.Variant, "secret")
+            .Add(x => x.Variant, DisplayVariant.Secret)
             .Add(x => x.Value, "sk_live_9876543210")
             .Add(x => x.VisibleChars, 4));
 

@@ -23,7 +23,7 @@ public sealed class TimelineScheduleTests : BunitContext
         JSInterop.SetupModule("./_content/Klyroo.Display/klyroo-display-media.js").Mode = JSRuntimeMode.Loose;
     }
 
-    private IRenderedComponent<KlyDisplay> Schedule(IReadOnlyList<DisplayTimelineItem> items, Action<ComponentParameterCollectionBuilder<KlyDisplay>>? configure = null, string variant = "schedule", DateTimeOffset? now = null) =>
+    private IRenderedComponent<KlyDisplay> Schedule(IReadOnlyList<DisplayTimelineItem> items, Action<ComponentParameterCollectionBuilder<KlyDisplay>>? configure = null, DisplayVariant variant = DisplayVariant.Schedule, DateTimeOffset? now = null) =>
         Render<KlyDisplay>(p =>
         {
             p.Add(x => x.Kind, DisplayKind.Timeline).Add(x => x.Variant, variant).Add(x => x.TimelineItems, items).Add(x => x.Now, now ?? Reference);
@@ -35,7 +35,7 @@ public sealed class TimelineScheduleTests : BunitContext
             .Add(x => x.Value, locale)
             .AddChildContent<KlyDisplay>(d => d
                 .Add(x => x.Kind, DisplayKind.Timeline)
-                .Add(x => x.Variant, "schedule")
+                .Add(x => x.Variant, DisplayVariant.Schedule)
                 .Add(x => x.Now, Reference)
                 .Add(x => x.TimelineItems, items)));
 
@@ -64,12 +64,9 @@ public sealed class TimelineScheduleTests : BunitContext
     }
 
     [Fact]
-    public void The_variant_name_ignores_case_and_other_variants_are_unchanged()
+    public void Other_variants_of_the_timeline_are_unchanged()
     {
-        var upper = Schedule([new("A", Date: At(12, 9))], variant: "SCHEDULE");
-        Assert.Single(upper.FindAll("[data-slot=schedule-event]"));
-
-        var pipeline = Schedule([new("A", Date: At(12, 9))], variant: "pipeline");
+        var pipeline = Schedule([new("A", Date: At(12, 9))], variant: DisplayVariant.Pipeline);
         Assert.Empty(pipeline.FindAll("[data-slot=schedule-event]"));
         Assert.Single(pipeline.FindAll("[data-slot=timeline-item]"));
     }

@@ -102,7 +102,7 @@ public sealed class DisplayAllKindsAndMediaTests : BunitContext
     {
         var text = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.Text)
-            .Add(x => x.Variant, "quote")
+            .Add(x => x.Variant, DisplayVariant.Quote)
             .Add(x => x.Value, "Simplicity is prerequisite for reliability."));
         Assert.Contains("Simplicity is prerequisite for reliability.", text.Markup);
 

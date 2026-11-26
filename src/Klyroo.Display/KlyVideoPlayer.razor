@@ -9,7 +9,7 @@
 <div @ref="_root" class="@RootClass" role="region" aria-label="@(Title ?? Texts.VideoPlayer)" tabindex="@(Keyboard ? 0 : -1)"
      style="@($"aspect-ratio:{AspectRatio}")"
      data-slot="video-player" data-compact="@(Compact ? "true" : null)" data-locked="@(IsLocked ? "true" : null)" @attributes="AdditionalAttributes">
-    <video @ref="_media" src="@Src" poster="@Poster" preload="@Preload" muted="@Muted" playsinline="@PlaysInline"
+    <video @ref="_media" src="@Src" poster="@Poster" preload="@Preload.ToString().ToLowerInvariant()" muted="@Muted" playsinline="@PlaysInline"
            loop="@(Loop && !IsRestricted)"
            disablepictureinpicture="@(!Seekable)"
            class="h-full w-full object-contain"
@@ -19,7 +19,7 @@
         {
             @foreach (var track in Tracks)
             {
-                <track src="@track.Src" srclang="@track.SrcLang" label="@track.Label" kind="@track.Kind" default="@track.Default" />
+                <track src="@track.Src" srclang="@track.SrcLang" label="@track.Label" kind="@track.Kind.ToString().ToLowerInvariant()" default="@track.Default" />
             }
         }
     </video>
@@ -220,8 +220,8 @@
     [Parameter] public string? Title { get; set; }
     /// <summary>The CSS <c>aspect-ratio</c> of the player (<c>"16 / 9"</c> by default).</summary>
     [Parameter] public string AspectRatio { get; set; } = "16 / 9";
-    /// <summary>The <c>preload</c> attribute of the media element (<c>"metadata"</c> by default).</summary>
-    [Parameter] public string Preload { get; set; } = "metadata";
+    /// <summary>How much of the clip the browser loads before the user plays it: <see cref="MediaPreload.Metadata"/> by default.</summary>
+    [Parameter] public MediaPreload Preload { get; set; } = MediaPreload.Metadata;
     /// <summary>Starts playing once the player is interactive. Browsers can refuse to start a player that is not muted before the user has interacted with the page; the player then stays paused.</summary>
     [Parameter] public bool Autoplay { get; set; }
     /// <summary>Sets <c>loop</c> on the media element. It is ignored when the player is restricted by <see cref="MaxPlays"/> or by <see cref="Seekable"/> being <see langword="false"/>.</summary>

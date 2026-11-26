@@ -93,8 +93,8 @@
     /// <summary>The kind of block to render (<see cref="DisplayKind.Facts"/> by default).</summary>
     [Parameter] public DisplayKind Kind { get; set; } = DisplayKind.Facts;
 
-    /// <summary>Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: <c>eyebrow</c>. Text: <c>quote</c>. Stat: <c>row</c>. Breakdown: <c>collapsible</c>. Meter: <c>ring</c>, <c>scale</c>. Chart: <c>line</c>, <c>funnel</c>. Table: <c>sticky</c>. Person: <c>group</c>. List: <c>steps</c>, <c>checks</c>, <c>files</c>. Timeline: <c>pipeline</c>, <c>log</c>, <c>schedule</c>. Date: <c>countdown</c>, <c>range</c>. Media: <c>gallery</c>. Code: <c>secret</c>.</summary>
-    [Parameter] public string? Variant { get; set; }
+    /// <summary>Selects a variant of the kind (<see cref="DisplayVariant.Default"/> is the default layout). A variant that belongs to another kind renders the default layout and, in Development, logs a warning. Heading: <see cref="DisplayVariant.Eyebrow"/>. Text: <see cref="DisplayVariant.Quote"/>. Stat: <see cref="DisplayVariant.Row"/>. Breakdown: <see cref="DisplayVariant.Collapsible"/>. Meter: <see cref="DisplayVariant.Ring"/>, <see cref="DisplayVariant.Scale"/>. Chart: <see cref="DisplayVariant.Line"/>, <see cref="DisplayVariant.Funnel"/>. Table: <see cref="DisplayVariant.Sticky"/>. Person: <see cref="DisplayVariant.Group"/>. List: <see cref="DisplayVariant.Steps"/>, <see cref="DisplayVariant.Checks"/>, <see cref="DisplayVariant.Files"/>. Timeline: <see cref="DisplayVariant.Pipeline"/>, <see cref="DisplayVariant.Log"/>, <see cref="DisplayVariant.Schedule"/>. Date: <see cref="DisplayVariant.Countdown"/>, <see cref="DisplayVariant.Range"/>. Media: <see cref="DisplayVariant.Gallery"/>. Code: <see cref="DisplayVariant.Secret"/>.</summary>
+    [Parameter] public DisplayVariant Variant { get; set; }
 
     /// <summary>The surface treatment (<see cref="DisplaySurface.Plain"/>, <see cref="DisplaySurface.Muted"/>, <see cref="DisplaySurface.Bordered"/> or <see cref="DisplaySurface.Elevated"/>). When <see langword="null"/>, a default is chosen from <see cref="Kind"/>: bordered for Facts, Breakdown, Table, Record and Code, muted for Alert and Stat (Stat is bordered for its <c>row</c> variant, and muted for any other variant), and plain for the others.</summary>
     [Parameter] public DisplaySurface? Surface { get; set; }
@@ -162,13 +162,13 @@
     /// <summary>The change shown as a badge beside a Stat value, for example <c>"+12.4%"</c>. It is displayed as given.</summary>
     [Parameter] public string? Delta { get; set; }
 
-    /// <summary>The direction of <see cref="Delta"/>: <c>"up"</c> (green, the default), <c>"down"</c> (red) or <c>"flat"</c> (neutral).</summary>
-    [Parameter] public string DeltaDirection { get; set; } = "up";
+    /// <summary>The direction of <see cref="Delta"/>: <see cref="DisplayDeltaDirection.Up"/> (green, the default), <see cref="DisplayDeltaDirection.Down"/> (red) or <see cref="DisplayDeltaDirection.Flat"/> (neutral).</summary>
+    [Parameter] public DisplayDeltaDirection DeltaDirection { get; set; } = DisplayDeltaDirection.Up;
 
     /// <summary>The series of a Stat sparkline. It is drawn from two points or more.</summary>
     [Parameter] public IReadOnlyList<double>? Trend { get; set; }
 
-    /// <summary>The metrics of a Stat block with <c>Variant="row"</c>. That variant shows <see cref="Title"/> above them and ignores <see cref="Value"/>, <see cref="Unit"/>, <see cref="Delta"/>, <see cref="Trend"/> and <see cref="Description"/>.</summary>
+    /// <summary>The metrics of a Stat block with <see cref="DisplayVariant.Row"/>. That variant shows <see cref="Title"/> above them and ignores <see cref="Value"/>, <see cref="Unit"/>, <see cref="Delta"/>, <see cref="Trend"/> and <see cref="Description"/>.</summary>
     [Parameter] public IReadOnlyList<DisplayStatItem>? StatItems { get; set; }
 
     /// <summary>The lines of a Breakdown block.</summary>
@@ -195,7 +195,7 @@
     /// <summary>The segments of a Meter block, stacked in the bar or around the ring. When set, they replace the single value and the thresholds do not apply. A legend lists them when one of them has a <see cref="DisplayMeterPart.ValueLabel"/>, an <see cref="DisplayMeterPart.Icon"/> or a <see cref="DisplayMeterPart.Max"/>.</summary>
     [Parameter] public IReadOnlyList<DisplayMeterPart>? MeterParts { get; set; }
 
-    /// <summary>The level labels of a Meter block with <c>Variant="scale"</c>.</summary>
+    /// <summary>The level labels of a Meter block with <see cref="DisplayVariant.Scale"/>.</summary>
     [Parameter] public IReadOnlyList<string>? MeterLevels { get; set; }
 
     /// <summary>The zero-based index of the current level of a <c>scale</c> Meter. The levels up to it are highlighted.</summary>
@@ -267,7 +267,7 @@
     /// <summary>The image URL of a Media block.</summary>
     [Parameter] public string? Src { get; set; }
 
-    /// <summary>The image URLs of a Media block with <c>Variant="gallery"</c>.</summary>
+    /// <summary>The image URLs of a Media block with <see cref="DisplayVariant.Gallery"/>.</summary>
     [Parameter] public IReadOnlyList<string>? Images { get; set; }
 
     /// <summary>The number of items shown before a Show more button, for the flat Facts, Table, Record, List and Timeline kinds (all items when <see langword="null"/>). In a <c>group</c> Person block it is the number of avatars (4 by default), and in a <c>gallery</c> Media block the number of tiles (3 by default).</summary>
@@ -277,7 +277,7 @@
     [Parameter] public int? Step { get; set; }
 
     // One warning per kind and variant a component instance sees, not one per render.
-    private (DisplayKind Kind, string Variant)? _warnedVariant;
+    private (DisplayKind Kind, DisplayVariant Variant)? _warnedVariant;
 
     // The environment name the host reads (ASP.NET Core and the generic host); Klyroo.Display does not depend on the hosting package.
     private static bool IsDevelopmentEnvironment() =>
@@ -285,12 +285,12 @@
 
     private void WarnAboutUnknownVariant()
     {
-        if (!DisplayVariants.IsUnknown(Kind, Variant) || _warnedVariant == (Kind, Variant!)) return;
-        _warnedVariant = (Kind, Variant!);
+        if (!DisplayVariants.IsUnknown(Kind, Variant) || _warnedVariant == (Kind, Variant)) return;
+        _warnedVariant = (Kind, Variant);
         var enabled = Options.Extension<KlyrooDisplayOptions>().WarnOnUnknownVariant
             ?? IsDevelopmentEnvironment();
         if (!enabled || Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService<Microsoft.Extensions.Logging.ILogger<KlyDisplay>>(Services) is not { } logger) return;
-        DisplayVariants.LogUnknownVariant(logger, Variant!, Kind, DisplayVariants.For(Kind) is { Count: > 0 } known ? string.Join(", ", known) : "none");
+        DisplayVariants.LogUnknownVariant(logger, Variant.ToString().ToLowerInvariant(), Kind, DisplayVariants.For(Kind) is { Count: > 0 } known ? string.Join(", ", known) : "none");
     }
 
     /// <inheritdoc />
@@ -344,7 +344,7 @@
     private DisplaySurface EffectiveSurface => Surface ?? Kind switch
     {
         DisplayKind.Facts or DisplayKind.Breakdown or DisplayKind.Table or DisplayKind.Record or DisplayKind.Code => DisplaySurface.Bordered,
-        DisplayKind.Stat => string.Equals(Variant, "row", StringComparison.OrdinalIgnoreCase) ? DisplaySurface.Bordered : DisplaySurface.Muted,
+        DisplayKind.Stat => Variant == DisplayVariant.Row ? DisplaySurface.Bordered : DisplaySurface.Muted,
         DisplayKind.Alert => DisplaySurface.Muted,
         _ => DisplaySurface.Plain,
     };
@@ -416,7 +416,7 @@
                 }
                 <div class="flex min-w-0 flex-col gap-0.5">
                     <div class="flex items-center gap-2">
-                        @if (string.Equals(Variant, "eyebrow", StringComparison.OrdinalIgnoreCase))
+                        @if (Variant == DisplayVariant.Eyebrow)
                         {
                             <span class="text-xs font-semibold tracking-wider uppercase text-(--klyroo-text-muted)" data-slot="heading-title">@Title</span>
                         }
@@ -442,7 +442,7 @@
         </div>;
 
     private RenderFragment RenderText() =>
-        @<div class="@(string.Equals(Variant, "quote", StringComparison.OrdinalIgnoreCase) ? "border-s-2 border-(--klyroo-primary-text) ps-3 italic" : "flex flex-col gap-2")" data-slot="display-text">
+        @<div class="@(Variant == DisplayVariant.Quote ? "border-s-2 border-(--klyroo-primary-text) ps-3 italic" : "flex flex-col gap-2")" data-slot="display-text">
             @if (!string.IsNullOrEmpty(Title))
             {
                 <p class="m-0 font-semibold text-(--klyroo-text-highlighted)">@Title</p>
@@ -614,7 +614,7 @@
 
     private RenderFragment RenderStat() =>
         @<div class="flex flex-col gap-2" data-slot="display-stat">
-            @if (string.Equals(Variant, "row", StringComparison.OrdinalIgnoreCase) && StatItems is { Count: > 0 })
+            @if (Variant == DisplayVariant.Row && StatItems is { Count: > 0 })
             {
                 @if (!string.IsNullOrEmpty(Title))
                 {
@@ -653,8 +653,8 @@
                     {
                         var deltaColor = DeltaDirection switch
                         {
-                            "down" => KlyColor.Error,
-                            "flat" => KlyColor.Neutral,
+                            DisplayDeltaDirection.Down => KlyColor.Error,
+                            DisplayDeltaDirection.Flat => KlyColor.Neutral,
                             _ => KlyColor.Success,
                         };
                         <KlyBadge Label="@Delta" Color="deltaColor" Variant="KlyVariant.Subtle" Size="KlySize.Sm" data-slot="stat-delta" />
@@ -691,7 +691,7 @@
 
     private RenderFragment RenderBreakdown()
     {
-        var isCollapsible = string.Equals(Variant, "collapsible", StringComparison.OrdinalIgnoreCase);
+        var isCollapsible = Variant == DisplayVariant.Collapsible;
         // The comparison layout lines the amounts up in two columns: Value under First, CompareValue under Second.
         var compare = CompareColumns is not null
             || BreakdownLines?.Any(l => l.CompareValue is not null) == true
@@ -771,8 +771,8 @@
         var level = ErrorThreshold is { } err && pct >= err ? "error" : WarningThreshold is { } warn && pct >= warn ? "warning" : "primary";
         var barTone = level switch { "error" => "bg-(--klyroo-error)", "warning" => "bg-(--klyroo-warning)", _ => "bg-(--klyroo-primary)" };
         var ringTone = level switch { "error" => "text-(--klyroo-error)", "warning" => "text-(--klyroo-warning)", _ => "text-(--klyroo-primary)" };
-        var isRing = string.Equals(Variant, "ring", StringComparison.OrdinalIgnoreCase);
-        var isScale = string.Equals(Variant, "scale", StringComparison.OrdinalIgnoreCase) && MeterLevels is { Count: > 0 };
+        var isRing = Variant == DisplayVariant.Ring;
+        var isScale = Variant == DisplayVariant.Scale && MeterLevels is { Count: > 0 };
         var hasParts = MeterParts is { Count: > 0 };
         var showLegend = hasParts && MeterParts!.Any(p => p.ValueLabel is not null || p.Icon is not null || p.Max is not null);
         var valueText = Value ?? $"{val:0.##} / {max:0.##}";
@@ -922,7 +922,7 @@
             {
                 <p class="m-0 text-xs text-(--klyroo-text-muted)" data-slot="chart-empty">@Texts.NoData</p>
             }
-            else if (string.Equals(Variant, "funnel", StringComparison.OrdinalIgnoreCase))
+            else if (Variant == DisplayVariant.Funnel)
             {
                 // Widths are relative to the largest positive step; a zero, negative or non-finite step has no bar, a positive one never vanishes.
                 var positives = ChartData.Where(d => double.IsFinite(d.Value) && d.Value > 0).Select(d => d.Value).ToList();
@@ -945,7 +945,7 @@
             }
             else
             {
-                @RenderChartPlot(ChartData, string.Equals(Variant, "line", StringComparison.OrdinalIgnoreCase))
+                @RenderChartPlot(ChartData, Variant == DisplayVariant.Line)
             }
         </div>;
 
@@ -976,7 +976,7 @@
     {
         var cols = TableColumns ?? [];
         var (visibleRows, remaining) = ApplyReveal(TableRows);
-        var isSticky = string.Equals(Variant, "sticky", StringComparison.OrdinalIgnoreCase);
+        var isSticky = Variant == DisplayVariant.Sticky;
         // A sticky header needs a background that hides the rows scrolling under it: the one of the surface.
         var headerBackground = EffectiveSurface switch
         {
@@ -991,7 +991,7 @@
                         <tr>
                             @foreach (var col in cols)
                             {
-                                <th scope="col" class="px-3 py-2 @(col.Numeric || string.Equals(col.Align, "end", StringComparison.OrdinalIgnoreCase) ? "text-end" : "text-start")">@col.Label</th>
+                                <th scope="col" class="px-3 py-2 @(col.Numeric || col.Align == DisplayAlign.End ? "text-end" : "text-start")">@col.Label</th>
                             }
                         </tr>
                     </thead>
@@ -1002,7 +1002,7 @@
                                 @foreach (var col in cols)
                                 {
                                     row.TryGetValue(col.Key, out var val);
-                                    <td class="px-3 py-2 @(col.Numeric || string.Equals(col.Align, "end", StringComparison.OrdinalIgnoreCase) ? "text-end tabular-nums" : "text-start") @(col.Mono ? "font-mono" : "")">@(val ?? "—")</td>
+                                    <td class="px-3 py-2 @(col.Numeric || col.Align == DisplayAlign.End ? "text-end tabular-nums" : "text-start") @(col.Mono ? "font-mono" : "")">@(val ?? "—")</td>
                                 }
                             </tr>
                         }
@@ -1014,7 +1014,7 @@
                                 @foreach (var col in cols)
                                 {
                                     TableFooter.TryGetValue(col.Key, out var fVal);
-                                    <td class="px-3 py-2 @(col.Numeric || string.Equals(col.Align, "end", StringComparison.OrdinalIgnoreCase) ? "text-end tabular-nums" : "text-start")">@fVal</td>
+                                    <td class="px-3 py-2 @(col.Numeric || col.Align == DisplayAlign.End ? "text-end tabular-nums" : "text-start")">@fVal</td>
                                 }
                             </tr>
                         </tfoot>
@@ -1181,7 +1181,7 @@
 
     private RenderFragment RenderPerson() =>
         @<div class="flex flex-col gap-3" data-slot="display-person">
-            @if (string.Equals(Variant, "group", StringComparison.OrdinalIgnoreCase) && People is { Count: > 0 })
+            @if (Variant == DisplayVariant.Group && People is { Count: > 0 })
             {
                 var max = Max ?? 4;
                 var shown = People.Take(max).ToList();
@@ -1296,9 +1296,9 @@
     private RenderFragment RenderList()
     {
         var (visible, remaining) = ApplyReveal(ListItems);
-        var isFiles = string.Equals(Variant, "files", StringComparison.OrdinalIgnoreCase);
-        var isSteps = string.Equals(Variant, "steps", StringComparison.OrdinalIgnoreCase);
-        var isChecks = string.Equals(Variant, "checks", StringComparison.OrdinalIgnoreCase);
+        var isFiles = Variant == DisplayVariant.Files;
+        var isSteps = Variant == DisplayVariant.Steps;
+        var isChecks = Variant == DisplayVariant.Checks;
         return @<div class="flex flex-col gap-2" data-slot="display-list">
             @if (!string.IsNullOrEmpty(Title))
             {
@@ -1374,7 +1374,7 @@
     }
 
     private bool CanPreviewFiles() =>
-        RendererInfo.IsInteractive && string.Equals(Variant, "files", StringComparison.OrdinalIgnoreCase)
+        RendererInfo.IsInteractive && Variant == DisplayVariant.Files
         && Services.GetService(typeof(FilePreviewService)) is FilePreviewService { IsMounted: true };
 
     private void OnFileItemClick(DisplayListItem clicked)
@@ -1397,10 +1397,10 @@
 
     private RenderFragment RenderTimeline()
     {
-        if (string.Equals(Variant, "schedule", StringComparison.OrdinalIgnoreCase)) return RenderSchedule();
+        if (Variant == DisplayVariant.Schedule) return RenderSchedule();
         var (visible, remaining) = ApplyReveal(TimelineItems);
-        var isPipeline = string.Equals(Variant, "pipeline", StringComparison.OrdinalIgnoreCase);
-        var isLog = string.Equals(Variant, "log", StringComparison.OrdinalIgnoreCase);
+        var isPipeline = Variant == DisplayVariant.Pipeline;
+        var isLog = Variant == DisplayVariant.Log;
         return @<div class="flex flex-col gap-2" data-slot="display-timeline">
             @if (isLog)
             {
@@ -1633,8 +1633,8 @@
         var date = DateValue ?? DateTimeOffset.UtcNow;
         var now = Now ?? DateTimeOffset.UtcNow;
         var days = (int)Math.Round((date.Date - now.Date).TotalDays);
-        var isCountdown = string.Equals(Variant, "countdown", StringComparison.OrdinalIgnoreCase);
-        var isRange = string.Equals(Variant, "range", StringComparison.OrdinalIgnoreCase) && EndDateValue is not null;
+        var isCountdown = Variant == DisplayVariant.Countdown;
+        var isRange = Variant == DisplayVariant.Range && EndDateValue is not null;
         return @<div class="flex items-center gap-3" data-slot="display-date">
             <div class="flex size-12 shrink-0 flex-col items-center justify-center rounded-(--klyroo-radius) border border-(--klyroo-border) bg-(--klyroo-bg-muted) text-center" data-slot="date-tile">
                 <span class="text-[10px] font-bold uppercase text-(--klyroo-primary-text)">@date.ToString("MMM", FormatCulture)</span>
@@ -1671,7 +1671,7 @@
 
     private RenderFragment RenderMedia() =>
         @<div class="flex flex-col gap-2" data-slot="display-media">
-            @if (string.Equals(Variant, "gallery", StringComparison.OrdinalIgnoreCase) && Images is { Count: > 0 })
+            @if (Variant == DisplayVariant.Gallery && Images is { Count: > 0 })
             {
                 var max = Math.Max(1, Max ?? 3);
                 var shown = Images.Take(max).ToList();
@@ -1703,10 +1703,10 @@
     private RenderFragment RenderCode()
     {
         var raw = Value ?? "";
-        var isSecret = string.Equals(Variant, "secret", StringComparison.OrdinalIgnoreCase);
+        var isSecret = Variant == DisplayVariant.Secret;
         var shown = isSecret && !_secretRevealed ? MaskSecret(raw, VisibleChars) : raw;
         var highlighted = HighlightedCode(raw, isSecret);
-        return @<div class="flex flex-col gap-2" data-slot="display-code" data-variant="@(Variant ?? "block")">
+        return @<div class="flex flex-col gap-2" data-slot="display-code" data-variant="@(Variant == DisplayVariant.Default ? "block" : Variant.ToString().ToLowerInvariant())">
             <div class="flex items-center justify-between gap-2">
                 <span class="text-xs font-semibold uppercase text-(--klyroo-text-muted)" data-slot="code-label">@(Title ?? Language ?? (isSecret ? Texts.Secret : Texts.Code))</span>
                 <div class="flex items-center gap-1">

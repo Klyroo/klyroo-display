@@ -4,7 +4,7 @@
 
 ## Klyroo.Display.Core
 
-Static classes and extensions (1) · Classes (4) · Records (4) · Structs (1) · Enums (4)
+Static classes and extensions (1) · Classes (4) · Records (4) · Structs (1) · Enums (6)
 
 ### Static classes and extensions
 
@@ -189,12 +189,12 @@ A subtitle or caption track of a video, rendered as a `track` element.
 
 | Constructor | Description |
 | :--- | :--- |
-| `VideoPlayerTrack(string Src, string SrcLang, string Label, string Kind = "subtitles", bool Default = false)` | A subtitle or caption track of a video, rendered as a `track` element. |
+| `VideoPlayerTrack(string Src, string SrcLang, string Label, VideoTrackKind Kind = Subtitles, bool Default = false)` | A subtitle or caption track of a video, rendered as a `track` element. |
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `Default` (init) | `bool` | Whether the track is shown initially. With several default tracks, the first one wins. |
-| `Kind` (init) | `string` | The `kind` attribute of the track (`"subtitles"` by default). |
+| `Kind` (init) | `VideoTrackKind` | The kind of the track, `VideoTrackKind.Subtitles` by default. |
 | `Label` (init) | `string` | The label shown in the browser's track list. |
 | `Src` (init) | `string` | The URL of the WebVTT file. |
 | `SrcLang` (init) | `string` | The BCP 47 language code of the track, for example `"fr"`. |
@@ -284,9 +284,35 @@ A control of `KlyAudioPlayer` or `KlyVideoPlayer` that can be hidden through the
 | `Fullscreen` | The fullscreen button of the video player, which shows the whole player fullscreen. It shows only once the browser reports fullscreen support. |
 | `Download` | The download link. |
 
+#### `MediaPreload`
+
+`Klyroo.Display` · enum
+
+How much of a clip the browser loads before the user plays it.
+
+| Value | Description |
+| :--- | :--- |
+| `None` | Nothing. |
+| `Metadata` | The metadata only (the duration and the size of a video). |
+| `Auto` | Whatever the browser decides is good, up to the whole file. |
+
+#### `VideoTrackKind`
+
+`Klyroo.Display` · enum
+
+The `kind` of a `VideoPlayerTrack`.
+
+| Value | Description |
+| :--- | :--- |
+| `Subtitles` | A translation of the dialogue. |
+| `Captions` | A transcription of the dialogue and the sounds, for viewers who cannot hear. |
+| `Descriptions` | A description of the video for viewers who cannot see it. |
+| `Chapters` | The titles of the chapters. |
+| `Metadata` | Data for scripts, not shown. |
+
 ## Klyroo.Display
 
-Components (4) · Static classes and extensions (2) · Classes (5) · Records (13) · Enums (3)
+Components (4) · Static classes and extensions (2) · Classes (5) · Records (13) · Enums (6)
 
 ### Components
 
@@ -320,7 +346,7 @@ A compact audio control bar with play and pause, a timeline, a mute button and a
 | `OnTimeUpdate` | `EventCallback<MediaPlayerProgress>` | Raised with the position during playback, about four times a second, and when the user seeks. |
 | `Plays` | `int` | The number of plays already used. The component increments it when a play starts and raises `KlyAudioPlayer.PlaysChanged`: keep the value in your own state and pass it back, so a re-render does not lose it. |
 | `PlaysChanged` | `EventCallback<int>` | Raised with the new count when a play starts. |
-| `Preload` | `string` | The `preload` attribute of the media element (`"metadata"` by default). |
+| `Preload` | `MediaPreload` | How much of the clip the browser loads before the user plays it: `MediaPreload.Metadata` by default. |
 | `Rate` | `double` | The playback rate shown on the speed button (`1.0` by default). |
 | `RateChanged` | `EventCallback<double>` | Raised with the new rate when the speed button is clicked. |
 | `Rates` | `IReadOnlyList<double>?` | The rates the speed button cycles through. The button is hidden when there are fewer than two (0.5, 0.75, 1, 1.25, 1.5 and 2 by default). |
@@ -375,7 +401,7 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `DateValue` | `DateTimeOffset?` | The date of a Date block, or the start of a `range`. When `null`, the current date is used. |
 | `DefaultOpen` | `bool` | Whether the Alert details, or the lines of a `collapsible` Breakdown, start open. It is read once, when the component first receives its parameters. |
 | `Delta` | `string?` | The change shown as a badge beside a Stat value, for example `"+12.4%"`. It is displayed as given. |
-| `DeltaDirection` | `string` | The direction of `KlyDisplay.Delta`: `"up"` (green, the default), `"down"` (red) or `"flat"` (neutral). |
+| `DeltaDirection` | `DisplayDeltaDirection` | The direction of `KlyDisplay.Delta`: `DisplayDeltaDirection.Up` (green, the default), `DisplayDeltaDirection.Down` (red) or `DisplayDeltaDirection.Flat` (neutral). |
 | `Description` | `string?` | A secondary line: under the title of a Heading, Stat, Meter, Date, Media (caption) or Empty block, under the name of a single Person when `KlyDisplay.People` is empty, or the Alert message when `KlyDisplay.Value` is empty. |
 | `Details` | `string?` | The collapsible details of an Alert (opened with Show details), or the footnote of a Breakdown. |
 | `DiffItems` | `IReadOnlyList<DisplayDiffItem>?` | The fields of a Diff block. |
@@ -386,7 +412,7 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `HeadingLevel` | `int` | The level of the heading element of a Heading block, from `1` (`h1`) to `6` (`h6`); `3` by default, and values outside are clamped. Choose it from the page outline: the look does not change with the level. The `eyebrow` variant renders no heading element. |
 | `Highlight` | `bool` | Whether a Code block is highlighted according to `KlyDisplay.Language` (`true` by default). Set it to `false` to render plain text. A code longer than `CodeHighlighter.MaxLength` characters or `CodeHighlighter.MaxLines` lines is never highlighted. |
 | `Icon` | `string?` | The name of the leading icon of a Heading, Alert or Empty block. For an Alert, an empty string hides the icon. |
-| `Images` | `IReadOnlyList<string>?` | The image URLs of a Media block with `Variant="gallery"`. |
+| `Images` | `IReadOnlyList<string>?` | The image URLs of a Media block with `DisplayVariant.Gallery`. |
 | `Kind` | `DisplayKind` | The kind of block to render (`DisplayKind.Facts` by default). |
 | `Language` | `string?` | The language of a Code block: it selects the syntax highlighting, and it is the label of the block when `KlyDisplay.Title` is not set. It accepts a name, an alias or a file extension (`csharp`, `cs`, `ts`, `json`, `html`, `xml`, `css`, `scss`, `less`, `sql`, `python`, `bash`, `yaml` and the others `CodeHighlighter.Languages` lists). A language that is not supported, or none, renders plain text. A `secret` block is never highlighted. |
 | `ListItems` | `IReadOnlyList<DisplayListItem>?` | The items of a List block. |
@@ -394,7 +420,7 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `Max` | `int?` | The number of items shown before a Show more button, for the flat Facts, Table, Record, List and Timeline kinds (all items when `null`). In a `group` Person block it is the number of avatars (4 by default), and in a `gallery` Media block the number of tiles (3 by default). |
 | `MaxLines` | `int?` | When greater than zero, clamps `KlyDisplay.Value` of a Text block to this number of lines and adds a Read more toggle. The toggle shows even when the text is shorter, and `KlyDisplay.Paragraphs` are not clamped. |
 | `Meta` | `string?` | Extra text shown in the footer of a Text block, after `KlyDisplay.Author`. |
-| `MeterLevels` | `IReadOnlyList<string>?` | The level labels of a Meter block with `Variant="scale"`. |
+| `MeterLevels` | `IReadOnlyList<string>?` | The level labels of a Meter block with `DisplayVariant.Scale`. |
 | `MeterMax` | `double` | The maximum of a Meter block (`100` by default). When it is zero or less, the sum of `KlyDisplay.MeterParts` is used. |
 | `MeterParts` | `IReadOnlyList<DisplayMeterPart>?` | The segments of a Meter block, stacked in the bar or around the ring. When set, they replace the single value and the thresholds do not apply. A legend lists them when one of them has a `DisplayMeterPart.ValueLabel`, an `DisplayMeterPart.Icon` or a `DisplayMeterPart.Max`. |
 | `MeterValue` | `double` | The current value of a Meter block, clamped between 0 and `KlyDisplay.MeterMax`. |
@@ -405,7 +431,7 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `Records` | `IReadOnlyList<DisplayRecordItem>?` | The rows of a Record block. |
 | `ShowUnchanged` | `bool` | Shows the fields whose `DisplayDiffItem.Changed` is `false` (`false` by default). |
 | `Src` | `string?` | The image URL of a Media block. |
-| `StatItems` | `IReadOnlyList<DisplayStatItem>?` | The metrics of a Stat block with `Variant="row"`. That variant shows `KlyDisplay.Title` above them and ignores `KlyDisplay.Value`, `KlyDisplay.Unit`, `KlyDisplay.Delta`, `KlyDisplay.Trend` and `KlyDisplay.Description`. |
+| `StatItems` | `IReadOnlyList<DisplayStatItem>?` | The metrics of a Stat block with `DisplayVariant.Row`. That variant shows `KlyDisplay.Title` above them and ignores `KlyDisplay.Value`, `KlyDisplay.Unit`, `KlyDisplay.Delta`, `KlyDisplay.Trend` and `KlyDisplay.Description`. |
 | `Step` | `int?` | The number of items each click on Show more reveals (all remaining items when `null`). |
 | `Surface` | `DisplaySurface?` | The surface treatment (`DisplaySurface.Plain`, `DisplaySurface.Muted`, `DisplaySurface.Bordered` or `DisplaySurface.Elevated`). When `null`, a default is chosen from `KlyDisplay.Kind`: bordered for Facts, Breakdown, Table, Record and Code, muted for Alert and Stat (Stat is bordered for its `row` variant, and muted for any other variant), and plain for the others. |
 | `TableColumns` | `IReadOnlyList<DisplayTableColumn>?` | The columns of a Table block. |
@@ -417,7 +443,7 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `Trend` | `IReadOnlyList<double>?` | The series of a Stat sparkline. It is drawn from two points or more. |
 | `Unit` | `string?` | The unit shown beside a Stat value, or at the end of a Chart title. |
 | `Value` | `string?` | The main text of the block: the Text body, the Alert message, the Stat value, the Meter value label, or the Code content. |
-| `Variant` | `string?` | Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: `eyebrow`. Text: `quote`. Stat: `row`. Breakdown: `collapsible`. Meter: `ring`, `scale`. Chart: `line`, `funnel`. Table: `sticky`. Person: `group`. List: `steps`, `checks`, `files`. Timeline: `pipeline`, `log`, `schedule`. Date: `countdown`, `range`. Media: `gallery`. Code: `secret`. |
+| `Variant` | `DisplayVariant` | Selects a variant of the kind (`DisplayVariant.Default` is the default layout). A variant that belongs to another kind renders the default layout and, in Development, logs a warning. Heading: `DisplayVariant.Eyebrow`. Text: `DisplayVariant.Quote`. Stat: `DisplayVariant.Row`. Breakdown: `DisplayVariant.Collapsible`. Meter: `DisplayVariant.Ring`, `DisplayVariant.Scale`. Chart: `DisplayVariant.Line`, `DisplayVariant.Funnel`. Table: `DisplayVariant.Sticky`. Person: `DisplayVariant.Group`. List: `DisplayVariant.Steps`, `DisplayVariant.Checks`, `DisplayVariant.Files`. Timeline: `DisplayVariant.Pipeline`, `DisplayVariant.Log`, `DisplayVariant.Schedule`. Date: `DisplayVariant.Countdown`, `DisplayVariant.Range`. Media: `DisplayVariant.Gallery`. Code: `DisplayVariant.Secret`. |
 | `VisibleChars` | `int` | The number of trailing characters left visible by a `secret` Code block (`4` by default). A longer value shows eight bullets followed by those characters. A value that is not longer than this number is fully masked. |
 | `WarningThreshold` | `double?` | The percentage of `KlyDisplay.MeterMax` from which the Meter bar turns to the warning color. |
 
@@ -469,7 +495,7 @@ A video frame with an overlay play button and a control bar (play and pause, tim
 | `PlaysChanged` | `EventCallback<int>` | Raised with the new count when a play starts. |
 | `PlaysInline` | `bool` | Sets `playsinline` on the video element (`true` by default). |
 | `Poster` | `string?` | The poster image shown before the video plays. |
-| `Preload` | `string` | The `preload` attribute of the media element (`"metadata"` by default). |
+| `Preload` | `MediaPreload` | How much of the clip the browser loads before the user plays it: `MediaPreload.Metadata` by default. |
 | `Rate` | `double` | The playback rate shown on the speed button (`1.0` by default). |
 | `RateChanged` | `EventCallback<double>` | Raised with the new rate when the speed button is clicked. |
 | `Rates` | `IReadOnlyList<double>?` | The rates the speed button cycles through. The button is hidden when there are fewer than two (0.5, 0.75, 1, 1.25, 1.5 and 2 by default). |
@@ -840,11 +866,11 @@ One column of a `DisplayKind.Table` block.
 
 | Constructor | Description |
 | :--- | :--- |
-| `DisplayTableColumn(string Key, string Label, bool Numeric = false, string? Align = null, bool Mono = false)` | One column of a `DisplayKind.Table` block. |
+| `DisplayTableColumn(string Key, string Label, bool Numeric = false, DisplayAlign Align = Start, bool Mono = false)` | One column of a `DisplayKind.Table` block. |
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `Align` (init) | `string?` | Set to `"end"` to align the column to the end. |
+| `Align` (init) | `DisplayAlign` | Set to `DisplayAlign.End` to align the column to the end. |
 | `Key` (init) | `string` | The key that selects this column's cell in each row. |
 | `Label` (init) | `string` | The header text. |
 | `Mono` (init) | `bool` | Renders the cells in a monospace font. |
@@ -955,6 +981,29 @@ One event of a `DisplayKind.Timeline` block.
 
 ### Enums
 
+#### `DisplayAlign`
+
+`Klyroo.Display` · enum
+
+The alignment of a `DisplayTableColumn`.
+
+| Value | Description |
+| :--- | :--- |
+| `Start` | At the start of the cell. |
+| `End` | At the end of the cell. |
+
+#### `DisplayDeltaDirection`
+
+`Klyroo.Display` · enum
+
+The direction of the delta of a Stat block, which only chooses its color.
+
+| Value | Description |
+| :--- | :--- |
+| `Up` | Green. |
+| `Down` | Red. |
+| `Flat` | Neutral. |
+
 #### `DisplayKind`
 
 `Klyroo.Display` · enum
@@ -1007,3 +1056,33 @@ The state of an event of a `DisplayKind.Timeline` block.
 | `Done` | The event happened. This is the state of an event whose state is not set. |
 | `Current` | The event is happening now. |
 | `Upcoming` | The event has not happened yet. |
+
+#### `DisplayVariant`
+
+`Klyroo.Display` · enum
+
+The layout of a `KlyDisplay` within its `DisplayKind`. A variant belongs to one kind (the comments name it); on another kind it renders the default layout and, in Development, logs a warning.
+
+| Value | Description |
+| :--- | :--- |
+| `Default` | The default layout of the kind. |
+| `Eyebrow` | Heading: the text above the title. |
+| `Quote` | Text: a block quote. |
+| `Row` | Stat: several metrics in a row. |
+| `Collapsible` | Breakdown: a collapsible block. |
+| `Ring` | Meter: a ring. |
+| `Scale` | Meter: a scale of levels. |
+| `Line` | Chart: a line plot. |
+| `Funnel` | Chart: a funnel. |
+| `Sticky` | Table: a sticky header. |
+| `Group` | Person: a group of people. |
+| `Steps` | List: numbered steps. |
+| `Checks` | List: a checklist. |
+| `Files` | List: files that open in the preview. |
+| `Pipeline` | Timeline: a pipeline. |
+| `Log` | Timeline: a log. |
+| `Schedule` | Timeline: an agenda grouped by day. |
+| `Countdown` | Date: a countdown. |
+| `Range` | Date: a range between two dates. |
+| `Gallery` | Media: a gallery of images. |
+| `Secret` | Code: a value that is masked until the user reveals it. |

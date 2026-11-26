@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Klyroo.Display.Tests;
 
-// A variant the kind does not know renders the default layout; in Development that is worth a warning, because it is usually a typo.
+// A variant that belongs to another kind renders the default layout; in Development that is worth a warning, because it is usually a mix-up.
 public sealed class UnknownVariantWarningTests : BunitContext
 {
     private sealed class Capture : ILoggerProvider, ILogger
@@ -28,7 +28,7 @@ public sealed class UnknownVariantWarningTests : BunitContext
         Services.AddKlyrooDisplay(d => d.WarnOnUnknownVariant = warn);
     }
 
-    private IRenderedComponent<KlyDisplay> Render(DisplayKind kind, string? variant) =>
+    private IRenderedComponent<KlyDisplay> Render(DisplayKind kind, DisplayVariant variant) =>
         Render<KlyDisplay>(p => p.Add(x => x.Kind, kind).Add(x => x.Variant, variant).Add(x => x.Title, "T"));
 
     [Fact]
@@ -36,10 +36,10 @@ public sealed class UnknownVariantWarningTests : BunitContext
     {
         Setup(true);
 
-        var cut = Render(DisplayKind.Chart, "linee");
+        var cut = Render(DisplayKind.Chart, DisplayVariant.Gallery);
 
         var entry = Assert.Single(_log.Entries, e => e.Level == LogLevel.Warning);
-        Assert.Contains("'linee'", entry.Message);
+        Assert.Contains("'gallery'", entry.Message);
         Assert.Contains("Chart", entry.Message);
         Assert.Contains("line, funnel", entry.Message);
         Assert.Equal(typeof(KlyDisplay).FullName, entry.Category);
@@ -52,19 +52,18 @@ public sealed class UnknownVariantWarningTests : BunitContext
     {
         Setup(true);
 
-        Render(DisplayKind.Alert, "fancy");
+        Render(DisplayKind.Alert, DisplayVariant.Quote);
 
         Assert.Contains("Known variants: none", Assert.Single(_log.Entries).Message);
     }
 
     [Fact]
-    public void A_known_variant_in_any_case_and_an_empty_variant_log_nothing()
+    public void A_variant_of_the_kind_and_the_default_variant_log_nothing()
     {
         Setup(true);
 
-        Render(DisplayKind.Chart, "LINE");
-        Render(DisplayKind.Chart, null);
-        Render(DisplayKind.Chart, " ");
+        Render(DisplayKind.Chart, DisplayVariant.Line);
+        Render(DisplayKind.Chart, DisplayVariant.Default);
 
         Assert.Empty(_log.Entries);
     }
@@ -75,13 +74,13 @@ public sealed class UnknownVariantWarningTests : BunitContext
         Setup(true);
 
         // The variants documented on the kinds and in the Variant parameter.
-        (DisplayKind, string)[] documented =
+        (DisplayKind, DisplayVariant)[] documented =
         [
-            (DisplayKind.Heading, "eyebrow"), (DisplayKind.Text, "quote"), (DisplayKind.Stat, "row"), (DisplayKind.Breakdown, "collapsible"),
-            (DisplayKind.Meter, "ring"), (DisplayKind.Meter, "scale"), (DisplayKind.Chart, "line"), (DisplayKind.Chart, "funnel"),
-            (DisplayKind.Table, "sticky"), (DisplayKind.Person, "group"), (DisplayKind.List, "steps"), (DisplayKind.List, "checks"),
-            (DisplayKind.List, "files"), (DisplayKind.Timeline, "pipeline"), (DisplayKind.Timeline, "log"), (DisplayKind.Timeline, "schedule"),
-            (DisplayKind.Date, "countdown"), (DisplayKind.Date, "range"), (DisplayKind.Media, "gallery"), (DisplayKind.Code, "secret"),
+            (DisplayKind.Heading, DisplayVariant.Eyebrow), (DisplayKind.Text, DisplayVariant.Quote), (DisplayKind.Stat, DisplayVariant.Row), (DisplayKind.Breakdown, DisplayVariant.Collapsible),
+            (DisplayKind.Meter, DisplayVariant.Ring), (DisplayKind.Meter, DisplayVariant.Scale), (DisplayKind.Chart, DisplayVariant.Line), (DisplayKind.Chart, DisplayVariant.Funnel),
+            (DisplayKind.Table, DisplayVariant.Sticky), (DisplayKind.Person, DisplayVariant.Group), (DisplayKind.List, DisplayVariant.Steps), (DisplayKind.List, DisplayVariant.Checks),
+            (DisplayKind.List, DisplayVariant.Files), (DisplayKind.Timeline, DisplayVariant.Pipeline), (DisplayKind.Timeline, DisplayVariant.Log), (DisplayKind.Timeline, DisplayVariant.Schedule),
+            (DisplayKind.Date, DisplayVariant.Countdown), (DisplayKind.Date, DisplayVariant.Range), (DisplayKind.Media, DisplayVariant.Gallery), (DisplayKind.Code, DisplayVariant.Secret),
         ];
 
         foreach (var (kind, variant) in documented)
@@ -96,13 +95,13 @@ public sealed class UnknownVariantWarningTests : BunitContext
     public void The_same_unknown_variant_warns_once_per_component_and_a_change_warns_again()
     {
         Setup(true);
-        var cut = Render(DisplayKind.Chart, "linee");
+        var cut = Render(DisplayKind.Chart, DisplayVariant.Gallery);
 
         cut.Render(p => p.Add(x => x.Title, "Other"));
         cut.Render(p => p.Add(x => x.Title, "More"));
         Assert.Single(_log.Entries);
 
-        cut.Render(p => p.Add(x => x.Variant, "bars"));
+        cut.Render(p => p.Add(x => x.Variant, DisplayVariant.Sticky));
         Assert.Equal(2, _log.Entries.Count);
     }
 
@@ -114,7 +113,7 @@ public sealed class UnknownVariantWarningTests : BunitContext
         try
         {
             Setup(false);
-            Render(DisplayKind.Chart, "linee");
+            Render(DisplayKind.Chart, DisplayVariant.Gallery);
             Assert.Empty(_log.Entries);
         }
         finally
@@ -131,11 +130,11 @@ public sealed class UnknownVariantWarningTests : BunitContext
         {
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Production");
             Setup(null);
-            Render(DisplayKind.Chart, "linee");
+            Render(DisplayKind.Chart, DisplayVariant.Gallery);
             Assert.Empty(_log.Entries);
 
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
-            Render(DisplayKind.Chart, "linee");
+            Render(DisplayKind.Chart, DisplayVariant.Gallery);
             Assert.Single(_log.Entries);
         }
         finally

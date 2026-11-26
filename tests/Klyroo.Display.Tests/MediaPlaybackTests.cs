@@ -107,7 +107,7 @@ public sealed class MediaPlaybackTests : BunitContext
         var preview = Services.GetRequiredService<FilePreviewService>();
         var cut = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.List)
-            .Add(x => x.Variant, "files")
+            .Add(x => x.Variant, DisplayVariant.Files)
             .Add(x => x.ListItems,
             [
                 new DisplayListItem { Text = "Pending upload" },

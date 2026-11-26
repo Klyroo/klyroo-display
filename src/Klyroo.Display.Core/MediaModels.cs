@@ -25,17 +25,43 @@ public enum MediaPlayerControl
     Download,
 }
 
+/// <summary>The <c>kind</c> of a <see cref="VideoPlayerTrack"/>.</summary>
+public enum VideoTrackKind
+{
+    /// <summary>A translation of the dialogue.</summary>
+    Subtitles,
+    /// <summary>A transcription of the dialogue and the sounds, for viewers who cannot hear.</summary>
+    Captions,
+    /// <summary>A description of the video for viewers who cannot see it.</summary>
+    Descriptions,
+    /// <summary>The titles of the chapters.</summary>
+    Chapters,
+    /// <summary>Data for scripts, not shown.</summary>
+    Metadata,
+}
+
+/// <summary>How much of a clip the browser loads before the user plays it.</summary>
+public enum MediaPreload
+{
+    /// <summary>Nothing.</summary>
+    None,
+    /// <summary>The metadata only (the duration and the size of a video).</summary>
+    Metadata,
+    /// <summary>Whatever the browser decides is good, up to the whole file.</summary>
+    Auto,
+}
+
 /// <summary>A subtitle or caption track of a video, rendered as a <c>track</c> element.</summary>
 /// <param name="Src">The URL of the WebVTT file.</param>
 /// <param name="SrcLang">The BCP 47 language code of the track, for example <c>"fr"</c>.</param>
 /// <param name="Label">The label shown in the browser's track list.</param>
-/// <param name="Kind">The <c>kind</c> attribute of the track (<c>"subtitles"</c> by default).</param>
+/// <param name="Kind">The kind of the track, <see cref="VideoTrackKind.Subtitles"/> by default.</param>
 /// <param name="Default">Whether the track is shown initially. With several default tracks, the first one wins.</param>
 public sealed record VideoPlayerTrack(
     string Src,
     string SrcLang,
     string Label,
-    string Kind = "subtitles",
+    VideoTrackKind Kind = VideoTrackKind.Subtitles,
     bool Default = false);
 
 /// <summary>The playback position reported by the <c>OnTimeUpdate</c> callback of the audio and video players.</summary>

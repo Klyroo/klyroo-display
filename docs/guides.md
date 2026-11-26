@@ -21,7 +21,7 @@ Goal: a revenue figure with a change badge and a sparkline, and a storage meter 
 
 ```razor
 <KlyDisplay Kind="DisplayKind.Stat" Title="Monthly revenue" Value="148,900" Unit="EUR"
-            Delta="+14.2%" DeltaDirection="up" Trend="_trend" Description="Compared to October" />
+            Delta="+14.2%" DeltaDirection="DisplayDeltaDirection.Up" Trend="_trend" Description="Compared to October" />
 
 <KlyDisplay Kind="DisplayKind.Meter" Title="Storage" MeterValue="46" MeterMax="50"
             WarningThreshold="75" ErrorThreshold="90" Description="46 of 50 GB used" />
@@ -31,14 +31,14 @@ Goal: a revenue figure with a change badge and a sparkline, and a storage meter 
 }
 ```
 
-`Delta` is shown as given, so format the number yourself. `DeltaDirection` only chooses the color (`up` is green, `down` is red, `flat` is neutral) and does not compare anything. The meter thresholds are percentages of `MeterMax`: here 46 of 50 is 92 percent, past the 90 percent error threshold, so the bar is red. The error threshold wins when both are crossed.
+`Delta` is shown as given, so format the number yourself. `DeltaDirection` only chooses the color (`Up` is green, `Down` is red, `Flat` is neutral) and does not compare anything. The meter thresholds are percentages of `MeterMax`: here 46 of 50 is 92 percent, past the 90 percent error threshold, so the bar is red. The error threshold wins when both are crossed.
 
 ## Mask a secret and let the user reveal it
 
 Goal: show an API key as `••••••••3210`, with a Reveal button and a copy button.
 
 ```razor
-<KlyDisplay Kind="DisplayKind.Code" Variant="secret" Title="API key" Value="@ApiKey" VisibleChars="4" />
+<KlyDisplay Kind="DisplayKind.Code" Variant="DisplayVariant.Secret" Title="API key" Value="@ApiKey" VisibleChars="4" />
 
 @code {
     [Parameter, EditorRequired] public string ApiKey { get; set; } = "";
@@ -70,7 +70,7 @@ You can call the scanner yourself, without any UI, with `CodeHighlighter.Tokeniz
 Goal: list the events of a few days, with their time range, length and the current one marked.
 
 ```razor
-<KlyDisplay Kind="DisplayKind.Timeline" Variant="schedule" TimelineItems="_events" Now="_now" />
+<KlyDisplay Kind="DisplayKind.Timeline" Variant="DisplayVariant.Schedule" TimelineItems="_events" Now="_now" />
 
 @code {
     private static readonly TimeSpan Paris = TimeSpan.FromHours(1);
@@ -95,8 +95,8 @@ The events are sorted by `Date` and grouped by day; the first day reads "Today" 
 Goal: a row of order stages with the current one marked, and a countdown to a due date.
 
 ```razor
-<KlyDisplay Kind="DisplayKind.Timeline" Variant="pipeline" TimelineItems="_steps" />
-<KlyDisplay Kind="DisplayKind.Date" Variant="countdown" Title="Invoice due" DateValue="_due" Now="_now" />
+<KlyDisplay Kind="DisplayKind.Timeline" Variant="DisplayVariant.Pipeline" TimelineItems="_steps" />
+<KlyDisplay Kind="DisplayKind.Date" Variant="DisplayVariant.Countdown" Title="Invoice due" DateValue="_due" Now="_now" />
 
 @code {
     private readonly DateTimeOffset _now = new(2026, 11, 25, 12, 0, 0, TimeSpan.Zero);
@@ -231,7 +231,7 @@ The CSV table shows the first 1,000 rows, then says so in its footer.
 Goal: a list of attachments that opens in the preview when clicked.
 
 ```razor
-<KlyDisplay Kind="DisplayKind.List" Variant="files" Title="Attachments" ListItems="_attachments" />
+<KlyDisplay Kind="DisplayKind.List" Variant="DisplayVariant.Files" Title="Attachments" ListItems="_attachments" />
 
 @code {
     private readonly IReadOnlyList<DisplayListItem> _attachments =

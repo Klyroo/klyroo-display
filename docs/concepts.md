@@ -13,7 +13,7 @@ FilePreviewService   ─── Changed ──────────► KlyFile
   Open / OpenGallery / Next / Previous /       │ injects the same instance
   GoTo / Close                                 │
   static: DetectKind, ParseCsv,              KlyDisplay               19 block kinds, one component
-          FormatFileSize, ...                  │ Variant="files" opens items in the service
+          FormatFileSize, ...                  │ Variant="DisplayVariant.Files" opens items in the service
 FilePreviewFile, FilePreviewOptions,         KlyAudioPlayer, KlyVideoPlayer
 ParsedCsvPreview, VideoPlayerTrack, ...        clip, play-limit and seek rules
 ```
@@ -24,7 +24,7 @@ ParsedCsvPreview, VideoPlayerTrack, ...        clip, play-limit and seek rules
 
 `KlyDisplay` is a single component whose `Kind` parameter selects one of 19 renderers. All kinds share one parameter list, so a parameter only has an effect on the kinds its documentation names: `Facts` is read by `DisplayKind.Facts`, `MeterValue` by `DisplayKind.Meter`, and so on. The [API reference](api-reference.md#klydisplay) says which kind reads each parameter.
 
-A kind can have variants, chosen with the string `Variant`: `row` for a statistic, `pipeline`, `log` or `schedule` for a timeline, `secret` for a code value. Matching ignores case, and an unknown value renders the kind's default layout without an error. A code value is also highlighted from its `Language` (see below). The item types (`DisplayFact`, `DisplayTimelineItem` and the others) are plain data: records or classes with init-only properties, so you build them in code and pass lists.
+A kind can have variants, chosen with the `DisplayVariant` enum: `DisplayVariant.Row` for a statistic, `Pipeline`, `Log` or `Schedule` for a timeline, `Secret` for a code value. A variant that belongs to another kind (`Gallery` on a heading) renders the kind's default layout without an error, and logs a warning in Development. A code value is also highlighted from its `Language` (see below). The item types (`DisplayFact`, `DisplayTimelineItem` and the others) are plain data: records or classes with init-only properties, so you build them in code and pass lists.
 
 The `schedule` variant of a Timeline is an agenda: events are sorted by `DisplayTimelineItem.Date`, grouped by calendar day under a heading (the long date of the resolved culture, prefixed by "Today" or "Tomorrow" relative to `Now`), and each row has a time column (`09:00 – 10:30`, or the "All day" text), a length ("1 h 30 min"), the title, description, actor and icon, and a left rule in the tone color. A day is the calendar day of the event in its own offset. An event that spans several days is listed once, on the day it starts, with the end date in its time range, and an event that lasts whole days says "All day" and its number of days. Events without a `Date` come last under an "Unscheduled" heading, which only appears when there are dated events too. Each day is an `ol` under an `h4` that holds a `time` element, and the times and lengths are `time` elements with `datetime` attributes. `Max` and `Step` cut the sorted list.
 
