@@ -37,6 +37,7 @@ public static partial class DisplayLocales
         Pause = "Pause",
         PlayVideo = "Lire la vidéo",
         Seek = "Position de lecture",
+        SeekValueText = (p, l) => $"{p} sur {l}",
         PlaybackProgress = "Progression de la lecture",
         NoPlaysLeft = "Plus aucune lecture possible",
         PlaysLeft = n => n <= 1 ? $"{n} lecture restante" : $"{n} lectures restantes",

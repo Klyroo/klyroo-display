@@ -190,6 +190,35 @@ public sealed class MediaPlayerControlsTests : BunitContext
     }
 
     [Fact]
+    public async Task Seek_slider_speaks_its_position_and_follows_the_playback()
+    {
+        var audio = Render<KlyAudioPlayer>(p => p.Add(x => x.Src, "/media/a.mp3").Add(x => x.Duration, 60));
+        Assert.Equal("0:00 of 1:00", audio.Find("[data-slot=media-seek]").GetAttribute("aria-valuetext"));
+        await audio.InvokeAsync(() => audio.Instance.TogglePlayAsync());
+        await audio.InvokeAsync(() => CallFromMediaAsync("TimeUpdate", 37d));
+        Assert.Equal("0:37 of 1:00", audio.Find("[data-slot=media-seek]").GetAttribute("aria-valuetext"));
+
+        var video = Render<KlyVideoPlayer>(p => p.Add(x => x.Src, "/media/v.mp4").Add(x => x.Duration, 3725).Add(x => x.Start, 25));
+        Assert.Equal("0:00 of 1:01:40", video.Find("[data-slot=media-seek]").GetAttribute("aria-valuetext"));
+    }
+
+    [Fact]
+    public void Progress_bar_of_a_non_seekable_player_also_has_a_spoken_value()
+    {
+        var cut = Render<KlyAudioPlayer>(p => p.Add(x => x.Src, "/media/a.mp3").Add(x => x.Duration, 90).Add(x => x.Seekable, false));
+        Assert.Equal("0:00 of 1:30", cut.Find("[data-slot=media-progress]").GetAttribute("aria-valuetext"));
+    }
+
+    [Fact]
+    public void Seek_value_text_is_localized_and_replaceable()
+    {
+        Services.AddKlyrooDisplay(d => d.Texts("en", t => t with { SeekValueText = (p, l) => $"{p} sur {l}" }));
+        var cut = Render<KlyAudioPlayer>(p => p.Add(x => x.Src, "/media/a.mp3").Add(x => x.Duration, 60));
+        Assert.Equal("0:00 sur 1:00", cut.Find("[data-slot=media-seek]").GetAttribute("aria-valuetext"));
+        Assert.Equal("0:37 sur 1:00", DisplayLocales.Fr.SeekValueText("0:37", "1:00"));
+    }
+
+    [Fact]
     public void Player_texts_come_from_DisplayTexts()
     {
         Services.AddKlyrooDisplay(d => d.Texts("en", t => t with

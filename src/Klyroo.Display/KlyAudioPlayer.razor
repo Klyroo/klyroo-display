@@ -46,6 +46,7 @@
                            step="0.1" value="@ClipPosition.ToString("0.##", CultureInfo.InvariantCulture)"
                            disabled="@Disabled"
                            aria-label="@Texts.Seek"
+                           aria-valuetext="@SeekValueText"
                            class="h-1.5 w-full cursor-pointer accent-(--klyroo-primary)"
                            data-slot="media-seek"
                            @oninput="OnSeekInputAsync" />
@@ -55,7 +56,7 @@
                     var pct = ClipLength > 0 ? Math.Clamp(ClipPosition / ClipLength * 100.0, 0, 100) : 0;
                     <div class="h-1.5 w-full overflow-hidden rounded-full bg-(--klyroo-bg-muted)"
                          role="progressbar" aria-label="@Texts.PlaybackProgress"
-                         aria-valuenow="@Math.Round(pct)" aria-valuemin="0" aria-valuemax="100"
+                         aria-valuenow="@Math.Round(pct)" aria-valuemin="0" aria-valuemax="100" aria-valuetext="@SeekValueText"
                          data-slot="media-progress">
                         <div class="h-full bg-(--klyroo-primary)" style="@($"width:{pct.ToString("0.#", CultureInfo.InvariantCulture)}%")"></div>
                     </div>
@@ -214,6 +215,9 @@
     public double ClipLength => Math.Max(0, ClipEnd - Start);
     /// <summary>The position inside the clip in seconds, between zero and <see cref="ClipLength"/>.</summary>
     public double ClipPosition => Math.Clamp(_currentTime - Start, 0, ClipLength);
+
+    // "0:37 of 1:00": a bare number tells a screen reader nothing about where it is in the clip.
+    private string SeekValueText => Texts.SeekValueText(FormatTime(ClipPosition), FormatTime(ClipLength));
 
     // The texts of the current locale, the one the Messages of Klyroo.UI come from; cached per locale by the options.
     private DisplayTexts Texts => Options.Extension<KlyrooDisplayOptions>().ResolveTexts(CurrentLocale.Code);

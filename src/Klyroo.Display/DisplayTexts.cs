@@ -127,6 +127,9 @@ public sealed record DisplayTexts
     /// <summary>The timeline slider (<c>"Seek"</c>).</summary>
     public string Seek { get; init; } = "Seek";
 
+    /// <summary>The spoken value of the timeline slider and of the progress bar of a non-seekable player, given the position and the length of the clip (<c>"0:37 of 1:00"</c>).</summary>
+    public Func<string, string, string> SeekValueText { get; init; } = (position, length) => $"{position} of {length}";
+
     /// <summary>The read-only timeline of a non-seekable player (<c>"Playback progress"</c>).</summary>
     public string PlaybackProgress { get; init; } = "Playback progress";
 

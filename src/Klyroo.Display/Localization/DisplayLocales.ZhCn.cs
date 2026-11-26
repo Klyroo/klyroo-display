@@ -38,6 +38,7 @@ public static partial class DisplayLocales
         Pause = "暂停",
         PlayVideo = "播放视频",
         Seek = "播放位置",
+        SeekValueText = (p, l) => $"共 {l}，当前 {p}",
         PlaybackProgress = "播放进度",
         NoPlaysLeft = "播放次数已用完",
         PlaysLeft = n => $"剩余 {n} 次播放",

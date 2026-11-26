@@ -38,6 +38,7 @@ public static partial class DisplayLocales
         Pause = "إيقاف مؤقت",
         PlayVideo = "تشغيل الفيديو",
         Seek = "موضع التشغيل",
+        SeekValueText = (p, l) => $"{p} من {l}",
         PlaybackProgress = "تقدم التشغيل",
         NoPlaysLeft = "لم تتبق مرات تشغيل",
         PlaysLeft = n => $"متبقٍ {n} {ArabicPlural(n, "مرة تشغيل", "مرات تشغيل")}",

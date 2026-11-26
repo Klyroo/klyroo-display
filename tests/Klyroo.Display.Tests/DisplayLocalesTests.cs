@@ -65,6 +65,7 @@ public sealed class DisplayLocalesTests : BunitContext
                     string s => new[] { s },
                     Func<int, string> f => new[] { f(0), f(1), f(2), f(5), f(21), f(1500) },
                     Func<string, string> f => new[] { f("Office") },
+                    Func<string, string, string> f => new[] { f("0:37", "1:00") },
                     Func<int, int, string, string> f => new[] { f(1, 1, "tab"), f(2, 12, ";") },
                     _ => throw new InvalidOperationException($"{property.Name} has an unexpected type."),
                 };

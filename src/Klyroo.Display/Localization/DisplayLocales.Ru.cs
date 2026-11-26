@@ -38,6 +38,7 @@ public static partial class DisplayLocales
         Pause = "Пауза",
         PlayVideo = "Воспроизвести видео",
         Seek = "Позиция воспроизведения",
+        SeekValueText = (p, l) => $"{p} из {l}",
         PlaybackProgress = "Ход воспроизведения",
         NoPlaysLeft = "Воспроизведений не осталось",
         PlaysLeft = n => $"Осталось {n} {RussianPlural(n, "воспроизведение", "воспроизведения", "воспроизведений")}",

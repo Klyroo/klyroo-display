@@ -38,6 +38,7 @@ public static partial class DisplayLocales
         Pause = "一時停止",
         PlayVideo = "動画を再生",
         Seek = "再生位置",
+        SeekValueText = (p, l) => $"{l} 中 {p}",
         PlaybackProgress = "再生の進行状況",
         NoPlaysLeft = "再生回数の上限に達しました",
         PlaysLeft = n => $"残り{n}回",
