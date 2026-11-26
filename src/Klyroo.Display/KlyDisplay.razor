@@ -963,7 +963,7 @@
         IReadOnlyList<KlyChartCategory<DisplayChartPoint>> categories =
             [new KlyChartCategory<DisplayChartPoint>("value", p => p.Value) { Label = name, Color = tones.Count == 1 ? tones[0] : KlyColor.Primary }];
         return @<div class="pt-1" data-slot="@(line ? "chart-line" : "chart-bars")">
-            <KlyChart TItem="DisplayChartPoint" Data="data" Index="@(p => p.Label)" Categories="categories"
+            <KlyChart TItem="DisplayChartPoint" TIndex="string" Data="data" Index="@(p => p.Label)" Categories="categories"
                       Type="@(line ? KlyChartType.Line : KlyChartType.Bar)" Points="line"
                       Legend="false" Format="ChartFormat" Table="KlyChartTable.Toggle"
                       Width="560" Height="220" data-slot="chart-plot" />
