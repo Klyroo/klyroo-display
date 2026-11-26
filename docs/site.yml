@@ -16,8 +16,36 @@ packages:
   - Klyroo.Display.Core
   - Klyroo.Display
 
-# The primary color of the site, the name of a Tailwind palette (blue, emerald, violet...). Without it the Klyroo colors are used.
-# accent: blue
+# The home page. headline is two lines, the second in the accent color; lead is the paragraph under it. Without them: the title and the tagline.
+headline: |
+  Read-only blocks
+  from typed models.
+lead: >-
+  KlyDisplay renders statistics, tables, timelines, code values and more from typed models through one component, and a file preview overlay opens PDFs, images, video, audio, CSV, Markdown and text.
+
+# The accent of the site (#rrggbb): buttons, links, marks and the second line of the headline. The text variants that pass the contrast rules in light and
+# dark mode are computed from it. Without it: the color of the library in klyroo-stack/docs-site/Klyroo.Docs.Site/libraries.yml.
+accent: "#ec4899"
+
+# The texture of the ground behind the header and the hero: blueprint-grid, dot-matrix, ruled-rows, baseline-grid, chart-ticks, halftone, cell-grid or node-dots.
+texture: halftone
+
+# What the hero demonstrates. Either board: table | form (a board with feature chips and several results, authored in docs-site), or a simple hero: the code,
+# the lines the leader line starts at (focus) and one result (output: lines of text, or preview: ui-settings | display-stat | spreadsheet-rows).
+demo:
+  file: Revenue.razor
+  language: razor
+  focus: 1-2
+  code: |
+    <KlyDisplay Kind="DisplayKind.Stat" Title="Monthly revenue" Value="148,900" Unit="EUR"
+                Delta="+14.2%" Trend="_trend" />
+
+    @code {
+        private readonly double[] _trend = [102, 118, 134, 149];
+    }
+  result:
+    title: What it renders
+    preview: display-stat
 
 # The pages in the order of the navigation. docs/README.md comes first, as "Documentation". A page that is not listed follows, by file name.
 # An entry is a file name below docs/ without .md, or a map with page and any of: title, navTitle, description, tocDepth, indexText. A group has a group name and its pages.
