@@ -1,11 +1,15 @@
 @namespace Klyroo.Display
 @using System.Globalization
+@using Microsoft.JSInterop
 @inherits KlyComponentBase
+@implements IAsyncDisposable
+@implements IMediaElementHost
+@inject IJSRuntime JS
 
 <div class="@RootClass" role="region" aria-label="@(Title ?? "Video player")" tabindex="@(Keyboard ? 0 : -1)"
      style="@($"aspect-ratio:{AspectRatio}")"
      @onkeydown="OnKeyDown" data-slot="video-player" data-locked="@(IsLocked ? "true" : null)" @attributes="AdditionalAttributes">
-    <video src="@Src" poster="@Poster" preload="@Preload" muted="@Muted" playsinline="@PlaysInline"
+    <video @ref="_media" src="@Src" poster="@Poster" preload="@Preload" muted="@Muted" playsinline="@PlaysInline"
            loop="@(Loop && !IsRestricted)"
            disablepictureinpicture="@(!Seekable)"
            class="h-full w-full object-contain"
@@ -162,6 +166,10 @@
     private bool _playing;
     private bool _playActive;
     private double _currentTime;
+    private ElementReference _media;
+    private MediaElementInterop? _interop;
+    private double? _mediaDuration;
+    private bool _pauseMedia;
     private int _activeTrackIndex = -1;
 
     /// <summary>The URL of the media file.</summary>
@@ -174,7 +182,7 @@
     [Parameter] public string AspectRatio { get; set; } = "16 / 9";
     /// <summary>The <c>preload</c> attribute of the media element (<c>"metadata"</c> by default).</summary>
     [Parameter] public string Preload { get; set; } = "metadata";
-    /// <summary>Not used in this version: the player never starts by itself.</summary>
+    /// <summary>Starts playing once the player is interactive. Browsers can refuse to start a player that is not muted before the user has interacted with the page; the player then stays paused.</summary>
     [Parameter] public bool Autoplay { get; set; }
     /// <summary>Sets <c>loop</c> on the media element. It is ignored when the player is restricted by <see cref="MaxPlays"/> or by <see cref="Seekable"/> being <see langword="false"/>.</summary>
     [Parameter] public bool Loop { get; set; }
@@ -191,7 +199,7 @@
     [Parameter] public double Start { get; set; }
     /// <summary>The clip end, in seconds. It is used when it is greater than <see cref="Start"/>, otherwise <see cref="Duration"/> gives the end.</summary>
     [Parameter] public double? End { get; set; }
-    /// <summary>The total duration in seconds (<c>60</c> by default). The player does not read the duration from the media element, so set it to the real length, or set <see cref="End"/>.</summary>
+    /// <summary>The total duration in seconds, used until the media element reports its own (<c>60</c> by default). Set <see cref="End"/> to stop before the end of the file.</summary>
     [Parameter] public double Duration { get; set; } = 60;
     /// <summary>Whether the user can move the position with the timeline. When <see langword="false"/> the timeline is a read-only progress bar (<see langword="true"/> by default).</summary>
     [Parameter] public bool Seekable { get; set; } = true;
@@ -211,9 +219,9 @@
     /// <summary>The rates the speed button cycles through. The button is hidden when there are fewer than two (0.5, 0.75, 1, 1.25, 1.5 and 2 by default).</summary>
     [Parameter] public IReadOnlyList<double>? Rates { get; set; } = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-    /// <summary>Not used in this version.</summary>
+    /// <summary>The volume of the media element, from 0 to 1 (<c>1.0</c> by default). The player has no volume slider, so set it from your own control.</summary>
     [Parameter] public double Volume { get; set; } = 1.0;
-    /// <summary>Not raised in this version.</summary>
+    /// <summary>Not raised in this version: the player has no volume slider.</summary>
     [Parameter] public EventCallback<double> VolumeChanged { get; set; }
 
     /// <summary>Whether the player is muted. The mute button toggles it and raises <see cref="MutedChanged"/>.</summary>
@@ -241,7 +249,7 @@
     [Parameter] public EventCallback OnEnded { get; set; }
     /// <summary>Raised when no plays are left: when a play ends with <see cref="Plays"/> at <see cref="MaxPlays"/>, or when a new play is requested after that.</summary>
     [Parameter] public EventCallback OnLimitReached { get; set; }
-    /// <summary>Raised with the position when the user seeks. The player does not raise it during playback.</summary>
+    /// <summary>Raised with the position during playback, about four times a second, and when the user seeks.</summary>
     [Parameter] public EventCallback<MediaPlayerProgress> OnTimeUpdate { get; set; }
     /// <summary>Raised when the download link is clicked.</summary>
     [Parameter] public EventCallback OnDownload { get; set; }
@@ -252,7 +260,7 @@
     public bool IsLocked => MaxPlays > 0 && RemainingPlays <= 0 && !_playActive;
     private bool IsRestricted => MaxPlays > 0 || !Seekable;
     /// <summary>The clip end in seconds: <see cref="End"/> when it is greater than <see cref="Start"/>, otherwise <see cref="Duration"/>.</summary>
-    public double ClipEnd => End is { } e && e > Start ? e : Math.Max(Start, Duration);
+    public double ClipEnd => End is { } e && e > Start ? e : Math.Max(Start, _mediaDuration ?? Duration);
     /// <summary>The clip length in seconds, <see cref="ClipEnd"/> minus <see cref="Start"/>.</summary>
     public double ClipLength => Math.Max(0, ClipEnd - Start);
     /// <summary>The position inside the clip in seconds, between zero and <see cref="ClipLength"/>.</summary>
@@ -265,7 +273,11 @@
     protected override void OnParametersSet()
     {
         if (_currentTime < Start) _currentTime = Start;
-        if (Disabled && _playing) _playing = false;
+        if (Disabled && _playing)
+        {
+            _playing = false;
+            _pauseMedia = true;
+        }
         if (_activeTrackIndex == -1 && Tracks is { Count: > 0 })
         {
             for (var i = 0; i < Tracks.Count; i++)
@@ -275,6 +287,72 @@
         }
     }
 
+    /// <inheritdoc />
+    protected override void OnInitialized() => _interop = new MediaElementInterop(this);
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_interop is null) return;
+        if (firstRender)
+        {
+            await _interop.AttachAsync(JS, _media, MediaOptions);
+            if (Autoplay) await TogglePlayAsync();
+            return;
+        }
+        await _interop.UpdateAsync(MediaOptions);
+        if (_pauseMedia)
+        {
+            _pauseMedia = false;
+            await _interop.PauseAsync();
+        }
+    }
+
+    private MediaElementOptions MediaOptions =>
+        new(Start, End is { } end && end > Start ? end : null, Loop && !IsRestricted, Muted, Rate, Volume, _activeTrackIndex);
+
+    async Task IMediaElementHost.OnMediaTimeUpdateAsync(double time)
+    {
+        if (!_playing) return;
+        _currentTime = time;
+        await OnTimeUpdate.InvokeAsync(new MediaPlayerProgress(ClipPosition, ClipLength, _currentTime));
+        StateHasChanged();
+    }
+
+    async Task IMediaElementHost.OnMediaEndedAsync()
+    {
+        if (_playActive) await CompletePlayAsync();
+    }
+
+    Task IMediaElementHost.OnMediaDurationAsync(double duration)
+    {
+        _mediaDuration = duration;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    // Playback started or paused outside the player's buttons, for example with a hardware media key.
+    async Task IMediaElementHost.OnMediaPlayingChangedAsync(bool playing)
+    {
+        if (playing == _playing) return;
+        await TogglePlayAsync();
+        if (playing && !_playing && _interop is not null) await _interop.PauseAsync();
+    }
+
+    Task IMediaElementHost.OnMediaPlayFailedAsync()
+    {
+        _playing = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_interop is not null) await _interop.DisposeAsync();
+        _interop = null;
+    }
+
     /// <summary>Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of <see cref="MaxPlays"/>. It does nothing when <see cref="Disabled"/> or <see cref="IsLocked"/>.</summary>
     public async Task TogglePlayAsync()
     {
@@ -282,11 +360,13 @@
         if (_playing)
         {
             _playing = false;
+            if (_interop is not null) await _interop.PauseAsync();
             await OnPause.InvokeAsync();
             StateHasChanged();
             return;
         }
 
+        double? from = null;
         if (!_playActive)
         {
             if (MaxPlays > 0 && Plays >= MaxPlays)
@@ -299,9 +379,11 @@
             _currentTime = Start;
             Plays++;
             await PlaysChanged.InvokeAsync(Plays);
+            from = Start;
         }
 
         _playing = true;
+        if (_interop is not null) await _interop.PlayAsync(from);
         await OnPlay.InvokeAsync();
         StateHasChanged();
     }
@@ -314,16 +396,27 @@
         if (!Seekable || Disabled || IsLocked) return;
         var clamped = Math.Clamp(clipOffsetSeconds, 0, ClipLength);
         _currentTime = Start + clamped;
+        if (_interop is not null) await _interop.SeekAsync(_currentTime);
         await OnTimeUpdate.InvokeAsync(new MediaPlayerProgress(ClipPosition, ClipLength, _currentTime));
         if (_currentTime >= ClipEnd - 0.05 && ClipLength > 0)
         {
-            _playing = false;
-            _playActive = false;
-            await OnEnded.InvokeAsync();
-            if (MaxPlays > 0 && Plays >= MaxPlays)
-            {
-                await OnLimitReached.InvokeAsync();
-            }
+            await CompletePlayAsync();
+            return;
+        }
+        StateHasChanged();
+    }
+
+    /// <summary>Ends the current play: stops, moves the position to the clip end, and raises <see cref="OnEnded"/> and, when no plays are left, <see cref="OnLimitReached"/>. The player calls it when the media reaches the clip end.</summary>
+    public async Task CompletePlayAsync()
+    {
+        _playing = false;
+        _playActive = false;
+        _currentTime = ClipEnd;
+        if (_interop is not null) await _interop.PauseAsync();
+        await OnEnded.InvokeAsync();
+        if (MaxPlays > 0 && Plays >= MaxPlays)
+        {
+            await OnLimitReached.InvokeAsync();
         }
         StateHasChanged();
     }
@@ -333,6 +426,7 @@
     {
         Muted = !Muted;
         await MutedChanged.InvokeAsync(Muted);
+        StateHasChanged();
     }
 
     /// <summary>Selects the next entry of <see cref="Rates"/> (wrapping around), and raises <see cref="RateChanged"/>. It does nothing with fewer than two rates.</summary>
@@ -346,6 +440,7 @@
         }
         Rate = Rates[(idx + 1) % Rates.Count];
         await RateChanged.InvokeAsync(Rate);
+        StateHasChanged();
     }
 
     private void CycleCaptions()

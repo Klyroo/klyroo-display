@@ -60,9 +60,8 @@ dotnet publish examples/FilePreviewCoreExample -c Release -r linux-x64 -p:Publis
 
 These are limits of the current code, not configuration errors.
 
-- **The media players do not play media.** `KlyAudioPlayer` and `KlyVideoPlayer` render a hidden or visible `audio` or `video` element and a control bar, and track the clip, the play count and the position in component state. They do not call `play()`, so pressing Play changes the button and counts a play but starts no sound, and the position does not advance on its own. `Autoplay`, `Compact` and `Volume` have no effect, and `OnTimeUpdate` is raised only by seeking.
-- **A non-seekable video cannot end a play from code.** `SeekAsync` returns immediately when `Seekable` is false, and `KlyVideoPlayer` has no `CompletePlayAsync`. `KlyAudioPlayer` does have it.
-- **The CC button of the video player does not change the active track.** The `track` elements are rendered, and the button only toggles its pressed state.
+- **The media players need an interactive render mode.** They drive their element from JavaScript once interactive, so under static server rendering the control bar shows but does not play. `Compact` has no effect, the players have no volume slider (set `Volume` yourself), and `VolumeChanged` is never raised.
+- **`Autoplay` depends on the browser.** Most browsers refuse to start a player that is not muted before the user has interacted with the page; the player then stays paused.
 - **`MediaPlayerControl.PictureInPicture` and `Fullscreen` are reserved.** Neither player renders those buttons.
 - **Some model properties are not rendered.** For example `DisplayChip.Icon`, `DisplayRecordItem.ImageSrc`, `DisplayRecordItem.Badges`, `DisplayPersonItem.AvatarSrc`, `DisplayTimelineItem.Date` and `Icon`, `DisplayBreakdownLine.CompareValue` and `Detail`, and `KlyDisplay.HeadingLevel` (a heading is always an `h3`). Each is marked as unused in its summary in the [API reference](api-reference.md).
 - **Layouts that are not implemented**: there is no comparison layout for a breakdown, no line chart or ring meter, no sticky table header, no log or schedule timeline, and no syntax highlighting in the code block. Charts are bars and a funnel only.

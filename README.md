@@ -16,7 +16,7 @@ Most screens show information more often than they edit it: an order summary, a 
 - **Progressive reveal**: `Max` and `Step` show long facts, tables, records, lists and timelines a few items at a time behind a Show more button.
 - **File preview overlay**: `KlyFilePreviewProvider` shows PDF, images, video, audio, CSV, Markdown and text in a modal, drawer or fullscreen panel, with galleries, keyboard navigation, image zoom and rotation, a details panel and downloads.
 - **Headless file helpers**: `Klyroo.Display.Core` detects a file kind from its MIME type or extension, parses CSV and TSV (RFC 4180 quoting, delimiter detection) and formats sizes, and it is NativeAOT compatible.
-- **Clip and play-limit rules**: `KlyAudioPlayer` and `KlyVideoPlayer` model a clip window, a play quota and a non-seekable timeline, and report them through callbacks. In this version your code connects the media element, see [Platforms](docs/platforms.md).
+- **Audio and video players with clip and play-limit rules**: `KlyAudioPlayer` and `KlyVideoPlayer` play a clip window of a file, enforce a play quota and a non-seekable timeline, and report progress and the end of each play through callbacks.
 
 ## Packages
 

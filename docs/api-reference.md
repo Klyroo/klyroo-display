@@ -238,13 +238,13 @@ A compact audio control bar with play and pause, a timeline, a mute button, a sp
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
-| `Autoplay` | `bool` | Not used in this version: the player never starts by itself. |
+| `Autoplay` | `bool` | Starts playing once the player is interactive. Browsers can refuse to start a player that is not muted before the user has interacted with the page; the player then stays paused. |
 | `Compact` | `bool` | Not used in this version. |
 | `Disabled` | `bool` | Disables the play, seek and mute controls. |
 | `Download` | `bool` | Shows the download link (`false` by default). The link also shows when `KlyAudioPlayer.DownloadUrl` is set. |
 | `DownloadFileName` | `string?` | The file name suggested to the browser by the download link. |
 | `DownloadUrl` | `string?` | The target of the download link. When `null`, `KlyAudioPlayer.Src` is used. |
-| `Duration` | `double` | The total duration in seconds (`60` by default). The player does not read the duration from the media element, so set it to the real length, or set `KlyAudioPlayer.End`. |
+| `Duration` | `double` | The total duration in seconds, used until the media element reports its own (`60` by default). Set `KlyAudioPlayer.End` to stop before the end of the file. |
 | `End` | `double?` | The clip end, in seconds. It is used when it is greater than `KlyAudioPlayer.Start`, otherwise `KlyAudioPlayer.Duration` gives the end. |
 | `Hide` | `IReadOnlyList<MediaPlayerControl>?` | The controls to remove from the control bar. |
 | `Keyboard` | `bool` | Whether the focused player reacts to keys: Space or K toggles playback, M toggles mute (`true` by default). |
@@ -257,7 +257,7 @@ A compact audio control bar with play and pause, a timeline, a mute button, a sp
 | `OnLimitReached` | `EventCallback` | Raised when no plays are left: when a play ends with `KlyAudioPlayer.Plays` at `KlyAudioPlayer.MaxPlays`, or when a new play is requested after that. |
 | `OnPause` | `EventCallback` | Raised when the user pauses. |
 | `OnPlay` | `EventCallback` | Raised when playback starts or resumes. |
-| `OnTimeUpdate` | `EventCallback<MediaPlayerProgress>` | Raised with the position when the user seeks. The player does not raise it during playback. |
+| `OnTimeUpdate` | `EventCallback<MediaPlayerProgress>` | Raised with the position during playback, about four times a second, and when the user seeks. |
 | `Plays` | `int` | The number of plays already used. The component increments it when a play starts and raises `KlyAudioPlayer.PlaysChanged`: keep the value in your own state and pass it back, so a re-render does not lose it. |
 | `PlaysChanged` | `EventCallback<int>` | Raised with the new count when a play starts. |
 | `Preload` | `string` | The `preload` attribute of the media element (`"metadata"` by default). |
@@ -268,8 +268,8 @@ A compact audio control bar with play and pause, a timeline, a mute button, a sp
 | `Src` | `string` | The URL of the media file. |
 | `Start` | `double` | The clip start, in seconds. Positions and durations are reported relative to it. |
 | `Title` | `string?` | The accessible name of the player region. |
-| `Volume` | `double` | Not used in this version. |
-| `VolumeChanged` | `EventCallback<double>` | Not raised in this version. |
+| `Volume` | `double` | The volume of the media element, from 0 to 1 (`1.0` by default). The player has no volume slider, so set it from your own control. |
+| `VolumeChanged` | `EventCallback<double>` | Not raised in this version: the player has no volume slider. |
 
 Also accepts the parameters of `KlyComponentBase`.
 
@@ -283,7 +283,7 @@ Also accepts the parameters of `KlyComponentBase`.
 
 | Method | Returns | Description |
 | :--- | :--- | :--- |
-| `CompletePlayAsync()` | `Task` | Ends the current play: stops, moves the position to the clip end, and raises `KlyAudioPlayer.OnEnded` and, when no plays are left, `KlyAudioPlayer.OnLimitReached`. Call it from your own code when the media finishes. |
+| `CompletePlayAsync()` | `Task` | Ends the current play: stops, moves the position to the clip end, and raises `KlyAudioPlayer.OnEnded` and, when no plays are left, `KlyAudioPlayer.OnLimitReached`. The player calls it when the media reaches the clip end. |
 | `CycleRateAsync()` | `Task` | Selects the next entry of `KlyAudioPlayer.Rates` (wrapping around), and raises `KlyAudioPlayer.RateChanged`. It does nothing with fewer than two rates. |
 | `SeekAsync(double clipOffsetSeconds)` | `Task` | Moves the position to an offset inside the clip, raises `KlyAudioPlayer.OnTimeUpdate`, and ends the play when the offset reaches the clip end. It does nothing unless `KlyAudioPlayer.Seekable`, and when `KlyAudioPlayer.Disabled` or `KlyAudioPlayer.IsLocked`. |
 | `ToggleMuteAsync()` | `Task` | Toggles `KlyAudioPlayer.Muted` and raises `KlyAudioPlayer.MutedChanged`. |
@@ -382,13 +382,13 @@ A video frame with an overlay play button and a control bar (play and pause, tim
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `AspectRatio` | `string` | The CSS `aspect-ratio` of the player (`"16 / 9"` by default). |
-| `Autoplay` | `bool` | Not used in this version: the player never starts by itself. |
+| `Autoplay` | `bool` | Starts playing once the player is interactive. Browsers can refuse to start a player that is not muted before the user has interacted with the page; the player then stays paused. |
 | `Compact` | `bool` | Not used in this version. |
 | `Disabled` | `bool` | Disables the play, seek and mute controls. |
 | `Download` | `bool` | Shows the download link (`false` by default). The link also shows when `KlyVideoPlayer.DownloadUrl` is set. |
 | `DownloadFileName` | `string?` | The file name suggested to the browser by the download link. |
 | `DownloadUrl` | `string?` | The target of the download link. When `null`, `KlyVideoPlayer.Src` is used. |
-| `Duration` | `double` | The total duration in seconds (`60` by default). The player does not read the duration from the media element, so set it to the real length, or set `KlyVideoPlayer.End`. |
+| `Duration` | `double` | The total duration in seconds, used until the media element reports its own (`60` by default). Set `KlyVideoPlayer.End` to stop before the end of the file. |
 | `End` | `double?` | The clip end, in seconds. It is used when it is greater than `KlyVideoPlayer.Start`, otherwise `KlyVideoPlayer.Duration` gives the end. |
 | `Hide` | `IReadOnlyList<MediaPlayerControl>?` | The controls to remove from the control bar. |
 | `Keyboard` | `bool` | Whether the focused player reacts to keys: Space or K toggles playback, M toggles mute (`true` by default). |
@@ -401,7 +401,7 @@ A video frame with an overlay play button and a control bar (play and pause, tim
 | `OnLimitReached` | `EventCallback` | Raised when no plays are left: when a play ends with `KlyVideoPlayer.Plays` at `KlyVideoPlayer.MaxPlays`, or when a new play is requested after that. |
 | `OnPause` | `EventCallback` | Raised when the user pauses. |
 | `OnPlay` | `EventCallback` | Raised when playback starts or resumes. |
-| `OnTimeUpdate` | `EventCallback<MediaPlayerProgress>` | Raised with the position when the user seeks. The player does not raise it during playback. |
+| `OnTimeUpdate` | `EventCallback<MediaPlayerProgress>` | Raised with the position during playback, about four times a second, and when the user seeks. |
 | `Plays` | `int` | The number of plays already used. The component increments it when a play starts and raises `KlyVideoPlayer.PlaysChanged`: keep the value in your own state and pass it back, so a re-render does not lose it. |
 | `PlaysChanged` | `EventCallback<int>` | Raised with the new count when a play starts. |
 | `PlaysInline` | `bool` | Sets `playsinline` on the video element (`true` by default). |
@@ -415,8 +415,8 @@ A video frame with an overlay play button and a control bar (play and pause, tim
 | `Start` | `double` | The clip start, in seconds. Positions and durations are reported relative to it. |
 | `Title` | `string?` | The accessible name of the player region. |
 | `Tracks` | `IReadOnlyList<VideoPlayerTrack>?` | The caption tracks, rendered as `track` elements. The CC button cycles an internal selection and does not change the browser track mode in this version. |
-| `Volume` | `double` | Not used in this version. |
-| `VolumeChanged` | `EventCallback<double>` | Not raised in this version. |
+| `Volume` | `double` | The volume of the media element, from 0 to 1 (`1.0` by default). The player has no volume slider, so set it from your own control. |
+| `VolumeChanged` | `EventCallback<double>` | Not raised in this version: the player has no volume slider. |
 
 Also accepts the parameters of `KlyComponentBase`.
 
@@ -430,6 +430,7 @@ Also accepts the parameters of `KlyComponentBase`.
 
 | Method | Returns | Description |
 | :--- | :--- | :--- |
+| `CompletePlayAsync()` | `Task` | Ends the current play: stops, moves the position to the clip end, and raises `KlyVideoPlayer.OnEnded` and, when no plays are left, `KlyVideoPlayer.OnLimitReached`. The player calls it when the media reaches the clip end. |
 | `CycleRateAsync()` | `Task` | Selects the next entry of `KlyVideoPlayer.Rates` (wrapping around), and raises `KlyVideoPlayer.RateChanged`. It does nothing with fewer than two rates. |
 | `SeekAsync(double clipOffsetSeconds)` | `Task` | Moves the position to an offset inside the clip, raises `KlyVideoPlayer.OnTimeUpdate`, and ends the play when the offset reaches the clip end. It does nothing unless `KlyVideoPlayer.Seekable`, and when `KlyVideoPlayer.Disabled` or `KlyVideoPlayer.IsLocked`. |
 | `ToggleMuteAsync()` | `Task` | Toggles `KlyVideoPlayer.Muted` and raises `KlyVideoPlayer.MutedChanged`. |

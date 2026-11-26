@@ -64,14 +64,9 @@ Troubleshooting, known limitations and common questions. Each problem is explain
 **Cause:** the `countdown` variant of the Date block compares against the current UTC time unless you pass `Now`.
 **Fix:** pass `Now` when the output must be stable, such as in a test or in cached markup.
 
-### The file list opens the wrong file
-
-**Cause:** in the `files` variant of a List, only items that have an `Href` become part of the gallery, but the clicked index counts all visible items.
-**Fix:** give every file item an `Href`.
-
 ## Known limitations
 
-- The audio and video players do not play media, and a few of their parameters are unused. [Platforms](platforms.md#known-limitations) has the full list, which also covers unimplemented layouts and model properties that are not rendered.
+- The audio and video players need an interactive render mode, and a few of their parameters are unused. [Platforms](platforms.md#known-limitations) has the full list, which also covers unimplemented layouts and model properties that are not rendered.
 - Text in the components is English only.
 - Heading elements are always `h3`, and `HeadingLevel` has no effect.
 - The file preview has no renderer for Office files, archives or unknown types, and relies on the browser for PDF.

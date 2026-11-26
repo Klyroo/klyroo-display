@@ -1062,7 +1062,7 @@
                                 @if (!string.IsNullOrEmpty(item.Href))
                                 {
                                     <a href="@item.Href" class="truncate font-medium text-(--klyroo-text-highlighted) hover:underline"
-                                       @onclick="@(e => OnFileItemClick(e, item, idx))" @onclick:preventDefault="@CanPreviewFiles()">@item.Text</a>
+                                       @onclick="@(() => OnFileItemClick(item))" @onclick:preventDefault="@CanPreviewFiles()">@item.Text</a>
                                 }
                                 else
                                 {
@@ -1094,12 +1094,13 @@
         RendererInfo.IsInteractive && string.Equals(Variant, "files", StringComparison.OrdinalIgnoreCase)
         && Services.GetService(typeof(FilePreviewService)) is FilePreviewService { IsMounted: true };
 
-    private void OnFileItemClick(MouseEventArgs _, DisplayListItem clicked, int index)
+    private void OnFileItemClick(DisplayListItem clicked)
     {
         if (!CanPreviewFiles() || ListItems is null) return;
         if (Services.GetService(typeof(FilePreviewService)) is not FilePreviewService preview) return;
-        var files = ListItems
-            .Where(x => !string.IsNullOrEmpty(x.Href))
+        // Only items with an Href are in the gallery, so the clicked item's position is counted among those.
+        var linked = ListItems.Where(x => !string.IsNullOrEmpty(x.Href)).ToList();
+        var files = linked
             .Select(x => new FilePreviewFile
             {
                 Src = x.Href!,
@@ -1108,7 +1109,7 @@
                 Size = x.FileSize,
             })
             .ToList();
-        preview.OpenGallery(files, new FilePreviewOptions { Index = Math.Clamp(index, 0, Math.Max(0, files.Count - 1)) });
+        preview.OpenGallery(files, new FilePreviewOptions { Index = Math.Max(0, linked.IndexOf(clicked)) });
     }
 
     private RenderFragment RenderTimeline()

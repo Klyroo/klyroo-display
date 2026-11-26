@@ -10,6 +10,7 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
     public DisplayMediaFilePreviewTests()
     {
         Services.AddKlyrooDisplay();
+        JSInterop.SetupModule("./_content/Klyroo.Display/klyroo-display-media.js").Mode = JSRuntimeMode.Loose;
     }
 
     [Fact]

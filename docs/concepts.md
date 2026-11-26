@@ -50,17 +50,17 @@ A file preview involves three parties: your code, `FilePreviewService` and `KlyF
 
 The service is registered as scoped. In Interactive Server that means one instance per circuit, in WebAssembly one for the app, and the provider and the code that calls `Open` must resolve the same instance, so they must render in the same interactive scope. `IsMounted` tells you whether a provider is currently subscribed.
 
-## Media players: rules, not a media engine
+## Media players: rules on top of the media element
 
 `KlyAudioPlayer` and `KlyVideoPlayer` share one model, defined by a clip and a set of restrictions:
 
-- **Clip**: `Start` and `End` (or `Duration` when `End` is not set) bound the playable range. `ClipLength` and `ClipPosition` are relative to `Start`.
+- **Clip**: `Start` and `End` bound the playable range. Without `End`, the clip runs to the end of the file, whose length the element reports once its metadata loads (`Duration` is the fallback until then). `ClipLength` and `ClipPosition` are relative to `Start`.
 - **Play quota**: with `MaxPlays` above zero, starting a play consumes one. Pausing and resuming within a play does not. When the quota is spent and the last play ends, the player locks, shows that no plays are left, and raises `OnLimitReached`.
 - **Seekability**: with `Seekable` false the timeline is a read-only progress bar and `SeekAsync` does nothing. A restricted player (a quota or no seeking) also ignores `Loop`.
 
 `Plays` is an input parameter that the component also increments. It reports the new value through `PlaysChanged`, and you keep the number in your own state with `@bind-Plays`; otherwise a parent re-render passes the old value back and the quota resets.
 
-The players hold this state and render the controls, but they do not drive the media element in this version: there is no `play()` call and the position does not advance by itself. They are the rule and display layer, and the host application connects playback. [Platforms](platforms.md#known-limitations) lists what that means in practice.
+The players hold this state and drive their `audio` or `video` element through a small JavaScript module, `_content/Klyroo.Display/klyroo-display-media.js`, which the component imports once it is interactive. The buttons play, pause, seek, mute and change the speed of the element; the element reports its position (about four times a second, raised as `OnTimeUpdate`), its duration and its end. When playback reaches `End`, the module pauses the element and the player ends the play, which spends it. The rules stay in .NET: a play started with a hardware media key is counted like one started with the button, and refused when the player is locked.
 
 ## Render modes, threading and errors
 

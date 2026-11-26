@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Fixed
+
+- `KlyAudioPlayer` and `KlyVideoPlayer` now play their media. A JavaScript module drives the `audio` or `video` element: the buttons play, pause, seek, mute and change the speed, the position and the duration come from the element, and playback stops at `End` and ends the play. `Autoplay` and `Volume` take effect, `OnTimeUpdate` is raised during playback, and the CC button of the video player switches the shown track.
+- `KlyVideoPlayer` has `CompletePlayAsync`, like `KlyAudioPlayer`.
+- Clicking a file in the `files` variant of a List opened the wrong file when an earlier item had no `Href`.
+
 ## [0.1.0-preview.1] - 2026-11-24
 
 ### Added

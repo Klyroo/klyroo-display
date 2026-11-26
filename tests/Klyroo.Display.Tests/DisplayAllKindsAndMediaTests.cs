@@ -12,6 +12,7 @@ public sealed class DisplayAllKindsAndMediaTests : BunitContext
     public DisplayAllKindsAndMediaTests()
     {
         Services.AddKlyrooDisplay();
+        JSInterop.SetupModule("./_content/Klyroo.Display/klyroo-display-media.js").Mode = JSRuntimeMode.Loose;
     }
 
     [Theory]

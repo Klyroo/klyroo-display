@@ -205,7 +205,7 @@ Goal: a listening exercise that lets the learner start a 30-second extract twice
 
 `Start` and `End` define the clip, so positions and the total length are relative to it (30 seconds here). `MaxPlays` caps the number of starts, and `@bind-Plays` keeps the count in your component: the player increments its own copy and raises `PlaysChanged`, and you pass the value back on each render. Once both plays are used and the second one ends, the player shows a locked state and raises `OnLimitReached`.
 
-In this version the player does not start the `audio` element and does not advance the position by itself. It enforces the rules and reports events, and your code connects the media: when your own playback ends, call `CompletePlayAsync` on the component (reachable with `@ref`) to end the play and spend it. Until then, treat the player as the rule and display layer and plan the audio wiring yourself. See [Platforms](platforms.md#known-limitations).
+Play starts the extract at 15 seconds and the player pauses it at 45, which ends the play. The player needs an interactive render mode: under static server rendering the control bar shows but nothing plays. To end a play from your own code, for example when a timer runs out, call `CompletePlayAsync` on the component (reachable with `@ref`).
 
 ## Detect file kinds and parse CSV on the server
 

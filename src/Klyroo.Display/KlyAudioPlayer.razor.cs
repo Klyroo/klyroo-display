@@ -6,9 +6,10 @@ namespace Klyroo.Display;
 /// and to a non-seekable timeline.
 /// </summary>
 /// <remarks>
-/// In this version the component keeps the clip, the play count and the position in its own state and does not call
-/// <c>play()</c> on the <c>audio</c> element, nor does the position advance by itself. Use it to present and enforce
-/// the rules, and drive the position from your own code with <see cref="SeekAsync"/> and <see cref="CompletePlayAsync"/>.
+/// The component drives its <c>audio</c> element through a small JavaScript module once it is interactive: the buttons play,
+/// pause and seek the media, and the position, the duration and the end of the clip come back from the element. The play
+/// count and the lock are enforced by the component. Under static server rendering nothing is interactive, so the
+/// control bar shows but does not play.
 /// </remarks>
 public partial class KlyAudioPlayer
 {
