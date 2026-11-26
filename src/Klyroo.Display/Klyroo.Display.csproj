@@ -3,6 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Klyroo.Display</RootNamespace>
     <PackageId>Klyroo.Display</PackageId>
+    <PackageTags>klyroo;blazor;display;audio-player;video-player;file-preview;syntax-highlighting;maui</PackageTags>
     <Description>Klyroo Display blocks (19 kinds), Audio/Video players with clip rules, and FilePreview overlay provider for Blazor Web &amp; .NET MAUI Hybrid.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);BL0007</NoWarn>
