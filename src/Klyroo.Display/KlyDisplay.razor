@@ -276,9 +276,27 @@
     /// <summary>The number of items each click on Show more reveals (all remaining items when <see langword="null"/>).</summary>
     [Parameter] public int? Step { get; set; }
 
+    // One warning per kind and variant a component instance sees, not one per render.
+    private (DisplayKind Kind, string Variant)? _warnedVariant;
+
+    // The environment name the host reads (ASP.NET Core and the generic host); Klyroo.Display does not depend on the hosting package.
+    private static bool IsDevelopmentEnvironment() =>
+        string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"), "Development", StringComparison.OrdinalIgnoreCase);
+
+    private void WarnAboutUnknownVariant()
+    {
+        if (!DisplayVariants.IsUnknown(Kind, Variant) || _warnedVariant == (Kind, Variant!)) return;
+        _warnedVariant = (Kind, Variant!);
+        var enabled = Options.Extension<KlyrooDisplayOptions>().WarnOnUnknownVariant
+            ?? IsDevelopmentEnvironment();
+        if (!enabled || Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService<Microsoft.Extensions.Logging.ILogger<KlyDisplay>>(Services) is not { } logger) return;
+        DisplayVariants.LogUnknownVariant(logger, Variant!, Kind, DisplayVariants.For(Kind) is { Count: > 0 } known ? string.Join(", ", known) : "none");
+    }
+
     /// <inheritdoc />
     protected override void OnParametersSet()
     {
+        WarnAboutUnknownVariant();
         if (!_detailsInitialized)
         {
             _detailsInitialized = true;

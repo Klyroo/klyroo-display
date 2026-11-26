@@ -12,6 +12,14 @@ public sealed class KlyrooDisplayOptions
     /// <summary>Creates the options with the built-in texts of <see cref="DisplayLocales"/>.</summary>
     public KlyrooDisplayOptions() { }
 
+    /// <summary>
+    /// Logs a warning (<c>ILogger&lt;KlyDisplay&gt;</c>, once per component) when <see cref="KlyDisplay.Variant"/> is not a variant of its
+    /// <see cref="KlyDisplay.Kind"/>, which renders the default layout. <see langword="null"/> (the default) turns it on when the
+    /// <c>ASPNETCORE_ENVIRONMENT</c> (or <c>DOTNET_ENVIRONMENT</c>) variable is <c>Development</c>, as in Blazor Web and Server apps. A
+    /// WebAssembly or MAUI app does not have that variable: set this to <c>builder.HostEnvironment.IsDevelopment()</c> there. <see langword="false"/> turns the warning off.
+    /// </summary>
+    public bool? WarnOnUnknownVariant { get; set; }
+
     private readonly object _gate = new();
     private readonly Dictionary<string, List<Func<DisplayTexts, DisplayTexts>>> _changes = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, DisplayTexts> _resolved = new(StringComparer.OrdinalIgnoreCase);
