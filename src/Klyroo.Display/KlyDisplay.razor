@@ -204,6 +204,9 @@
     /// <summary>The bars of a Chart block, the points of a <c>line</c> Chart, or the steps of a <c>funnel</c> Chart.</summary>
     [Parameter] public IReadOnlyList<DisplayChartPoint>? ChartData { get; set; }
 
+    /// <summary>Formats the values of a Chart block (funnel steps, axis ticks, tooltips and the data table). Defaults to the format culture of the locale in effect, with up to two decimals and thousands separators.</summary>
+    [Parameter] public Func<double, string>? ChartFormat { get; set; }
+
     /// <summary>The columns of a Table block.</summary>
     [Parameter] public IReadOnlyList<DisplayTableColumn>? TableColumns { get; set; }
 
@@ -903,81 +906,64 @@
             }
             else if (string.Equals(Variant, "funnel", StringComparison.OrdinalIgnoreCase))
             {
-                var first = Math.Max(1.0, ChartData[0].Value);
+                // Widths are relative to the largest step; a zero or negative step has no bar, a positive one never vanishes.
+                var largest = Math.Max(1.0, ChartData.Max(d => d.Value));
                 <div class="flex flex-col gap-2" data-slot="chart-funnel">
                     @for (var i = 0; i < ChartData.Count; i++)
                     {
                         var pt = ChartData[i];
-                        var widthPct = Math.Clamp(pt.Value / first * 100.0, 4, 100).ToString("0.#", CultureInfo.InvariantCulture);
+                        var widthPct = (pt.Value <= 0 ? 0.0 : Math.Clamp(pt.Value / largest * 100.0, 2, 100)).ToString("0.#", CultureInfo.InvariantCulture);
                         var rate = i > 0 && ChartData[i - 1].Value > 0 ? $"{Math.Round(pt.Value / ChartData[i - 1].Value * 100)}%" : null;
                         <div class="flex flex-col gap-1" data-slot="funnel-step">
                             <div class="flex items-baseline justify-between gap-2 text-xs">
                                 <span class="font-medium text-(--klyroo-text)">@pt.Label</span>
-                                <span class="tabular-nums text-(--klyroo-text-muted)">@pt.Value @(rate is not null ? $"({rate})" : "")</span>
+                                <span class="tabular-nums text-(--klyroo-text-muted)">@FormatChartValue(pt.Value) @(rate is not null ? $"({rate})" : "")</span>
                             </div>
-                            <div class="h-2 rounded-full @ChartFill(pt.Tone)" data-color="@ToneValue(pt.Tone)" style="@($"width:{widthPct}%")"></div>
+                            <div class="h-2 rounded-full @ChartFill(pt.Tone)" data-color="@ToneValue(pt.Tone)" style="@($"width:{widthPct}%")" aria-hidden="true"></div>
                         </div>
                     }
                 </div>
-            }
-            else if (string.Equals(Variant, "line", StringComparison.OrdinalIgnoreCase))
-            {
-                @RenderLineChart(ChartData)
             }
             else
             {
-                var max = Math.Max(1.0, ChartData.Max(d => d.Value));
-                <div class="flex h-24 items-end gap-2 pt-4" data-slot="chart-bars">
-                    @foreach (var pt in ChartData)
-                    {
-                        var hPct = Math.Clamp(pt.Value / max * 100.0, 6, 100).ToString("0.#", CultureInfo.InvariantCulture);
-                        <div class="flex flex-1 flex-col items-center gap-1" title="@($"{pt.Label}: {pt.Value}")" data-slot="chart-bar">
-                            <div class="w-full rounded-t-sm @ChartFill(pt.Tone)" data-color="@ToneValue(pt.Tone)" style="@($"height:{hPct}%")"></div>
-                            <span class="max-w-full truncate text-[11px] text-(--klyroo-text-muted)">@pt.Label</span>
-                        </div>
-                    }
-                </div>
+                @RenderChartPlot(ChartData, string.Equals(Variant, "line", StringComparison.OrdinalIgnoreCase))
             }
         </div>;
 
-    private static string ChartFill(KlyColor? tone) => tone is null ? "bg-(--klyroo-primary)" : "bg-(--kly-color)";
+    private string FormatChartValue(double value) =>
+        ChartFormat is not null ? ChartFormat(value) : (value == 0 ? 0 : value).ToString("#,0.##", FormatCulture);
 
-    private RenderFragment RenderLineChart(IReadOnlyList<DisplayChartPoint> data)
+    // The bar and line plots are Klyroo.UI's KlyChart: axes, signed values, tooltip, arrow keys and the data table
+    // (an image with a generated description, plus a disclosure with the numbers for assistive technology).
+    private RenderFragment RenderChartPlot(IReadOnlyList<DisplayChartPoint> data, bool line)
     {
-        // The plot spans from zero (or the lowest negative value) to the highest value; points are spread evenly.
-        var max = Math.Max(1.0, data.Max(d => d.Value));
-        var min = Math.Min(0.0, data.Min(d => d.Value));
-        var range = max - min <= 0 ? 1 : max - min;
-        var positions = new List<(double X, double Y)>(data.Count);
-        for (var i = 0; i < data.Count; i++)
+        var tones = data.Select(d => d.Tone ?? KlyColor.Primary).Distinct().ToList();
+        var name = string.IsNullOrWhiteSpace(Title) ? Texts.ChartValue : Title!;
+        IReadOnlyList<KlyChartCategory<DisplayChartPoint>> categories;
+        // A line is one series in one color; bars of different tones are one stacked series per tone, so each bar keeps its own color.
+        if (line || tones.Count == 1)
         {
-            var x = data.Count == 1 ? 50.0 : i * 100.0 / (data.Count - 1);
-            var y = 100.0 - ((data[i].Value - min) / range * 100.0);
-            positions.Add((x, y));
+            categories = [new KlyChartCategory<DisplayChartPoint>("value", p => p.Value) { Label = name, Color = line && tones.Count > 1 ? KlyColor.Primary : tones[0] }];
         }
-        var polyline = string.Join(' ', positions.Select(p => $"{Num(p.X)},{Num(p.Y)}"));
-        return @<div class="flex flex-col gap-1.5 pt-2" data-slot="chart-line">
-            <div class="relative h-24">
-                <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="absolute inset-0 size-full overflow-visible text-(--klyroo-primary)" aria-hidden="true">
-                    <polyline fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                              vector-effect="non-scaling-stroke" points="@polyline" data-slot="chart-line-path" />
-                </svg>
-                @for (var i = 0; i < data.Count; i++)
-                {
-                    var pt = data[i];
-                    <span class="absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-(--klyroo-bg) @ChartFill(pt.Tone)"
-                          data-color="@ToneValue(pt.Tone)" style="@($"left:{Num(positions[i].X)}%;top:{Num(positions[i].Y)}%")"
-                          title="@($"{pt.Label}: {pt.Value}")" data-slot="chart-point"></span>
-                }
-            </div>
-            <div class="flex gap-1 @(data.Count == 1 ? "justify-center" : "justify-between")">
-                @foreach (var pt in data)
-                {
-                    <span class="min-w-0 truncate text-[11px] text-(--klyroo-text-muted)">@pt.Label</span>
-                }
-            </div>
+        else
+        {
+            categories = tones.Select(t => new KlyChartCategory<DisplayChartPoint>(t.Value, p => (p.Tone ?? KlyColor.Primary) == t ? p.Value : null)
+            {
+                Label = $"{name} ({t.Value})",
+                Color = t,
+            }).ToList();
+        }
+        var stacked = !line && categories.Count > 1;
+        return @<div class="pt-1" data-slot="@(line ? "chart-line" : "chart-bars")">
+            <KlyChart TItem="DisplayChartPoint" Data="data" Index="@(p => p.Label)" Categories="categories"
+                      Type="@(line ? KlyChartType.Line : KlyChartType.Bar)" Stacked="stacked" Points="line"
+                      Legend="false" Format="ChartFormat" Table="KlyChartTable.Toggle"
+                      AriaLabel="@(string.IsNullOrWhiteSpace(Title) ? null : Title)"
+                      Width="560" Height="220" data-slot="chart-plot" />
         </div>;
     }
+
+    private static string ChartFill(KlyColor? tone) => tone is null ? "bg-(--klyroo-primary)" : "bg-(--kly-color)";
 
     private RenderFragment RenderTable()
     {

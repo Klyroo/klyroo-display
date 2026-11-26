@@ -56,6 +56,9 @@ public sealed record DisplayTexts
     /// <summary>The text of a Chart block without data (<c>"No data"</c>).</summary>
     public string NoData { get; init; } = "No data";
 
+    /// <summary>The name of the series of a Chart block without a title, used in the tooltip and the data table (<c>"Value"</c>).</summary>
+    public string ChartValue { get; init; } = "Value";
+
     /// <summary>The accessible name of a Meter without a title (<c>"Meter"</c>).</summary>
     public string Meter { get; init; } = "Meter";
 

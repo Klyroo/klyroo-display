@@ -143,25 +143,6 @@ public sealed class DisplayMembersTests : BunitContext
     }
 
     [Fact]
-    public void Line_chart_places_one_point_per_value_and_point_tones_color_bars()
-    {
-        var line = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Chart)
-            .Add(x => x.Variant, "line")
-            .Add(x => x.ChartData, [new DisplayChartPoint("Mon", 0), new DisplayChartPoint("Tue", 50), new DisplayChartPoint("Wed", 100, KlyColor.Warning)]));
-
-        Assert.Equal("0,100 50,50 100,0", line.Find("[data-slot=chart-line-path]").GetAttribute("points"));
-        var points = line.FindAll("[data-slot=chart-point]");
-        Assert.Equal(3, points.Count);
-        Assert.Equal("warning", points[2].GetAttribute("data-color"));
-
-        var bars = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Chart)
-            .Add(x => x.ChartData, [new DisplayChartPoint("A", 1, KlyColor.Error)]));
-        Assert.Equal("error", bars.Find("[data-slot=chart-bar] [data-color]").GetAttribute("data-color"));
-    }
-
-    [Fact]
     public void Sticky_table_keeps_its_header_in_a_scrolling_box()
     {
         var cut = Render<KlyDisplay>(p => p

@@ -15,6 +15,7 @@ public static partial class DisplayLocales
         CopyValue = label => $"Copiar {label}",
         CopyCode = "Copiar código",
         NoData = "Sem dados",
+        ChartValue = "Valor",
         Meter = "Medidor",
         Today = "Hoje",
         Tomorrow = "Amanhã",

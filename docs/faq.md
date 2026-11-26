@@ -83,7 +83,7 @@ No. `klyroo-display.css` is a compiled stylesheet. If your app compiles Tailwind
 
 ### Is `KlyDisplay` a replacement for a data grid or a chart library?
 
-No. The table is a plain table of text cells, and the charts are small bars, a line and a funnel without axes, with the values only in tooltips. Use it for summaries next to richer components.
+No. The table is a plain table of text cells, and the chart kind draws one series of bars or a line (Klyroo.UI's `KlyChart`, with axes, tooltip, keyboard exploration and a data table) and a funnel. It has no multiple series, stacking or zoom. Use it for summaries, and `KlyChart` itself for richer charts.
 
 ### Why is my code not colored?
 

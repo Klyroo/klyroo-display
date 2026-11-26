@@ -15,6 +15,7 @@ public static partial class DisplayLocales
         CopyValue = label => $"{label}をコピー",
         CopyCode = "コードをコピー",
         NoData = "データがありません",
+        ChartValue = "値",
         Meter = "メーター",
         Today = "今日",
         Tomorrow = "明日",
