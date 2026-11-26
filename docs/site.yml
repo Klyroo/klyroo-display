@@ -35,13 +35,16 @@ texture: halftone
 demo:
   file: Revenue.razor
   language: razor
-  focus: 1-2
+  focus: 1-9
   code: |
-    <KlyDisplay Kind="DisplayKind.Stat" Title="Monthly revenue" Value="148,900" Unit="EUR"
+    <KlyDisplay Kind="DisplayKind.Stat"
+                Title="Monthly revenue"
+                Value="148,900" Unit="EUR"
                 Delta="+14.2%" Trend="_trend" />
 
     @code {
-        private readonly double[] _trend = [102, 118, 134, 149];
+        private readonly double[] _trend =
+            [102, 118, 134, 149];
     }
   result:
     title: What it renders
