@@ -1,5 +1,6 @@
 @namespace Klyroo.Display
 @using System.Globalization
+@using Microsoft.JSInterop
 @inherits KlyComponentBase
 @implements IDisposable
 @inject FilePreviewService Preview
@@ -17,7 +18,7 @@
     var fileName = current.Name ?? FilePreviewService.FileNameFromUrl(current.Src);
     var container = _expanded ? FilePreviewContainer.Fullscreen : Preview.ResolveContainer();
 
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-0 sm:p-4"
+    <div @ref="_dialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-0 sm:p-4"
          role="dialog" aria-modal="true" aria-label="@fileName"
          tabindex="0" @onkeydown="OnKeyDown"
          data-slot="file-preview-provider" data-container="@container.ToString().ToLowerInvariant()"
@@ -27,7 +28,7 @@
             @if (Preview.Files.Count > 1)
             {
                 <div class="sr-only" aria-live="polite" data-slot="file-preview-live">
-                    @($"{Preview.CurrentIndex + 1} of {Preview.Files.Count}: {fileName}")
+                    @Texts.PreviewPosition(Preview.CurrentIndex + 1, Preview.Files.Count, fileName)
                 </div>
             }
 
@@ -62,7 +63,7 @@
                         <button type="button"
                                 class="inline-flex size-8 items-center justify-center rounded-(--klyroo-radius) border border-(--klyroo-border) text-(--klyroo-text) hover:bg-(--klyroo-bg-muted) disabled:opacity-40"
                                 disabled="@(!Preview.Options.Loop && Preview.CurrentIndex <= 0)"
-                                aria-label="Previous file"
+                                aria-label="@Texts.PreviousFile"
                                 data-slot="file-preview-prev"
                                 @onclick="OnPrevious">
                             ‹
@@ -73,7 +74,7 @@
                         <button type="button"
                                 class="inline-flex size-8 items-center justify-center rounded-(--klyroo-radius) border border-(--klyroo-border) text-(--klyroo-text) hover:bg-(--klyroo-bg-muted) disabled:opacity-40"
                                 disabled="@(!Preview.Options.Loop && Preview.CurrentIndex >= Preview.Files.Count - 1)"
-                                aria-label="Next file"
+                                aria-label="@Texts.NextFile"
                                 data-slot="file-preview-next"
                                 @onclick="OnNext">
                             ›
@@ -83,25 +84,42 @@
                     @if (kind == FilePreviewKind.Image)
                     {
                         <button type="button" class="inline-flex size-8 items-center justify-center rounded-(--klyroo-radius) text-xs font-semibold text-(--klyroo-text) hover:bg-(--klyroo-bg-muted)"
-                                aria-label="Zoom out" data-slot="image-zoom-out" @onclick="ZoomOut">−</button>
+                                aria-label="@Texts.ZoomOut" data-slot="image-zoom-out" @onclick="ZoomOut">−</button>
                         <button type="button" class="inline-flex h-8 items-center justify-center rounded-(--klyroo-radius) px-2 text-xs font-semibold tabular-nums text-(--klyroo-text) hover:bg-(--klyroo-bg-muted)"
-                                aria-label="Reset zoom" data-slot="image-zoom-reset" @onclick="ResetImageTransform">@($"{Math.Round(_zoom * 100)}%")</button>
+                                aria-label="@Texts.ResetZoom" data-slot="image-zoom-reset" @onclick="ResetImageTransform">@($"{Math.Round(_zoom * 100)}%")</button>
                         <button type="button" class="inline-flex size-8 items-center justify-center rounded-(--klyroo-radius) text-xs font-semibold text-(--klyroo-text) hover:bg-(--klyroo-bg-muted)"
-                                aria-label="Zoom in" data-slot="image-zoom-in" @onclick="ZoomIn">+</button>
+                                aria-label="@Texts.ZoomIn" data-slot="image-zoom-in" @onclick="ZoomIn">+</button>
                         <button type="button" class="inline-flex size-8 items-center justify-center rounded-(--klyroo-radius) text-xs font-semibold text-(--klyroo-text) hover:bg-(--klyroo-bg-muted)"
-                                aria-label="Rotate 90 degrees" data-slot="image-rotate" @onclick="RotateImage">↻</button>
+                                aria-label="@Texts.Rotate" data-slot="image-rotate" @onclick="RotateImage">↻</button>
                     }
 
                     @if (current.Actions is { Count: > 0 })
                     {
                         @foreach (var act in current.Actions)
                         {
-                            <button type="button"
-                                    class="inline-flex h-8 items-center gap-1 rounded-(--klyroo-radius) border border-(--klyroo-border) px-2.5 text-xs font-medium text-(--klyroo-text) hover:bg-(--klyroo-bg-muted)"
-                                    data-slot="file-preview-custom-action"
-                                    @onclick="@(() => OnCustomActionAsync(act, current))">
-                                @act.Label
-                            </button>
+                            const string actionClass = "inline-flex h-8 items-center gap-1 rounded-(--klyroo-radius) border border-(--klyroo-border) px-2.5 text-xs font-medium text-(--klyroo-text) hover:bg-(--klyroo-bg-muted)";
+                            @if (!string.IsNullOrEmpty(act.Href))
+                            {
+                                <a href="@act.Href" class="@actionClass" data-slot="file-preview-custom-action"
+                                   @onclick="@(() => OnCustomActionAsync(act, current))">
+                                    @if (!string.IsNullOrEmpty(act.Icon))
+                                    {
+                                        @RenderIcon(act.Icon, "size-3.5 shrink-0")
+                                    }
+                                    <span>@act.Label</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <button type="button" class="@actionClass" data-slot="file-preview-custom-action"
+                                        @onclick="@(() => OnCustomActionAsync(act, current))">
+                                    @if (!string.IsNullOrEmpty(act.Icon))
+                                    {
+                                        @RenderIcon(act.Icon, "size-3.5 shrink-0")
+                                    }
+                                    <span>@act.Label</span>
+                                </button>
+                            }
                         }
                     }
 
@@ -110,20 +128,20 @@
                             aria-pressed="@(_showDetails ? "true" : "false")"
                             data-slot="file-preview-details-toggle"
                             @onclick="@(() => _showDetails = !_showDetails)">
-                        Details
+                        @Texts.Details
                     </button>
 
                     <a href="@(current.DownloadUrl ?? current.Src)" download="@fileName"
                        class="inline-flex h-8 items-center rounded-(--klyroo-radius) px-2 text-xs font-medium text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
                        data-slot="file-preview-download">
-                        Download
+                        @Texts.Download
                     </a>
 
                     @if (Preview.ResolveContainer() != FilePreviewContainer.Fullscreen)
                     {
                         <button type="button"
                                 class="inline-flex size-8 items-center justify-center rounded-(--klyroo-radius) text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
-                                aria-label="@(_expanded ? "Restore preview size" : "Expand preview")"
+                                aria-label="@(_expanded ? Texts.RestorePreview : Texts.ExpandPreview)"
                                 aria-pressed="@(_expanded ? "true" : "false")"
                                 data-slot="file-preview-expand"
                                 @onclick="@(() => _expanded = !_expanded)">
@@ -133,7 +151,7 @@
 
                     <button type="button"
                             class="inline-flex size-8 items-center justify-center rounded-(--klyroo-radius) text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
-                            aria-label="Close preview"
+                            aria-label="@Texts.ClosePreview"
                             data-slot="file-preview-close"
                             @onclick="Preview.Close">
                         ✕
@@ -146,9 +164,9 @@
             {
                 <div class="flex items-center justify-between gap-2 border-b border-(--klyroo-border) bg-(--klyroo-bg-muted) px-4 py-1.5 text-xs text-(--klyroo-text-muted)"
                      data-slot="file-preview-rendition-banner">
-                    <span>Converted preview · The original is a <strong>@originalKind</strong> file.</span>
+                    <span>@Texts.ConvertedPreview(originalKind.ToString())</span>
                     <a href="@(current.DownloadUrl ?? current.Src)" download="@fileName" class="font-medium text-(--klyroo-primary-text) hover:underline">
-                        Download original
+                        @Texts.DownloadOriginal
                     </a>
                 </div>
             }
@@ -162,20 +180,20 @@
                 @if (_showDetails)
                 {
                     <aside class="w-72 shrink-0 overflow-y-auto border-s border-(--klyroo-border) bg-(--klyroo-bg-elevated) p-4 text-xs" data-slot="file-preview-details">
-                        <h3 class="m-0 mb-3 text-xs font-semibold uppercase tracking-wide text-(--klyroo-text-muted)">Details</h3>
+                        <h3 class="m-0 mb-3 text-xs font-semibold uppercase tracking-wide text-(--klyroo-text-muted)">@Texts.Details</h3>
                         <dl class="m-0 flex flex-col gap-2">
                             <div class="flex justify-between gap-2">
-                                <dt class="text-(--klyroo-text-muted)">Name</dt>
+                                <dt class="text-(--klyroo-text-muted)">@Texts.DetailName</dt>
                                 <dd class="m-0 truncate font-medium text-(--klyroo-text-highlighted)">@fileName</dd>
                             </div>
                             <div class="flex justify-between gap-2">
-                                <dt class="text-(--klyroo-text-muted)">Type</dt>
+                                <dt class="text-(--klyroo-text-muted)">@Texts.DetailType</dt>
                                 <dd class="m-0 font-medium text-(--klyroo-text-highlighted)">@(current.Mime ?? kind.ToString())</dd>
                             </div>
                             @if (current.Size is { } sizeBytes)
                             {
                                 <div class="flex justify-between gap-2">
-                                    <dt class="text-(--klyroo-text-muted)">Size</dt>
+                                    <dt class="text-(--klyroo-text-muted)">@Texts.DetailSize</dt>
                                     <dd class="m-0 tabular-nums font-medium text-(--klyroo-text-highlighted)">@FilePreviewService.FormatFileSize(sizeBytes, CultureInfo.InvariantCulture)</dd>
                                 </div>
                             }
@@ -204,7 +222,7 @@
                         var f = Preview.Files[i];
                         var fName = f.Name ?? FilePreviewService.FileNameFromUrl(f.Src);
                         var isCurrent = idx == Preview.CurrentIndex;
-                        <button type="button"
+                        <button type="button" @key="@((object?)f.Id ?? idx)"
                                 class="inline-flex shrink-0 items-center gap-1.5 rounded-(--klyroo-radius) border px-2.5 py-1 text-xs font-medium @(isCurrent ? "border-(--klyroo-primary-text) bg-(--klyroo-bg-muted) text-(--klyroo-text-highlighted)" : "border-(--klyroo-border) text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted)")"
                                 aria-current="@(isCurrent ? "true" : null)"
                                 data-slot="file-preview-thumb"
@@ -222,6 +240,9 @@
 @code {
     private bool _showDetails;
     private bool _expanded;
+    private bool _focusedOpen;
+    private ElementReference _dialog;
+    private DisplayTexts? _texts;
     private bool _wrapLines;
     private bool _markdownSource;
     private double _zoom = 1.0;
@@ -240,10 +261,46 @@
         Preview.Changed += OnPreviewChanged;
     }
 
+    private DisplayTexts Texts => _texts ??= Options.Extension<DisplayTexts>();
+
     private void OnPreviewChanged()
     {
         ResetImageTransform();
+        if (!Preview.IsOpen)
+        {
+            // The next preview opens in its own container, not in the fullscreen view left from this one.
+            _expanded = false;
+        }
         _ = InvokeAsync(StateHasChanged);
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!Preview.IsOpen || Preview.CurrentFile is null)
+        {
+            _focusedOpen = false;
+            return;
+        }
+        if (_focusedOpen) return;
+        // Move the focus into the dialog once per opening, so the keyboard shortcuts work and screen readers enter it.
+        _focusedOpen = true;
+        try
+        {
+            await _dialog.FocusAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    // A trailing line break ends the last line instead of starting an empty one, and empty content has no lines.
+    private static int CountLines(string text)
+    {
+        if (text.Length == 0) return 0;
+        var normalized = text.Replace("\r\n", "\n", StringComparison.Ordinal);
+        var count = normalized.Count(c => c == '\n') + 1;
+        return normalized.EndsWith('\n') ? count - 1 : count;
     }
 
     private string ShellClass(FilePreviewContainer container) => container switch
@@ -291,12 +348,12 @@
             <span class="inline-flex h-10 min-w-12 items-center justify-center rounded-(--klyroo-radius) bg-(--klyroo-bg-muted) px-2.5 text-xs font-bold uppercase text-(--klyroo-text-highlighted)">
                 @FilePreviewService.ExtensionLabel(fileName, file.Mime)
             </span>
-            <p class="m-0 font-semibold text-(--klyroo-text-highlighted)">No preview available</p>
-            <p class="m-0 text-xs text-(--klyroo-text-muted)">Download this file to open it in another application.</p>
+            <p class="m-0 font-semibold text-(--klyroo-text-highlighted)">@Texts.NoPreview</p>
+            <p class="m-0 text-xs text-(--klyroo-text-muted)">@Texts.NoPreviewHint</p>
             <a href="@(file.DownloadUrl ?? file.Src)" download="@fileName"
                class="inline-flex items-center gap-1.5 rounded-(--klyroo-radius) bg-(--klyroo-primary) px-3 py-1.5 text-xs font-semibold text-(--klyroo-primary-contrast) hover:opacity-90"
                data-slot="fallback-download">
-                Download
+                @Texts.Download
             </a>
         </div>,
     };
@@ -335,10 +392,10 @@
                 </table>
             </div>
             <div class="flex items-center justify-between text-xs text-(--klyroo-text-muted)" data-slot="csv-footer">
-                <span>@($"{parsed.Rows.Count} rows · {parsed.Headers.Count} columns · delimiter '{(parsed.Delimiter == '\t' ? "tab" : parsed.Delimiter.ToString())}'")</span>
+                <span>@Texts.CsvSummary(parsed.Rows.Count, parsed.Headers.Count, parsed.Delimiter == '\t' ? "tab" : parsed.Delimiter.ToString())</span>
                 @if (parsed.Truncated)
                 {
-                    <span>Showing first 1,000 rows</span>
+                    <span>@Texts.CsvTruncated(parsed.Rows.Count)</span>
                 }
             </div>
         </div>;
@@ -353,9 +410,9 @@
             {
                 <div class="flex items-center justify-end gap-1">
                     <button type="button" class="rounded-(--klyroo-radius) px-2 py-1 text-xs font-medium @(!_markdownSource ? "bg-(--klyroo-bg-muted) text-(--klyroo-text-highlighted)" : "text-(--klyroo-text-muted)")"
-                            data-slot="markdown-preview-tab" @onclick="@(() => _markdownSource = false)">Preview</button>
+                            data-slot="markdown-preview-tab" @onclick="@(() => _markdownSource = false)">@Texts.MarkdownPreview</button>
                     <button type="button" class="rounded-(--klyroo-radius) px-2 py-1 text-xs font-medium @(_markdownSource ? "bg-(--klyroo-bg-muted) text-(--klyroo-text-highlighted)" : "text-(--klyroo-text-muted)")"
-                            data-slot="markdown-source-tab" @onclick="@(() => _markdownSource = true)">Source</button>
+                            data-slot="markdown-source-tab" @onclick="@(() => _markdownSource = true)">@Texts.MarkdownSource</button>
                 </div>
             }
             @if (hasHook && !_markdownSource)
@@ -374,14 +431,13 @@
     private RenderFragment RenderTextStage(FilePreviewFile file)
     {
         var raw = file.Content ?? "";
-        var lines = raw.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
         return @<div class="flex h-full w-full flex-col gap-2" data-slot="renderer-text">
             <div class="flex items-center justify-between gap-2 text-xs text-(--klyroo-text-muted)">
-                <span>@($"{lines.Length} lines")</span>
+                <span data-slot="text-line-count">@Texts.LineCount(CountLines(raw))</span>
                 <button type="button" class="rounded-(--klyroo-radius) px-2 py-1 font-medium hover:bg-(--klyroo-bg-muted)"
                         aria-pressed="@(_wrapLines ? "true" : "false")" data-slot="text-wrap-toggle"
                         @onclick="@(() => _wrapLines = !_wrapLines)">
-                    Wrap lines
+                    @Texts.WrapLines
                 </button>
             </div>
             <pre class="m-0 flex-1 overflow-auto rounded-(--klyroo-radius) bg-(--klyroo-bg-muted) p-4 font-mono text-xs text-(--klyroo-text-highlighted) @(_wrapLines ? "whitespace-pre-wrap" : "whitespace-pre")" data-slot="text-content"><code>@raw</code></pre>

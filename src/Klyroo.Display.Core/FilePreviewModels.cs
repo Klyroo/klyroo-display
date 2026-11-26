@@ -68,13 +68,13 @@ public sealed class FilePreviewAction
     /// <summary>The button text.</summary>
     public required string Label { get; init; }
 
-    /// <summary>An icon name. The current provider does not render it.</summary>
+    /// <summary>An icon name shown before the label, resolved through the icons of Klyroo.UI.</summary>
     public string? Icon { get; init; }
 
-    /// <summary>A link target. The current provider does not use it: handle the click in <see cref="OnSelect"/>.</summary>
+    /// <summary>A URL. When set, the action renders as a link to it instead of a button, and <see cref="OnSelect"/>, when also set, still runs on click.</summary>
     public string? Href { get; init; }
 
-    /// <summary>The callback invoked with the file being previewed when the button is clicked.</summary>
+    /// <summary>The callback invoked with the file being previewed when the action is clicked.</summary>
     public Func<FilePreviewFile, Task>? OnSelect { get; init; }
 }
 
@@ -89,7 +89,7 @@ public sealed class FilePreviewFile
     /// <summary>The URL or data URI of the file. Images, video, audio and PDF are loaded from it by the browser.</summary>
     public required string Src { get; init; }
 
-    /// <summary>An optional stable identifier of the file. The preview does not use it.</summary>
+    /// <summary>An optional stable identifier of the file. The provider uses it as the key of the file's thumbnail in the gallery strip, so the strip keeps its elements when a gallery is reordered; it must be unique within a gallery.</summary>
     public string? Id { get; init; }
 
     /// <summary>The display file name. When <see langword="null"/>, the last path segment of <see cref="Src"/> is used.</summary>
