@@ -3,7 +3,9 @@
 @using Microsoft.JSInterop
 @inherits KlyComponentBase
 @implements IDisposable
+@implements IAsyncDisposable
 @inject FilePreviewService Preview
+@inject IJSRuntime JS
 
 @if (ChildContent is not null)
 {
@@ -241,6 +243,7 @@
     private bool _showDetails;
     private bool _expanded;
     private bool _focusedOpen;
+    private IJSObjectReference? _module;
     private ElementReference _dialog;
     private bool _wrapLines;
     private bool _markdownSource;
@@ -279,15 +282,35 @@
     {
         if (!Preview.IsOpen || Preview.CurrentFile is null)
         {
-            _focusedOpen = false;
+            if (_focusedOpen)
+            {
+                _focusedOpen = false;
+                // Closing gives the focus back to what had it before the overlay opened (usually the trigger).
+                await ReleaseFocusAsync();
+            }
             return;
         }
         if (_focusedOpen) return;
         // Move the focus into the dialog once per opening, so the keyboard shortcuts work and screen readers enter it.
+        // Tab is trapped first, which also remembers the element to give the focus back to on close.
         _focusedOpen = true;
         try
         {
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Klyroo.Display/klyroo-display-media.js");
+            await _module.InvokeVoidAsync("trapFocus", _dialog);
             await _dialog.FocusAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    private async Task ReleaseFocusAsync()
+    {
+        if (_module is null) return;
+        try
+        {
+            await _module.InvokeVoidAsync("releaseFocus");
         }
         catch (JSDisconnectedException)
         {
@@ -551,5 +574,21 @@
     {
         Preview.Changed -= OnPreviewChanged;
         Preview.DetachProvider();
+    }
+
+    /// <summary>Releases the focus trap, then unsubscribes like <see cref="Dispose"/>.</summary>
+    public async ValueTask DisposeAsync()
+    {
+        Dispose();
+        if (_module is null) return;
+        try
+        {
+            if (_focusedOpen) await _module.InvokeVoidAsync("releaseFocus", false);
+            await _module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+        _module = null;
     }
 }

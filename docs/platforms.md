@@ -27,7 +27,7 @@ Notes that apply to all modes:
 - **Copy buttons** call `navigator.clipboard.writeText` through JS interop and do nothing before the page is interactive. Browsers expose the Clipboard API only in secure contexts, so over plain HTTP, other than on localhost, copying can fail. A JavaScript error from the call is swallowed.
 - **The file preview provider and the code that opens a file must share a scope.** Put `<KlyFilePreviewProvider />` in a layout that renders interactively (for example with global interactivity on `<Routes />`), or inside the interactive page that opens files.
 - **Package stylesheets** are loaded with ordinary `<link>` elements, in any mode, see [Getting started](getting-started.md#4-add-imports-and-stylesheets).
-- **One JavaScript module, for the players.** The audio and video players import `_content/Klyroo.Display/klyroo-display-media.js` once interactive. It drives the media element and reports back the position, the end of the clip, the player keys, and picture-in-picture and fullscreen support. The blocks use JS interop only for the clipboard, and the preview provider only to move the focus into its dialog.
+- **One JavaScript module, for the players.** The audio and video players import `_content/Klyroo.Display/klyroo-display-media.js` once interactive. It drives the media element and reports back the position, the end of the clip, the player keys, and picture-in-picture and fullscreen support. The blocks use JS interop only for the clipboard. The preview provider imports the same module only to manage focus: it traps Tab inside its dialog and gives the focus back to the element that had it before the overlay opened.
 
 ## .NET MAUI Blazor Hybrid
 

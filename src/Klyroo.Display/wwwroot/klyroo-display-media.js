@@ -169,3 +169,57 @@ export function detach(media) {
   }
   states.delete(media);
 }
+
+// The file preview overlay is a role="dialog" element, not a native <dialog>, so it keeps Tab inside and gives the focus back itself,
+// the way Klyroo.UI's kly-modal does: the element focused before the opening gets the focus again on close.
+const TABBABLE =
+  'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, iframe, audio[controls], video[controls], [tabindex]:not([tabindex="-1"])';
+
+let trap = null;
+
+function tabbables(root) {
+  return [...root.querySelectorAll(TABBABLE)].filter((el) => !el.closest('[inert]') && el.getClientRects().length > 0);
+}
+
+/** Keeps Tab and Shift+Tab inside the element and remembers the focused element to restore on release. Call it before moving the focus in. */
+export function trapFocus(element) {
+  releaseFocus(false);
+  const active = document.activeElement;
+  const returnTo = active && active !== document.body && !element.contains(active) ? active : null;
+  const onKeyDown = (event) => {
+    if (event.key !== 'Tab') return;
+    const items = tabbables(element);
+    if (items.length === 0) {
+      event.preventDefault();
+      element.focus();
+      return;
+    }
+    const first = items[0];
+    const last = items[items.length - 1];
+    const current = document.activeElement;
+    if (!element.contains(current) || (event.shiftKey && (current === first || current === element))) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+    } else if (!event.shiftKey && current === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+  // Focus that lands outside by other means (a click on the backdrop, a script) is brought back in.
+  const onFocusIn = (event) => {
+    if (!element.contains(event.target)) (tabbables(element)[0] ?? element).focus();
+  };
+  element.addEventListener('keydown', onKeyDown);
+  document.addEventListener('focusin', onFocusIn);
+  trap = { element, onKeyDown, onFocusIn, returnTo };
+}
+
+/** Stops trapping and, unless `restore` is false, focuses the element that had the focus before the trap, if it is still in the page. */
+export function releaseFocus(restore = true) {
+  if (!trap) return;
+  const { element, onKeyDown, onFocusIn, returnTo } = trap;
+  trap = null;
+  element.removeEventListener('keydown', onKeyDown);
+  document.removeEventListener('focusin', onFocusIn);
+  if (restore && returnTo?.isConnected) returnTo.focus();
+}

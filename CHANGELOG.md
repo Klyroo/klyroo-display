@@ -11,6 +11,10 @@ All notable changes to this project are documented in this file. The format is b
 - The `bar` and `line` variants of the Chart block are now Klyroo.UI's `KlyChart`: value and index axes, a tooltip with arrow-key exploration, signed values, an image description generated from the values and a "Table" disclosure with the numbers. The public parameters are unchanged. Per-point `Tone` still colors each bar (one stacked series per tone); a `line` is one series, in the tone shared by all its points or in the primary color.
 - The `funnel` variant draws a zero or negative step with no bar (it used to show a 4% sliver, like the bars used to show 6%) and a positive step at 2% at least.
 
+### Fixed
+
+- `KlyFilePreviewProvider` traps Tab and Shift+Tab inside its dialog and returns the focus to the element that had it before the overlay opened, the way `KlyModal` does. Before, Tab walked out into the page behind the overlay and closing left the focus on the page body.
+
 ### Added
 
 - `KlyDisplay.ChartFormat` (`Func<double, string>`) formats the values of a Chart: funnel steps, axis ticks, tooltip and data table. Without it values use the format culture of the locale in effect, with thousands separators, instead of the raw number. `DisplayTexts.ChartValue` names the series of an untitled chart, in all twelve locales.

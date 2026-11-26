@@ -10,8 +10,11 @@ public sealed class FilePreviewProviderTests : BunitContext
     public FilePreviewProviderTests()
     {
         Services.AddKlyrooDisplay();
-        JSInterop.SetupModule("./_content/Klyroo.Display/klyroo-display-media.js").Mode = JSRuntimeMode.Loose;
+        _module = JSInterop.SetupModule("./_content/Klyroo.Display/klyroo-display-media.js");
+        _module.Mode = JSRuntimeMode.Loose;
     }
+
+    private readonly BunitJSModuleInterop _module;
 
     private (IRenderedComponent<KlyFilePreviewProvider> Provider, FilePreviewService Service) RenderProvider()
     {
@@ -54,6 +57,43 @@ public sealed class FilePreviewProviderTests : BunitContext
         service.Open(new FilePreviewFile { Src = "/files/c.png" });
         provider.Render();
         Assert.Equal(2, JSInterop.Invocations.Count(i => i.Identifier == focus.Identifier));
+    }
+
+    [Fact]
+    public void Opening_traps_Tab_in_the_dialog_before_focusing_it_and_closing_gives_the_focus_back()
+    {
+        var (provider, service) = RenderProvider();
+
+        service.Open(new FilePreviewFile { Src = "/files/photo.png" });
+        provider.Render();
+
+        var trap = Assert.Single(_module.Invocations, i => i.Identifier == "trapFocus");
+        Assert.IsType<ElementReference>(trap.Arguments[0]);
+        Assert.DoesNotContain(_module.Invocations, i => i.Identifier == "releaseFocus");
+        var all = JSInterop.Invocations.ToList();
+        Assert.True(all.IndexOf(trap) < all.FindIndex(i => i.Identifier.EndsWith("focus", StringComparison.OrdinalIgnoreCase) && i != trap));
+
+        // A gallery step re-renders the same dialog: no second trap, no release.
+        provider.Find("[data-slot=file-preview-close]").Click();
+        provider.Render();
+        Assert.Single(_module.Invocations, i => i.Identifier == "releaseFocus");
+
+        service.Open(new FilePreviewFile { Src = "/files/b.png" });
+        provider.Render();
+        Assert.Equal(2, _module.Invocations.Count(i => i.Identifier == "trapFocus"));
+    }
+
+    [Fact]
+    public async Task Disposing_an_open_provider_drops_the_trap_without_moving_the_focus()
+    {
+        var (provider, service) = RenderProvider();
+        service.Open(new FilePreviewFile { Src = "/files/photo.png" });
+        provider.Render();
+
+        await provider.Instance.DisposeAsync();
+
+        var release = Assert.Single(_module.Invocations, i => i.Identifier == "releaseFocus");
+        Assert.Equal(false, release.Arguments[0]);
     }
 
     [Fact]
