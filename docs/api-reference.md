@@ -240,7 +240,7 @@ A compact audio control bar with play and pause, a timeline, a mute button and a
 | :--- | :--- | :--- |
 | `Autoplay` | `bool` | Starts playing once the player is interactive. Browsers can refuse to start a player that is not muted before the user has interacted with the page; the player then stays paused. |
 | `Compact` | `bool` | Renders a denser control bar: less padding and spacing, smaller buttons and a shorter volume slider. |
-| `Disabled` | `bool` | Disables the play, seek and mute controls. |
+| `Disabled` | `bool` | Disables the play, seek, mute and volume controls, and the methods that drive them. |
 | `Download` | `bool` | Shows the download link (`false` by default). The link also shows when `KlyAudioPlayer.DownloadUrl` is set. |
 | `DownloadFileName` | `string?` | The file name suggested to the browser by the download link. When `null`, the last segment of the link URL is used, or the browser picks a name for a `data:` or `blob:` URL. |
 | `DownloadUrl` | `string?` | The target of the download link. When `null`, `KlyAudioPlayer.Src` is used. |
@@ -287,7 +287,7 @@ Also accepts the parameters of `KlyComponentBase`.
 | `CycleRateAsync()` | `Task` | Selects the next entry of `KlyAudioPlayer.Rates` (wrapping around), and raises `KlyAudioPlayer.RateChanged`. It does nothing with fewer than two rates. |
 | `SeekAsync(double clipOffsetSeconds)` | `Task` | Moves the position to an offset inside the clip, raises `KlyAudioPlayer.OnTimeUpdate`, and ends the play when the offset reaches the clip end. It does nothing unless `KlyAudioPlayer.Seekable`, and when `KlyAudioPlayer.Disabled` or `KlyAudioPlayer.IsLocked`. |
 | `SetVolumeAsync(double volume)` | `Task` | Sets `KlyAudioPlayer.Volume`, as the volume slider does, and raises `KlyAudioPlayer.VolumeChanged`. |
-| `ToggleMuteAsync()` | `Task` | Toggles `KlyAudioPlayer.Muted` and raises `KlyAudioPlayer.MutedChanged`. |
+| `ToggleMuteAsync()` | `Task` | Toggles `KlyAudioPlayer.Muted` and raises `KlyAudioPlayer.MutedChanged`. It does nothing when `KlyAudioPlayer.Disabled`. |
 | `TogglePlayAsync()` | `Task` | Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of `KlyAudioPlayer.MaxPlays`. It does nothing when `KlyAudioPlayer.Disabled`, and only raises `KlyAudioPlayer.OnLimitReached` when `KlyAudioPlayer.IsLocked`. |
 
 #### `KlyDisplay`
@@ -385,7 +385,7 @@ A video frame with an overlay play button and a control bar (play and pause, tim
 | `AspectRatio` | `string` | The CSS `aspect-ratio` of the player (`"16 / 9"` by default). |
 | `Autoplay` | `bool` | Starts playing once the player is interactive. Browsers can refuse to start a player that is not muted before the user has interacted with the page; the player then stays paused. |
 | `Compact` | `bool` | Renders a denser control bar: less padding and spacing, smaller buttons and a shorter volume slider. |
-| `Disabled` | `bool` | Disables the play, seek and mute controls. |
+| `Disabled` | `bool` | Disables the play, seek, mute and volume controls, and the methods that drive them. |
 | `Download` | `bool` | Shows the download link (`false` by default). The link also shows when `KlyVideoPlayer.DownloadUrl` is set. |
 | `DownloadFileName` | `string?` | The file name suggested to the browser by the download link. When `null`, the last segment of the link URL is used, or the browser picks a name for a `data:` or `blob:` URL. |
 | `DownloadUrl` | `string?` | The target of the download link. When `null`, `KlyVideoPlayer.Src` is used. |
@@ -436,7 +436,7 @@ Also accepts the parameters of `KlyComponentBase`.
 | `SeekAsync(double clipOffsetSeconds)` | `Task` | Moves the position to an offset inside the clip, raises `KlyVideoPlayer.OnTimeUpdate`, and ends the play when the offset reaches the clip end. It does nothing unless `KlyVideoPlayer.Seekable`, and when `KlyVideoPlayer.Disabled` or `KlyVideoPlayer.IsLocked`. |
 | `SetVolumeAsync(double volume)` | `Task` | Sets `KlyVideoPlayer.Volume`, as the volume slider does, and raises `KlyVideoPlayer.VolumeChanged`. |
 | `ToggleFullscreenAsync()` | `Task` | Shows the player fullscreen, or leaves fullscreen, as the fullscreen button does. The browser refuses it without a recent user gesture. |
-| `ToggleMuteAsync()` | `Task` | Toggles `KlyVideoPlayer.Muted` and raises `KlyVideoPlayer.MutedChanged`. |
+| `ToggleMuteAsync()` | `Task` | Toggles `KlyVideoPlayer.Muted` and raises `KlyVideoPlayer.MutedChanged`. It does nothing when `KlyVideoPlayer.Disabled`. |
 | `TogglePictureInPictureAsync()` | `Task` | Opens the video in the browser's picture-in-picture window, or closes that window, as the picture-in-picture button does. The browser refuses it without a recent user gesture, when it does not support picture-in-picture, and when `KlyVideoPlayer.Seekable` is `false` (the element then has `disablepictureinpicture`). |
 | `TogglePlayAsync()` | `Task` | Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of `KlyVideoPlayer.MaxPlays`. It does nothing when `KlyVideoPlayer.Disabled`, and only raises `KlyVideoPlayer.OnLimitReached` when `KlyVideoPlayer.IsLocked`. |
 

@@ -76,6 +76,7 @@
                         class="inline-flex @(Compact ? "size-6" : "size-7") items-center justify-center rounded-full text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
                         aria-label="@(Muted ? Texts.Unmute : Texts.Mute)"
                         aria-pressed="@(Muted ? "true" : "false")"
+                        disabled="@Disabled"
                         data-slot="media-mute"
                         @onclick="ToggleMuteAsync">
                     @RenderIcon(Muted ? "volume-x" : "volume-2", "size-4")
@@ -84,6 +85,7 @@
                        value="@Volume.ToString("0.##", CultureInfo.InvariantCulture)"
                        aria-label="@Texts.Volume"
                        class="h-1.5 @(Compact ? "w-14" : "w-20") shrink-0 cursor-pointer accent-(--klyroo-primary)"
+                       disabled="@Disabled"
                        data-slot="media-volume"
                        @oninput="OnVolumeInputAsync" />
             }
@@ -134,7 +136,7 @@
     [Parameter] public bool Autoplay { get; set; }
     /// <summary>Sets <c>loop</c> on the media element. It is ignored when the player is restricted by <see cref="MaxPlays"/> or by <see cref="Seekable"/> being <see langword="false"/>.</summary>
     [Parameter] public bool Loop { get; set; }
-    /// <summary>Disables the play, seek and mute controls.</summary>
+    /// <summary>Disables the play, seek, mute and volume controls, and the methods that drive them.</summary>
     [Parameter] public bool Disabled { get; set; }
     /// <summary>Renders a denser control bar: less padding and spacing, smaller buttons and a shorter volume slider.</summary>
     [Parameter] public bool Compact { get; set; }
@@ -383,9 +385,10 @@
         StateHasChanged();
     }
 
-    /// <summary>Toggles <see cref="Muted"/> and raises <see cref="MutedChanged"/>.</summary>
+    /// <summary>Toggles <see cref="Muted"/> and raises <see cref="MutedChanged"/>. It does nothing when <see cref="Disabled"/>.</summary>
     public async Task ToggleMuteAsync()
     {
+        if (Disabled) return;
         Muted = !Muted;
         await MutedChanged.InvokeAsync(Muted);
         StateHasChanged();
@@ -396,6 +399,7 @@
     /// <returns>A task that completes when the callback has run.</returns>
     public async Task SetVolumeAsync(double volume)
     {
+        if (Disabled) return;
         var clamped = double.IsNaN(volume) ? Volume : Math.Clamp(volume, 0, 1);
         if (clamped.Equals(Volume)) return;
         Volume = clamped;

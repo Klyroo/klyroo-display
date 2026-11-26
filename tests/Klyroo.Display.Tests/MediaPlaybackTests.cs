@@ -137,4 +137,17 @@ public sealed class MediaPlaybackTests : BunitContext
         Assert.Equal("Play", cut.Find("[data-slot=media-play]").GetAttribute("aria-label"));
         Assert.Equal(60, cut.Instance.ClipLength);
     }
+
+    [Fact]
+    public async Task Disabled_also_locks_mute_and_volume()
+    {
+        var cut = Render<KlyAudioPlayer>(p => p.Add(x => x.Src, "/media/brief.mp3").Add(x => x.Disabled, true));
+
+        Assert.True(cut.Find("[data-slot=media-mute]").HasAttribute("disabled"));
+        Assert.True(cut.Find("[data-slot=media-volume]").HasAttribute("disabled"));
+        await cut.InvokeAsync(() => cut.Instance.ToggleMuteAsync());
+        await cut.InvokeAsync(() => cut.Instance.SetVolumeAsync(0.2));
+        Assert.False(cut.Instance.Muted);
+        Assert.Equal(1.0, cut.Instance.Volume);
+    }
 }

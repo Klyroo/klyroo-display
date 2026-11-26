@@ -24,6 +24,7 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Fixed
 
+- `Disabled` on the players now also disables the mute button and the volume slider, as its summary said.
 - Space on a focused player button clicked it and also toggled playback, and M on the mute button muted twice.
 - Turning captions off in `KlyVideoPlayer` was undone by the next render when a track was `Default`.
 - `OnLimitReached` was not raised when a play was requested on a locked player, although its summary said so.
