@@ -20,10 +20,10 @@ A custom button added to the header of the file preview.
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `Href` (init) | `string?` | A link target. The current provider does not use it: handle the click in `FilePreviewAction.OnSelect`. |
-| `Icon` (init) | `string?` | An icon name. The current provider does not render it. |
+| `Href` (init) | `string?` | A URL. When set, the action renders as a link to it instead of a button, and `FilePreviewAction.OnSelect`, when also set, still runs on click. |
+| `Icon` (init) | `string?` | An icon name shown before the label, resolved through the icons of Klyroo.UI. |
 | `Label` (init) | `string` | The button text. |
-| `OnSelect` (init) | `Func<FilePreviewFile, Task>?` | The callback invoked with the file being previewed when the button is clicked. |
+| `OnSelect` (init) | `Func<FilePreviewFile, Task>?` | The callback invoked with the file being previewed when the action is clicked. |
 
 #### `FilePreviewFile`
 
@@ -41,7 +41,7 @@ A file to show in `KlyFilePreviewProvider`. Pass it to `FilePreviewService.Open`
 | `Content` (init) | `string?` | The text of the file. CSV, Markdown and text files are rendered from it: the provider does not download `FilePreviewFile.Src` for them. |
 | `Details` (init) | `IReadOnlyList<FilePreviewDetail>?` | Extra rows for the details panel. |
 | `DownloadUrl` (init) | `string?` | The URL of the download link. When `null`, `FilePreviewFile.Src` is used. |
-| `Id` (init) | `string?` | An optional stable identifier of the file. The preview does not use it. |
+| `Id` (init) | `string?` | An optional stable identifier of the file. The provider uses it as the key of the file's thumbnail in the gallery strip, so the strip keeps its elements when a gallery is reordered; it must be unique within a gallery. |
 | `Kind` (init) | `FilePreviewKind?` | The kind to use, skipping detection. Set it when the name and MIME type do not tell the kind, for example a signed URL. |
 | `Mime` (init) | `string?` | The MIME type. When set and recognized, it takes precedence over the file extension when the kind is detected. |
 | `Name` (init) | `string?` | The display file name. When `null`, the last path segment of `FilePreviewFile.Src` is used. |
@@ -169,7 +169,7 @@ A subtitle or caption track of a video, rendered as a `track` element.
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `Default` (init) | `bool` | Whether the track is selected initially. |
+| `Default` (init) | `bool` | Whether the track is shown initially. With several default tracks, the first one wins. |
 | `Kind` (init) | `string` | The `kind` attribute of the track (`"subtitles"` by default). |
 | `Label` (init) | `string` | The label shown in the browser's track list. |
 | `Src` (init) | `string` | The URL of the WebVTT file. |
@@ -217,16 +217,16 @@ A control of `KlyAudioPlayer` or `KlyVideoPlayer` that can be hidden through the
 | Value | Description |
 | :--- | :--- |
 | `Time` | The elapsed and total time label. |
-| `Volume` | The mute button. |
+| `Volume` | The mute button and the volume slider. |
 | `Rate` | The playback speed button. |
 | `Captions` | The captions button of the video player. |
-| `PictureInPicture` | Reserved: neither player renders a picture-in-picture button yet. |
-| `Fullscreen` | Reserved: neither player renders a fullscreen button yet. |
+| `PictureInPicture` | The picture-in-picture button of the video player. It shows only once the browser reports picture-in-picture support, and not when the player is not seekable, since the video element then disables picture-in-picture. |
+| `Fullscreen` | The fullscreen button of the video player, which shows the whole player fullscreen. It shows only once the browser reports fullscreen support. |
 | `Download` | The download link. |
 
 ## Klyroo.Display
 
-Components (4) · Static classes and extensions (1) · Classes (4) · Records (12) · Enums (3)
+Components (4) · Static classes and extensions (1) · Classes (5) · Records (12) · Enums (3)
 
 ### Components
 
@@ -234,27 +234,27 @@ Components (4) · Static classes and extensions (1) · Classes (4) · Records (1
 
 `Klyroo.Display` · component · inherits `KlyComponentBase`
 
-A compact audio control bar with play and pause, a timeline, a mute button, a speed button and an optional download link, that can restrict playback to a clip (`KlyAudioPlayer.Start` and `KlyAudioPlayer.End`), to a number of plays (`KlyAudioPlayer.MaxPlays`) and to a non-seekable timeline.
+A compact audio control bar with play and pause, a timeline, a mute button and a volume slider, a speed button and an optional download link, that can restrict playback to a clip (`KlyAudioPlayer.Start` and `KlyAudioPlayer.End`), to a number of plays (`KlyAudioPlayer.MaxPlays`) and to a non-seekable timeline.
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `Autoplay` | `bool` | Starts playing once the player is interactive. Browsers can refuse to start a player that is not muted before the user has interacted with the page; the player then stays paused. |
-| `Compact` | `bool` | Not used in this version. |
+| `Compact` | `bool` | Renders a denser control bar: less padding and spacing, smaller buttons and a shorter volume slider. |
 | `Disabled` | `bool` | Disables the play, seek and mute controls. |
 | `Download` | `bool` | Shows the download link (`false` by default). The link also shows when `KlyAudioPlayer.DownloadUrl` is set. |
-| `DownloadFileName` | `string?` | The file name suggested to the browser by the download link. |
+| `DownloadFileName` | `string?` | The file name suggested to the browser by the download link. When `null`, the last segment of the link URL is used, or the browser picks a name for a `data:` or `blob:` URL. |
 | `DownloadUrl` | `string?` | The target of the download link. When `null`, `KlyAudioPlayer.Src` is used. |
 | `Duration` | `double` | The total duration in seconds, used until the media element reports its own (`60` by default). Set `KlyAudioPlayer.End` to stop before the end of the file. |
 | `End` | `double?` | The clip end, in seconds. It is used when it is greater than `KlyAudioPlayer.Start`, otherwise `KlyAudioPlayer.Duration` gives the end. |
-| `Hide` | `IReadOnlyList<MediaPlayerControl>?` | The controls to remove from the control bar. |
-| `Keyboard` | `bool` | Whether the focused player reacts to keys: Space or K toggles playback, M toggles mute (`true` by default). |
+| `Hide` | `IReadOnlyList<MediaPlayerControl>?` | The controls to remove from the control bar. `MediaPlayerControl.Volume` removes the mute button and the volume slider. `MediaPlayerControl.Captions`, `MediaPlayerControl.PictureInPicture` and `MediaPlayerControl.Fullscreen` are video controls that this player does not render. |
+| `Keyboard` | `bool` | Whether the focused player reacts to keys: Space or K toggles playback, M toggles mute (`true` by default). Only keys pressed while the player itself has the focus count: a key on one of its buttons or sliders is left to that control. |
 | `Loop` | `bool` | Sets `loop` on the media element. It is ignored when the player is restricted by `KlyAudioPlayer.MaxPlays` or by `KlyAudioPlayer.Seekable` being `false`. |
 | `MaxPlays` | `int` | The number of times the clip can be started (`0`, the default, means unlimited). Once `KlyAudioPlayer.Plays` reaches it and the current play ends, the player locks and shows that no plays are left. |
 | `Muted` | `bool` | Whether the player is muted. The mute button toggles it and raises `KlyAudioPlayer.MutedChanged`. |
 | `MutedChanged` | `EventCallback<bool>` | Raised with the new value when the mute button is clicked. |
 | `OnDownload` | `EventCallback` | Raised when the download link is clicked. |
 | `OnEnded` | `EventCallback` | Raised when the position reaches the end of the clip. |
-| `OnLimitReached` | `EventCallback` | Raised when no plays are left: when a play ends with `KlyAudioPlayer.Plays` at `KlyAudioPlayer.MaxPlays`, or when a new play is requested after that. |
+| `OnLimitReached` | `EventCallback` | Raised when no plays are left: when a play ends with `KlyAudioPlayer.Plays` at `KlyAudioPlayer.MaxPlays`, and each time a play is requested while the player is locked (from the keyboard, a media key or `KlyAudioPlayer.TogglePlayAsync`). |
 | `OnPause` | `EventCallback` | Raised when the user pauses. |
 | `OnPlay` | `EventCallback` | Raised when playback starts or resumes. |
 | `OnTimeUpdate` | `EventCallback<MediaPlayerProgress>` | Raised with the position during playback, about four times a second, and when the user seeks. |
@@ -268,8 +268,8 @@ A compact audio control bar with play and pause, a timeline, a mute button, a sp
 | `Src` | `string` | The URL of the media file. |
 | `Start` | `double` | The clip start, in seconds. Positions and durations are reported relative to it. |
 | `Title` | `string?` | The accessible name of the player region. |
-| `Volume` | `double` | The volume of the media element, from 0 to 1 (`1.0` by default). The player has no volume slider, so set it from your own control. |
-| `VolumeChanged` | `EventCallback<double>` | Not raised in this version: the player has no volume slider. |
+| `Volume` | `double` | The volume of the media element, from 0 to 1 (`1.0` by default). The volume slider changes it and raises `KlyAudioPlayer.VolumeChanged`. |
+| `VolumeChanged` | `EventCallback<double>` | Raised with the new volume, from 0 to 1, when the volume slider moves or `KlyAudioPlayer.SetVolumeAsync` is called. |
 
 Also accepts the parameters of `KlyComponentBase`.
 
@@ -286,8 +286,9 @@ Also accepts the parameters of `KlyComponentBase`.
 | `CompletePlayAsync()` | `Task` | Ends the current play: stops, moves the position to the clip end, and raises `KlyAudioPlayer.OnEnded` and, when no plays are left, `KlyAudioPlayer.OnLimitReached`. The player calls it when the media reaches the clip end. |
 | `CycleRateAsync()` | `Task` | Selects the next entry of `KlyAudioPlayer.Rates` (wrapping around), and raises `KlyAudioPlayer.RateChanged`. It does nothing with fewer than two rates. |
 | `SeekAsync(double clipOffsetSeconds)` | `Task` | Moves the position to an offset inside the clip, raises `KlyAudioPlayer.OnTimeUpdate`, and ends the play when the offset reaches the clip end. It does nothing unless `KlyAudioPlayer.Seekable`, and when `KlyAudioPlayer.Disabled` or `KlyAudioPlayer.IsLocked`. |
+| `SetVolumeAsync(double volume)` | `Task` | Sets `KlyAudioPlayer.Volume`, as the volume slider does, and raises `KlyAudioPlayer.VolumeChanged`. |
 | `ToggleMuteAsync()` | `Task` | Toggles `KlyAudioPlayer.Muted` and raises `KlyAudioPlayer.MutedChanged`. |
-| `TogglePlayAsync()` | `Task` | Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of `KlyAudioPlayer.MaxPlays`. It does nothing when `KlyAudioPlayer.Disabled` or `KlyAudioPlayer.IsLocked`. |
+| `TogglePlayAsync()` | `Task` | Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of `KlyAudioPlayer.MaxPlays`. It does nothing when `KlyAudioPlayer.Disabled`, and only raises `KlyAudioPlayer.OnLimitReached` when `KlyAudioPlayer.IsLocked`. |
 
 #### `KlyDisplay`
 
@@ -303,9 +304,9 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `Author` | `string?` | The author shown in the footer of a Text block, before `KlyDisplay.Meta`. |
 | `BreakdownLines` | `IReadOnlyList<DisplayBreakdownLine>?` | The lines of a Breakdown block. |
 | `BreakdownTotal` | `DisplayBreakdownLine?` | The total row of a Breakdown block, shown below the lines. |
-| `ChartData` | `IReadOnlyList<DisplayChartPoint>?` | The bars of a Chart block, or the steps of a `funnel` Chart. |
+| `ChartData` | `IReadOnlyList<DisplayChartPoint>?` | The bars of a Chart block, the points of a `line` Chart, or the steps of a `funnel` Chart. |
 | `Chip` | `DisplayChip?` | The badge of the single person shown by a Person block when `KlyDisplay.People` is empty. |
-| `CompareColumns` | `(string, string)?` | Not used in this version: a Breakdown has no comparison layout. |
+| `CompareColumns` | `(string, string)?` | The headers of the two amount columns of a Breakdown, for example `("2026", "2025")`: `DisplayBreakdownLine.Value` goes under `First` and `DisplayBreakdownLine.CompareValue` under `Second`, for the lines and the total. A line without a second amount shows a dash. |
 | `Contacts` | `IReadOnlyList<DisplayContactItem>?` | The contact lines of a Person block. They are shown under the person and are ignored by the `group` variant. |
 | `Copy` | `bool` | Whether a Code block shows a copy button (`true` by default). |
 | `Count` | `string?` | Count text shown beside the title of a Heading or Record block. |
@@ -314,14 +315,14 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `DefaultOpen` | `bool` | Whether the Alert details, or the lines of a `collapsible` Breakdown, start open. It is read once, when the component first receives its parameters. |
 | `Delta` | `string?` | The change shown as a badge beside a Stat value, for example `"+12.4%"`. It is displayed as given. |
 | `DeltaDirection` | `string` | The direction of `KlyDisplay.Delta`: `"up"` (green, the default), `"down"` (red) or `"flat"` (neutral). |
-| `Description` | `string?` | A secondary line: under the title of a Heading, Stat, Meter, Date, Media (caption) or Empty block, under the name of a single Person, or the Alert message when `KlyDisplay.Value` is not set. |
+| `Description` | `string?` | A secondary line: under the title of a Heading, Stat, Meter, Date, Media (caption) or Empty block, under the name of a single Person when `KlyDisplay.People` is empty, or the Alert message when `KlyDisplay.Value` is empty. |
 | `Details` | `string?` | The collapsible details of an Alert (opened with Show details), or the footnote of a Breakdown. |
 | `DiffItems` | `IReadOnlyList<DisplayDiffItem>?` | The fields of a Diff block. |
 | `EndDateValue` | `DateTimeOffset?` | The end of a `range` Date block, inclusive in the day count. |
 | `ErrorThreshold` | `double?` | The percentage of `KlyDisplay.MeterMax` from which the Meter bar turns to the error color. It wins over `KlyDisplay.WarningThreshold`. |
 | `FactGroups` | `IReadOnlyList<DisplayFactGroup>?` | The titled groups of a Facts block. When set, they replace `KlyDisplay.Facts`, and `KlyDisplay.Max` does not apply. |
 | `Facts` | `IReadOnlyList<DisplayFact>?` | The rows of a Facts block. They are ignored when `KlyDisplay.FactGroups` is set. |
-| `HeadingLevel` | `int` | Not used in this version: a Heading always renders an `h3`, and the `eyebrow` variant renders no heading element. |
+| `HeadingLevel` | `int` | The level of the heading element of a Heading block, from `1` (`h1`) to `6` (`h6`); `3` by default, and values outside are clamped. Choose it from the page outline: the look does not change with the level. The `eyebrow` variant renders no heading element. |
 | `Icon` | `string?` | The name of the leading icon of a Heading, Alert or Empty block. For an Alert, an empty string hides the icon. |
 | `Images` | `IReadOnlyList<string>?` | The image URLs of a Media block with `Variant="gallery"`. |
 | `Kind` | `DisplayKind` | The kind of block to render (`DisplayKind.Facts` by default). |
@@ -329,32 +330,32 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `ListItems` | `IReadOnlyList<DisplayListItem>?` | The items of a List block. |
 | `Loading` | `bool` | Shows a skeleton placeholder instead of the block. |
 | `Max` | `int?` | The number of items shown before a Show more button, for the flat Facts, Table, Record, List and Timeline kinds (all items when `null`). In a `group` Person block it is the number of avatars (4 by default), and in a `gallery` Media block the number of tiles (3 by default). |
-| `MaxLines` | `int?` | When greater than zero, clamps `KlyDisplay.Value` of a Text block to two lines and adds a Read more toggle. The number itself is not used, and `KlyDisplay.Paragraphs` are not clamped. |
+| `MaxLines` | `int?` | When greater than zero, clamps `KlyDisplay.Value` of a Text block to this number of lines and adds a Read more toggle. The toggle shows even when the text is shorter, and `KlyDisplay.Paragraphs` are not clamped. |
 | `Meta` | `string?` | Extra text shown in the footer of a Text block, after `KlyDisplay.Author`. |
 | `MeterLevels` | `IReadOnlyList<string>?` | The level labels of a Meter block with `Variant="scale"`. |
 | `MeterMax` | `double` | The maximum of a Meter block (`100` by default). When it is zero or less, the sum of `KlyDisplay.MeterParts` is used. |
-| `MeterParts` | `IReadOnlyList<DisplayMeterPart>?` | The segments of a Meter block. When set, they replace the single bar and the thresholds do not apply. |
+| `MeterParts` | `IReadOnlyList<DisplayMeterPart>?` | The segments of a Meter block, stacked in the bar or around the ring. When set, they replace the single value and the thresholds do not apply. A legend lists them when one of them has a `DisplayMeterPart.ValueLabel`, an `DisplayMeterPart.Icon` or a `DisplayMeterPart.Max`. |
 | `MeterValue` | `double` | The current value of a Meter block, clamped between 0 and `KlyDisplay.MeterMax`. |
 | `Multiple` | `bool` | Allows several Accordion sections to be open at once (`false` by default). |
 | `Now` | `DateTimeOffset?` | The reference time of a `countdown` Date block. When `null`, `DateTimeOffset.UtcNow` is used. Pass it for tests and for stable server rendering. |
 | `Paragraphs` | `IReadOnlyList<string>?` | The paragraphs of a Text block. When set, they replace `KlyDisplay.Value`. |
-| `People` | `IReadOnlyList<DisplayPersonItem>?` | The people of a Person block. Without the `group` variant, only the first person is shown. |
+| `People` | `IReadOnlyList<DisplayPersonItem>?` | The people of a Person block. Without the `group` variant, only the first person is shown. When empty, the person comes from `KlyDisplay.Title`, `KlyDisplay.Description` and `KlyDisplay.Chip`, and the avatar shows a person icon when there is no name. |
 | `Records` | `IReadOnlyList<DisplayRecordItem>?` | The rows of a Record block. |
 | `ShowUnchanged` | `bool` | Shows the fields whose `DisplayDiffItem.Changed` is `false` (`false` by default). |
 | `Src` | `string?` | The image URL of a Media block. |
-| `StatItems` | `IReadOnlyList<DisplayStatItem>?` | The metrics of a Stat block with `Variant="row"`. |
+| `StatItems` | `IReadOnlyList<DisplayStatItem>?` | The metrics of a Stat block with `Variant="row"`. That variant shows `KlyDisplay.Title` above them and ignores `KlyDisplay.Value`, `KlyDisplay.Unit`, `KlyDisplay.Delta`, `KlyDisplay.Trend` and `KlyDisplay.Description`. |
 | `Step` | `int?` | The number of items each click on Show more reveals (all remaining items when `null`). |
-| `Surface` | `DisplaySurface?` | The surface treatment (`DisplaySurface.Plain`, `DisplaySurface.Muted`, `DisplaySurface.Bordered` or `DisplaySurface.Elevated`). When `null`, a default is chosen from `KlyDisplay.Kind`: bordered for Facts, Breakdown, Table, Record and Code, muted for Alert and Stat (Stat is bordered for its `row` variant), and plain for the others. |
+| `Surface` | `DisplaySurface?` | The surface treatment (`DisplaySurface.Plain`, `DisplaySurface.Muted`, `DisplaySurface.Bordered` or `DisplaySurface.Elevated`). When `null`, a default is chosen from `KlyDisplay.Kind`: bordered for Facts, Breakdown, Table, Record and Code, muted for Alert and Stat (Stat is bordered for its `row` variant, and muted for any other variant), and plain for the others. |
 | `TableColumns` | `IReadOnlyList<DisplayTableColumn>?` | The columns of a Table block. |
 | `TableFooter` | `IReadOnlyDictionary<string, string?>?` | The footer row of a Table block, as a map from column key to text. |
 | `TableRows` | `IReadOnlyList<IReadOnlyDictionary<string, string?>>?` | The rows of a Table block. Each row maps a column key to its text, and a missing key renders a dash. |
 | `TimelineItems` | `IReadOnlyList<DisplayTimelineItem>?` | The events of a Timeline block. |
-| `Title` | `string?` | The title of the block: the heading text, the bold first line of a Text, the Alert title, the label of a Stat, Meter or Code block, and the title of the other kinds that show one. For a Person block it is the name of the single person, or the caption of a `group`. For a Date block it replaces the formatted date, and for a Media block it is the alt text. |
-| `Tone` | `KlyColor` | The tone of the block. Only `DisplayKind.Alert` reads it: it selects the default icon and sets `role="status"` for `KlyColor.Warning` and `KlyColor.Error`. |
+| `Title` | `string?` | The title of the block: the heading text, the bold first line of a Text, the Alert title, the label of a Stat, Meter or Code block, the line above a `row` Stat, and the title of the other kinds that show one. For a Person block it is the name of the single person when `KlyDisplay.People` is empty (no name is shown when it is not set either), or the caption of a `group`. For a Date block it replaces the formatted date, or is a caption under the `countdown` and `range` text, and for a Media block it is the alt text. |
+| `Tone` | `KlyColor` | The tone of the block. Only `DisplayKind.Alert` reads it: it selects the default icon and sets `role="status"` for `KlyColor.Warning` and `KlyColor.Error`. Items have their own `Tone`. |
 | `Trend` | `IReadOnlyList<double>?` | The series of a Stat sparkline. It is drawn from two points or more. |
 | `Unit` | `string?` | The unit shown beside a Stat value, or at the end of a Chart title. |
 | `Value` | `string?` | The main text of the block: the Text body, the Alert message, the Stat value, the Meter value label, or the Code content. |
-| `Variant` | `string?` | Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: `eyebrow`. Text: `quote`. Stat: `row`. Breakdown: `collapsible`. Meter: `scale`. Chart: `funnel`. Person: `group`. List: `steps`, `checks`, `files`. Timeline: `pipeline`. Date: `countdown`, `range`. Media: `gallery`. Code: `secret`. |
+| `Variant` | `string?` | Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: `eyebrow`. Text: `quote`. Stat: `row`. Breakdown: `collapsible`. Meter: `ring`, `scale`. Chart: `line`, `funnel`. Table: `sticky`. Person: `group`. List: `steps`, `checks`, `files`. Timeline: `pipeline`, `log`. Date: `countdown`, `range`. Media: `gallery`. Code: `secret`. |
 | `VisibleChars` | `int` | The number of trailing characters left visible by a `secret` Code block (`4` by default). A longer value shows eight bullets followed by those characters. A value that is not longer than this number is fully masked. |
 | `WarningThreshold` | `double?` | The percentage of `KlyDisplay.MeterMax` from which the Meter bar turns to the warning color. |
 
@@ -377,28 +378,28 @@ Also accepts the parameters of `KlyComponentBase`.
 
 `Klyroo.Display` · component · inherits `KlyComponentBase`
 
-A video frame with an overlay play button and a control bar (play and pause, timeline, mute, speed, captions and an optional download link), that can restrict playback to a clip (`KlyVideoPlayer.Start` and `KlyVideoPlayer.End`), to a number of plays (`KlyVideoPlayer.MaxPlays`) and to a non-seekable timeline.
+A video frame with an overlay play button and a control bar (play and pause, timeline, mute and volume, speed, captions, picture-in-picture, fullscreen and an optional download link), that can restrict playback to a clip (`KlyVideoPlayer.Start` and `KlyVideoPlayer.End`), to a number of plays (`KlyVideoPlayer.MaxPlays`) and to a non-seekable timeline.
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `AspectRatio` | `string` | The CSS `aspect-ratio` of the player (`"16 / 9"` by default). |
 | `Autoplay` | `bool` | Starts playing once the player is interactive. Browsers can refuse to start a player that is not muted before the user has interacted with the page; the player then stays paused. |
-| `Compact` | `bool` | Not used in this version. |
+| `Compact` | `bool` | Renders a denser control bar: less padding and spacing, smaller buttons and a shorter volume slider. |
 | `Disabled` | `bool` | Disables the play, seek and mute controls. |
 | `Download` | `bool` | Shows the download link (`false` by default). The link also shows when `KlyVideoPlayer.DownloadUrl` is set. |
-| `DownloadFileName` | `string?` | The file name suggested to the browser by the download link. |
+| `DownloadFileName` | `string?` | The file name suggested to the browser by the download link. When `null`, the last segment of the link URL is used, or the browser picks a name for a `data:` or `blob:` URL. |
 | `DownloadUrl` | `string?` | The target of the download link. When `null`, `KlyVideoPlayer.Src` is used. |
 | `Duration` | `double` | The total duration in seconds, used until the media element reports its own (`60` by default). Set `KlyVideoPlayer.End` to stop before the end of the file. |
 | `End` | `double?` | The clip end, in seconds. It is used when it is greater than `KlyVideoPlayer.Start`, otherwise `KlyVideoPlayer.Duration` gives the end. |
-| `Hide` | `IReadOnlyList<MediaPlayerControl>?` | The controls to remove from the control bar. |
-| `Keyboard` | `bool` | Whether the focused player reacts to keys: Space or K toggles playback, M toggles mute (`true` by default). |
+| `Hide` | `IReadOnlyList<MediaPlayerControl>?` | The controls to remove from the control bar. `MediaPlayerControl.Volume` removes the mute button and the volume slider. |
+| `Keyboard` | `bool` | Whether the focused player reacts to keys: Space or K toggles playback, M toggles mute (`true` by default). Only keys pressed while the player itself has the focus count: a key on one of its buttons or sliders is left to that control. |
 | `Loop` | `bool` | Sets `loop` on the media element. It is ignored when the player is restricted by `KlyVideoPlayer.MaxPlays` or by `KlyVideoPlayer.Seekable` being `false`. |
 | `MaxPlays` | `int` | The number of times the clip can be started (`0`, the default, means unlimited). Once `KlyVideoPlayer.Plays` reaches it and the current play ends, the player locks and shows that no plays are left. |
 | `Muted` | `bool` | Whether the player is muted. The mute button toggles it and raises `KlyVideoPlayer.MutedChanged`. |
 | `MutedChanged` | `EventCallback<bool>` | Raised with the new value when the mute button is clicked. |
 | `OnDownload` | `EventCallback` | Raised when the download link is clicked. |
 | `OnEnded` | `EventCallback` | Raised when the position reaches the end of the clip. |
-| `OnLimitReached` | `EventCallback` | Raised when no plays are left: when a play ends with `KlyVideoPlayer.Plays` at `KlyVideoPlayer.MaxPlays`, or when a new play is requested after that. |
+| `OnLimitReached` | `EventCallback` | Raised when no plays are left: when a play ends with `KlyVideoPlayer.Plays` at `KlyVideoPlayer.MaxPlays`, and each time a play is requested while the player is locked (from the keyboard, a media key or `KlyVideoPlayer.TogglePlayAsync`). |
 | `OnPause` | `EventCallback` | Raised when the user pauses. |
 | `OnPlay` | `EventCallback` | Raised when playback starts or resumes. |
 | `OnTimeUpdate` | `EventCallback<MediaPlayerProgress>` | Raised with the position during playback, about four times a second, and when the user seeks. |
@@ -414,9 +415,9 @@ A video frame with an overlay play button and a control bar (play and pause, tim
 | `Src` | `string` | The URL of the media file. |
 | `Start` | `double` | The clip start, in seconds. Positions and durations are reported relative to it. |
 | `Title` | `string?` | The accessible name of the player region. |
-| `Tracks` | `IReadOnlyList<VideoPlayerTrack>?` | The caption tracks, rendered as `track` elements. The CC button cycles an internal selection and does not change the browser track mode in this version. |
-| `Volume` | `double` | The volume of the media element, from 0 to 1 (`1.0` by default). The player has no volume slider, so set it from your own control. |
-| `VolumeChanged` | `EventCallback<double>` | Not raised in this version: the player has no volume slider. |
+| `Tracks` | `IReadOnlyList<VideoPlayerTrack>?` | The caption tracks, rendered as `track` elements. The track marked `VideoPlayerTrack.Default` is shown first; the CC button then cycles through the tracks and off, showing the selected track and disabling the others. The choice is kept across renders and starts over when `KlyVideoPlayer.Src` changes. |
+| `Volume` | `double` | The volume of the media element, from 0 to 1 (`1.0` by default). The volume slider changes it and raises `KlyVideoPlayer.VolumeChanged`. |
+| `VolumeChanged` | `EventCallback<double>` | Raised with the new volume, from 0 to 1, when the volume slider moves or `KlyVideoPlayer.SetVolumeAsync` is called. |
 
 Also accepts the parameters of `KlyComponentBase`.
 
@@ -433,8 +434,11 @@ Also accepts the parameters of `KlyComponentBase`.
 | `CompletePlayAsync()` | `Task` | Ends the current play: stops, moves the position to the clip end, and raises `KlyVideoPlayer.OnEnded` and, when no plays are left, `KlyVideoPlayer.OnLimitReached`. The player calls it when the media reaches the clip end. |
 | `CycleRateAsync()` | `Task` | Selects the next entry of `KlyVideoPlayer.Rates` (wrapping around), and raises `KlyVideoPlayer.RateChanged`. It does nothing with fewer than two rates. |
 | `SeekAsync(double clipOffsetSeconds)` | `Task` | Moves the position to an offset inside the clip, raises `KlyVideoPlayer.OnTimeUpdate`, and ends the play when the offset reaches the clip end. It does nothing unless `KlyVideoPlayer.Seekable`, and when `KlyVideoPlayer.Disabled` or `KlyVideoPlayer.IsLocked`. |
+| `SetVolumeAsync(double volume)` | `Task` | Sets `KlyVideoPlayer.Volume`, as the volume slider does, and raises `KlyVideoPlayer.VolumeChanged`. |
+| `ToggleFullscreenAsync()` | `Task` | Shows the player fullscreen, or leaves fullscreen, as the fullscreen button does. The browser refuses it without a recent user gesture. |
 | `ToggleMuteAsync()` | `Task` | Toggles `KlyVideoPlayer.Muted` and raises `KlyVideoPlayer.MutedChanged`. |
-| `TogglePlayAsync()` | `Task` | Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of `KlyVideoPlayer.MaxPlays`. It does nothing when `KlyVideoPlayer.Disabled` or `KlyVideoPlayer.IsLocked`. |
+| `TogglePictureInPictureAsync()` | `Task` | Opens the video in the browser's picture-in-picture window, or closes that window, as the picture-in-picture button does. The browser refuses it without a recent user gesture, when it does not support picture-in-picture, and when `KlyVideoPlayer.Seekable` is `false` (the element then has `disablepictureinpicture`). |
+| `TogglePlayAsync()` | `Task` | Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of `KlyVideoPlayer.MaxPlays`. It does nothing when `KlyVideoPlayer.Disabled`, and only raises `KlyVideoPlayer.OnLimitReached` when `KlyVideoPlayer.IsLocked`. |
 
 ### Static classes and extensions
 
@@ -446,7 +450,7 @@ Service registration for Klyroo.Display.
 
 | Method | Returns | Description |
 | :--- | :--- | :--- |
-| `static AddKlyrooDisplay(IServiceCollection services)` | `IServiceCollection` | Registers `FilePreviewService` as a scoped service and calls `AddKlyrooUi()`, which Klyroo.Display depends on. Call it once in `Program.cs`, and also in the client project of an Interactive WebAssembly or Auto app. |
+| `static AddKlyrooDisplay(IServiceCollection services, Action<DisplayTexts>? configureTexts = null)` | `IServiceCollection` | Registers `FilePreviewService` as a scoped service and calls `AddKlyrooUi()`, which Klyroo.Display depends on. Call it once in `Program.cs`, and also in the client project of an Interactive WebAssembly or Auto app. |
 
 ### Classes
 
@@ -467,7 +471,7 @@ A button or link shown in a block, rendered as a small `KlyButton`.
 | `Icon` (init) | `string?` | An icon name shown before the label. |
 | `Label` (init) | `string` | The button text. |
 | `OnClick` (init) | `EventCallback` | The callback invoked when the button is clicked. It only runs once the page is interactive. |
-| `Target` (init) | `string?` | The link target window. The current renderer does not apply it. |
+| `Target` (init) | `string?` | The `target` of the link, such as `"_blank"`. It applies only with `DisplayAction.Href`. |
 | `Variant` (init) | `ButtonVariant` | The button style (outline by default). |
 
 #### `DisplayFact`
@@ -486,13 +490,13 @@ One label and value row of a `DisplayKind.Facts` block.
 | `Copy` (init) | `bool` | Shows a copy button that copies `DisplayFact.CopyText`, or `DisplayFact.Value` when that is not set. |
 | `CopyText` (init) | `string?` | The text copied by the copy button. Setting it also shows the button. |
 | `Emphasis` (init) | `bool` | Renders the value in bold. |
-| `Hint` (init) | `string?` | A hint. The current renderer does not show it. |
+| `Hint` (init) | `string?` | A short line of help shown under the label. |
 | `Href` (init) | `string?` | Renders the value as a link to this URL. |
 | `Icon` (init) | `string?` | An icon name shown before the label. |
 | `Label` (init) | `string` | The row label. |
 | `Loading` (init) | `bool` | Shows a placeholder instead of the value. |
 | `Mono` (init) | `bool` | Renders the value in a monospace font. |
-| `Tone` (init) | `KlyColor?` | A tone for the row. The current renderer does not use it. |
+| `Tone` (init) | `KlyColor?` | A color for the value, such as `KlyColor.Success`. It applies to plain values; a link keeps the link color and a chip its own. |
 | `Value` (init) | `string?` | The row value. An empty value with no `DisplayFact.Chip` renders a dash. |
 
 #### `DisplayListItem`
@@ -513,11 +517,11 @@ One item of a `DisplayKind.List` block.
 | `FileName` (init) | `string?` | The file name of a file item, used for the extension badge and the preview. It defaults to `DisplayListItem.Text`. |
 | `FileSize` (init) | `long?` | The size of a file item in bytes. |
 | `Href` (init) | `string?` | The URL of the item. In the `files` variant, a click opens the item in the file preview when a `KlyFilePreviewProvider` is mounted. |
-| `Icon` (init) | `string?` | An icon name. The current renderer does not show it. |
+| `Icon` (init) | `string?` | An icon name shown instead of the bullet in the default variant. The `steps`, `checks` and `files` variants keep their own marker. |
 | `Meta` (init) | `string?` | Text shown at the end of the row. |
 | `MimeType` (init) | `string?` | The MIME type of a file item, used for the extension badge and to detect the preview kind. |
 | `Text` (init) | `string` | The item text. It is a link when `DisplayListItem.Href` is set. |
-| `Tone` (init) | `KlyColor?` | A tone. The current renderer does not use it. |
+| `Tone` (init) | `KlyColor?` | A color for the bullet or `DisplayListItem.Icon` in the default variant. |
 
 #### `DisplayRecordItem`
 
@@ -532,20 +536,96 @@ One row of a `DisplayKind.Record` block.
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `AvatarText` (init) | `string?` | Short text, such as initials, shown in the leading tile. |
-| `Badges` (init) | `IReadOnlyList<DisplayChip>?` | Several badges. The current renderer does not show them: use `DisplayRecordItem.Chip`. |
+| `Badges` (init) | `IReadOnlyList<DisplayChip>?` | Badges shown at the end of the row, before `DisplayRecordItem.Chip`. |
 | `Chip` (init) | `DisplayChip?` | A badge shown at the end of the row. |
 | `Description` (init) | `string?` | The secondary line when `DisplayRecordItem.Meta` is not set. |
 | `Href` (init) | `string?` | The URL the title links to. |
-| `Icon` (init) | `string?` | An icon name shown in the leading tile. It takes precedence over `DisplayRecordItem.AvatarText`. |
-| `ImageSrc` (init) | `string?` | An image for the leading tile. The current renderer does not show it. |
-| `Meta` (init) | `string?` | The secondary line. It takes precedence over `DisplayRecordItem.Description`. |
-| `MetaIcon` (init) | `string?` | An icon for the meta line. The current renderer does not show it. |
-| `OnClick` (init) | `EventCallback` | A click callback. The current renderer does not invoke it. |
+| `Icon` (init) | `string?` | An icon name shown in the leading tile. It takes precedence over `DisplayRecordItem.AvatarText`, and `DisplayRecordItem.ImageSrc` takes precedence over it. |
+| `ImageSrc` (init) | `string?` | The URL of an image shown in the leading tile instead of the icon or avatar text. It is decorative (empty `alt`), since the title names the row. |
+| `Meta` (init) | `string?` | The secondary line. It takes precedence over `DisplayRecordItem.Description` unless it is empty. |
+| `MetaIcon` (init) | `string?` | An icon shown before the secondary line (`DisplayRecordItem.Meta` or `DisplayRecordItem.Description`). |
+| `OnClick` (init) | `EventCallback` | A callback invoked when the title is clicked. Without `DisplayRecordItem.Href` the title becomes a button; with it, the link is followed and the callback runs too. It only runs once the page is interactive. |
 | `Reference` (init) | `string?` | A reference such as an order number, shown above the title in a monospace font. |
 | `Title` (init) | `string` | The row title. It is a link when `DisplayRecordItem.Href` is set. |
-| `Tone` (init) | `KlyColor?` | A tone. The current renderer does not use it. |
+| `Tone` (init) | `KlyColor?` | A color for the leading tile and the trailing value. |
 | `Trailing` (init) | `string?` | A value shown at the end of the row, such as an amount. |
-| `TrailingCaption` (init) | `string?` | A caption under the trailing value. The current renderer does not show it. |
+| `TrailingCaption` (init) | `string?` | A line of smaller text under the trailing value, such as a date. |
+
+#### `DisplayTexts`
+
+`Klyroo.Display` · class
+
+The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyFilePreviewProvider`: button labels, accessible names, empty states and counters. They are English by default. Change them once in `AddKlyrooDisplay(texts => ...)`; every component of the app reads the same instance.
+
+| Constructor | Description |
+| :--- | :--- |
+| `DisplayTexts()` | Creates the texts with their English defaults. |
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `AudioPlayer` (get, set) | `string` | The accessible name of an audio player without a title (`"Audio player"`). |
+| `Captions` (get, set) | `string` | The captions button of the video player (`"Subtitles"`). |
+| `ClosePreview` (get, set) | `string` | The close button of the preview (`"Close preview"`). |
+| `Code` (get, set) | `string` | The label of a Code block without a title or language (`"Code"`). |
+| `Conceal` (get, set) | `string` | The button that masks a revealed `secret` Code block again (`"Conceal"`). |
+| `ConvertedPreview` (get, set) | `Func<string, string>` | The notice above a rendition, given the kind of the original file (`"Converted preview · The original is a Office file."`). |
+| `CopyCode` (get, set) | `string` | The accessible name of the copy button of a Code block (`"Copy code"`). |
+| `CopyValue` (get, set) | `Func<string, string>` | The accessible name of a copy button, given the label or value it copies (`"Copy Email"`). |
+| `CsvSummary` (get, set) | `Func<int, int, string, string>` | The footer of a CSV table, given the number of rows, the number of columns and the delimiter (`"12 rows · 4 columns · delimiter ','"`, with `"tab"` for a tab). |
+| `CsvTruncated` (get, set) | `Func<int, string>` | The notice of a CSV table cut to its first rows, given the number of rows shown (`"Showing first 1,000 rows"`). |
+| `DayCount` (get, set) | `Func<int, string>` | The length of a `range` Date, given the number of days (`"7 days"`). |
+| `DaysOverdue` (get, set) | `Func<int, string>` | The `countdown` Date text for a past date, given the number of days (`"3 days overdue"`). |
+| `DetailName` (get, set) | `string` | The file name row of the details panel (`"Name"`). |
+| `Details` (get, set) | `string` | The toggle that opens the lines of a `collapsible` Breakdown, and the details button and panel title of the file preview (`"Details"`). |
+| `DetailSize` (get, set) | `string` | The file size row of the details panel (`"Size"`). |
+| `DetailType` (get, set) | `string` | The file type row of the details panel (`"Type"`). |
+| `Download` (get, set) | `string` | The download link of the players and the file preview (`"Download"`). |
+| `DownloadOriginal` (get, set) | `string` | The download link of the rendition notice (`"Download original"`). |
+| `ExitFullscreen` (get, set) | `string` | The fullscreen button of the video player while it is fullscreen (`"Exit fullscreen"`). |
+| `ExpandPreview` (get, set) | `string` | The button that expands a modal or drawer to the whole viewport (`"Expand preview"`). |
+| `Fullscreen` (get, set) | `string` | The fullscreen button of the video player (`"Fullscreen"`). |
+| `HideDetails` (get, set) | `string` | The toggle that closes the details of an Alert or the lines of a `collapsible` Breakdown (`"Hide details"`). |
+| `ImageAlt` (get, set) | `Func<int, string>` | The alternative text of a gallery image when the block has no title, given its one-based position (`"Image 2"`). |
+| `InDays` (get, set) | `Func<int, string>` | The `countdown` Date text for a date two days away or more, given the number of days (`"In 5 days"`). |
+| `LineCount` (get, set) | `Func<int, string>` | The line count of a text file (`"1 line"`, `"12 lines"`). |
+| `MarkdownPreview` (get, set) | `string` | The tab that shows rendered Markdown (`"Preview"`). |
+| `MarkdownSource` (get, set) | `string` | The tab that shows Markdown source (`"Source"`). |
+| `MediaAlt` (get, set) | `string` | The alternative text of a Media image when the block has no title (`"Media"`). |
+| `Meter` (get, set) | `string` | The accessible name of a Meter without a title (`"Meter"`). |
+| `Mute` (get, set) | `string` | The mute button of an unmuted player (`"Mute"`). |
+| `NextFile` (get, set) | `string` | The next file button of a gallery (`"Next file"`). |
+| `NoData` (get, set) | `string` | The text of a Chart block without data (`"No data"`). |
+| `NoPlaysLeft` (get, set) | `string` | The message of a locked player (`"No plays left"`). |
+| `NoPreview` (get, set) | `string` | The title of the card shown for a file without a renderer (`"No preview available"`). |
+| `NoPreviewHint` (get, set) | `string` | The text of the card shown for a file without a renderer (`"Download this file to open it in another application."`). |
+| `NothingToShow` (get, set) | `string` | The title of an Empty block without a title (`"Nothing to show"`). |
+| `Pause` (get, set) | `string` | The pause button (`"Pause"`). |
+| `PictureInPicture` (get, set) | `string` | The picture-in-picture button of the video player (`"Picture in picture"`). |
+| `Play` (get, set) | `string` | The play button (`"Play"`). |
+| `PlaybackProgress` (get, set) | `string` | The read-only timeline of a non-seekable player (`"Playback progress"`). |
+| `PlaybackSpeed` (get, set) | `string` | The playback speed button (`"Playback speed"`). |
+| `PlaysLeft` (get, set) | `Func<int, string>` | The remaining plays of a player with a quota, given their number (`"2 plays left"`). |
+| `PlayVideo` (get, set) | `string` | The large play button over a paused video (`"Play the video"`). |
+| `PreviewPosition` (get, set) | `Func<int, int, string, string>` | The announcement of gallery navigation for screen readers, given the one-based position, the number of files and the file name (`"2 of 5: report.pdf"`). |
+| `PreviousFile` (get, set) | `string` | The previous file button of a gallery (`"Previous file"`). |
+| `ReadMore` (get, set) | `string` | The toggle that expands a clamped Text block (`"Read more"`). |
+| `ResetZoom` (get, set) | `string` | The button that resets the zoom of an image (`"Reset zoom"`). |
+| `RestorePreview` (get, set) | `string` | The button that returns an expanded preview to its container (`"Restore preview size"`). |
+| `Reveal` (get, set) | `string` | The button that unmasks a `secret` Code block (`"Reveal"`). |
+| `Rotate` (get, set) | `string` | The rotate button of an image (`"Rotate 90 degrees"`). |
+| `Secret` (get, set) | `string` | The label of a `secret` Code block without a title or language (`"Secret"`). |
+| `Seek` (get, set) | `string` | The timeline slider (`"Seek"`). |
+| `ShowDetails` (get, set) | `string` | The toggle that opens the details of an Alert (`"Show details"`). |
+| `ShowLess` (get, set) | `string` | The toggle that clamps an expanded Text block again (`"Show less"`). |
+| `ShowMore` (get, set) | `Func<int, string>` | The Show more button of a list, given the number of items the next click reveals (`"Show more · 3"`). |
+| `Today` (get, set) | `string` | The `countdown` Date text for the current day (`"Today"`). |
+| `Tomorrow` (get, set) | `string` | The `countdown` Date text for the next day (`"Tomorrow"`). |
+| `Unmute` (get, set) | `string` | The mute button of a muted player (`"Unmute"`). |
+| `VideoPlayer` (get, set) | `string` | The accessible name of a video player without a title (`"Video player"`). |
+| `Volume` (get, set) | `string` | The volume slider (`"Volume"`). |
+| `WrapLines` (get, set) | `string` | The toggle that wraps long lines of a text file (`"Wrap lines"`). |
+| `ZoomIn` (get, set) | `string` | The zoom in button of an image (`"Zoom in"`). |
+| `ZoomOut` (get, set) | `string` | The zoom out button of an image (`"Zoom out"`). |
 
 ### Records
 
@@ -579,13 +659,13 @@ One line of a `DisplayKind.Breakdown` block, also used for its total.
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `Chip` (init) | `DisplayChip?` | A badge. The current renderer does not show it. |
-| `CompareValue` (init) | `string?` | A second amount. The current renderer does not show it. |
-| `Detail` (init) | `string?` | A detail text. The current renderer does not show it. |
+| `Chip` (init) | `DisplayChip?` | A badge shown after the label. |
+| `CompareValue` (init) | `string?` | A second amount, such as the previous period, shown in a second column. Setting it on any line, or setting `KlyDisplay.CompareColumns`, switches the block to two columns, with a dash where a line has no second amount. |
+| `Detail` (init) | `string?` | A line of smaller text under the label. |
 | `IsMuted` (init) | `bool` | Renders the line in a dimmed color. |
 | `IsSubtotal` (init) | `bool` | Renders the line as a subtotal, with a top border and bold text. |
 | `Label` (init) | `string` | The line label. |
-| `Tone` (init) | `KlyColor?` | A tone. The current renderer does not use it. |
+| `Tone` (init) | `KlyColor?` | A color for the amount, such as `KlyColor.Success` for a discount. |
 | `Value` (init) | `string?` | The amount, already formatted. A missing value renders a dash. |
 
 #### `DisplayChartPoint`
@@ -601,7 +681,7 @@ One bar or step of a `DisplayKind.Chart` block.
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `Label` (init) | `string` | The label under the bar. |
-| `Tone` (init) | `KlyColor?` | A tone. The current renderer does not use it. |
+| `Tone` (init) | `KlyColor?` | The color of the bar, step or point (primary when `null`), for example to highlight one value. |
 | `Value` (init) | `double` | The value. Bar heights are relative to the largest value. |
 
 #### `DisplayChip`
@@ -617,7 +697,7 @@ A small badge shown in a block.
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `Color` (init) | `KlyColor?` | The badge color, or `null` for neutral. |
-| `Icon` (init) | `string?` | An icon name. The current renderer does not show it. |
+| `Icon` (init) | `string?` | An icon name shown before the label. |
 | `Label` (init) | `string` | The badge text. |
 
 #### `DisplayContactItem`
@@ -633,8 +713,8 @@ One contact line of a `DisplayKind.Person` block.
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `Copy` (init) | `bool` | Whether to show a copy button. |
-| `Href` (init) | `string?` | A link. The current renderer does not use it. |
-| `Icon` (init) | `string?` | An icon name. The current renderer does not show it. |
+| `Href` (init) | `string?` | A link for the value, such as a `mailto:` or `tel:` URL. |
+| `Icon` (init) | `string?` | An icon name shown before the value, such as `"mail"`. |
 | `Value` (init) | `string` | The text shown and copied, such as an email address. |
 
 #### `DisplayDiffItem`
@@ -653,7 +733,7 @@ One field of a `DisplayKind.Diff` block.
 | `Before` (init) | `string?` | The previous value, shown struck through. |
 | `Changed` (init) | `bool` | Whether the field changed. Unchanged fields are hidden unless `KlyDisplay.ShowUnchanged` is set. |
 | `Label` (init) | `string` | The field label. |
-| `Note` (init) | `DisplayChip?` | A note. The current renderer does not show it. |
+| `Note` (init) | `DisplayChip?` | A badge shown after the label, such as `"Requires approval"`. |
 
 #### `DisplayFactGroup`
 
@@ -683,12 +763,12 @@ One segment of a `DisplayKind.Meter` block.
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `Icon` (init) | `string?` | An icon name. The current renderer does not show it. |
-| `Label` (init) | `string` | The segment label, shown as a tooltip. |
-| `Max` (init) | `double?` | A maximum for this segment. The current renderer does not use it. |
-| `Tone` (init) | `KlyColor?` | A tone. The current renderer does not use it. |
+| `Icon` (init) | `string?` | An icon name shown in the legend instead of the color dot. |
+| `Label` (init) | `string` | The segment label, shown as a tooltip and in the legend. |
+| `Max` (init) | `double?` | A maximum for this segment: the segment never grows past it, and the legend shows the value out of it. |
+| `Tone` (init) | `KlyColor?` | The segment color (primary when `null`). |
 | `Value` (init) | `double` | The segment size, in the same unit as `KlyDisplay.MeterMax`. |
-| `ValueLabel` (init) | `string?` | A formatted value. The current renderer does not show it. |
+| `ValueLabel` (init) | `string?` | The value as displayed in the tooltip and the legend, such as `"3.2 GB"`. When `null`, the number is shown. |
 
 #### `DisplayPersonItem`
 
@@ -702,11 +782,11 @@ One person of a `DisplayKind.Person` block.
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `AvatarSrc` (init) | `string?` | An avatar image. The current renderer does not show it. |
-| `Chip` (init) | `DisplayChip?` | A badge shown at the end of the row. |
-| `Description` (init) | `string?` | A line under the name, such as a role. |
+| `AvatarSrc` (init) | `string?` | The URL of an avatar image, shown instead of the initials. It is decorative (empty `alt`), since the name is shown or in the tooltip. |
+| `Chip` (init) | `DisplayChip?` | A badge shown at the end of the row. In the `group` variant its label goes in the avatar tooltip. |
+| `Description` (init) | `string?` | A line under the name, such as a role. In the `group` variant it goes in the avatar tooltip. |
 | `Name` (init) | `string` | The person's name. The avatar shows its initials. |
-| `Tone` (init) | `KlyColor?` | A tone. The current renderer does not use it. |
+| `Tone` (init) | `KlyColor?` | A color that tints the initials avatar. |
 
 #### `DisplayStatItem`
 
@@ -722,7 +802,7 @@ One metric of the `row` variant of a `DisplayKind.Stat` block.
 | :--- | :--- | :--- |
 | `Caption` (init) | `string?` | A line of text below the value. |
 | `Label` (init) | `string` | The metric label. |
-| `Tone` (init) | `KlyColor?` | A tone. The current renderer does not use it. |
+| `Tone` (init) | `KlyColor?` | A color for the value, such as `KlyColor.Error` for a metric that went wrong. |
 | `Value` (init) | `string` | The metric value. |
 
 #### `DisplayTableColumn`
@@ -756,13 +836,13 @@ One event of a `DisplayKind.Timeline` block.
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `ActorName` (init) | `string?` | The name of the person behind the event. |
-| `Date` (init) | `DateTimeOffset?` | A date. The current renderer does not use it. |
+| `Date` (init) | `DateTimeOffset?` | When the event happened. It is shown in the short date and time format of the resolved culture when `Time` is not set, set as the `datetime` of the `time` element, and starts each line of the `log` variant. It is shown in its own offset. |
 | `Description` (init) | `string?` | A line under the title. |
-| `Icon` (init) | `string?` | An icon name. The current renderer does not show it. |
+| `Icon` (init) | `string?` | An icon name shown in the marker instead of the event number (or the dot of the `log` variant). |
 | `State` (init) | `DisplayTimelineState?` | The event state. When `null`, `DisplayTimelineState.Done` is used. |
-| `Time` (init) | `string?` | The time text shown beside the title. It is displayed as given. |
+| `Time` (init) | `string?` | The time text shown beside the title. It is displayed as given and takes precedence over `Date` for the text; in the `log` variant it replaces the time part of the date. |
 | `Title` (init) | `string` | The event title. |
-| `Tone` (init) | `KlyColor?` | A tone. The current renderer does not use it. |
+| `Tone` (init) | `KlyColor?` | A color for the marker, replacing the primary color of done and current events and the border of upcoming ones. |
 
 ### Enums
 
@@ -770,25 +850,25 @@ One event of a `DisplayKind.Timeline` block.
 
 `Klyroo.Display` · enum
 
-The kind of block rendered by `KlyDisplay`. Each kind reads its own set of parameters and a few of them accept a `KlyDisplay.Variant`. The summaries list what the current renderer supports.
+The kind of block rendered by `KlyDisplay`. Each kind reads its own set of parameters and a few of them accept a `KlyDisplay.Variant`. The summaries list what each kind renders.
 
 | Value | Description |
 | :--- | :--- |
-| `Heading` | A section heading with an optional icon, count pill, description and action. The `eyebrow` variant renders small uppercase text instead of a heading element. |
+| `Heading` | A section heading with an optional icon, count pill, description and action, rendered as the heading element chosen by `KlyDisplay.HeadingLevel`. The `eyebrow` variant renders small uppercase text instead of a heading element. |
 | `Text` | One or more paragraphs, or a single value. The `quote` variant adds a start border and a footer with the author and meta text. `KlyDisplay.MaxLines` clamps the value and adds a Read more toggle. |
 | `Alert` | A message with an icon chosen from `KlyDisplay.Tone`, an optional collapsible details text and action buttons. |
 | `Facts` | A list of label and value rows, flat from `KlyDisplay.Facts` or grouped from `KlyDisplay.FactGroups`. Rows can show a chip, a link, a copy button and a loading placeholder. |
-| `Stat` | A highlighted value with a title, unit, delta badge, sparkline and caption. The `row` variant shows several small metrics side by side from `KlyDisplay.StatItems`. |
-| `Breakdown` | A list of labelled amounts with subtotal rows and a total row. The `collapsible` variant hides the lines behind a toggle. |
-| `Meter` | A horizontal meter driven by `KlyDisplay.MeterValue` and `KlyDisplay.MeterMax`, with warning and error thresholds, or stacked parts. The `scale` variant shows discrete levels instead. |
-| `Chart` | A small bar chart from `KlyDisplay.ChartData`. The `funnel` variant draws one bar per step with the conversion rate from the previous step. |
-| `Table` | A plain table of text cells, defined by columns and rows keyed by column, with an optional footer row. |
+| `Stat` | A highlighted value with a title, unit, delta badge, sparkline and caption. The `row` variant shows the title above several small metrics side by side from `KlyDisplay.StatItems`, and ignores the value, unit, delta, trend and caption. |
+| `Breakdown` | A list of labelled amounts with subtotal rows and a total row. The `collapsible` variant hides the lines behind a toggle. With `KlyDisplay.CompareColumns`, or when a line has a `DisplayBreakdownLine.CompareValue`, the amounts are shown in two columns. |
+| `Meter` | A horizontal meter driven by `KlyDisplay.MeterValue` and `KlyDisplay.MeterMax`, with warning and error thresholds, or stacked parts with an optional legend. The `ring` variant draws the same value or parts as a ring with the value in its center, and the `scale` variant shows discrete levels instead. |
+| `Chart` | A small bar chart from `KlyDisplay.ChartData`. The `line` variant draws a line through the points, and the `funnel` variant draws one bar per step with the conversion rate from the previous step. |
+| `Table` | A plain table of text cells, defined by columns and rows keyed by column, with an optional footer row. The `sticky` variant scrolls the rows in a box at most 20rem high and keeps the header row visible. |
 | `Diff` | Before and after values per field, with unchanged fields hidden unless `KlyDisplay.ShowUnchanged` is set. |
-| `Record` | A list of entity rows, each with an avatar or icon, a reference, a title, a secondary line, a chip and a trailing value. |
-| `Person` | A person with initials, name, description and chip and optional copyable contacts, or with the `group` variant a stack of initials with a +N overflow. |
+| `Record` | A list of entity rows, each with an image, avatar or icon, a reference, a title, a secondary line, badges and a trailing value with a caption. |
+| `Person` | A person with an avatar (image or initials), name, description and chip and optional contacts, or with the `group` variant a stack of avatars with a +N overflow, whose tooltips give each name, description and chip. |
 | `List` | A list of items. The `steps` and `checks` variants number the items and mark done ones, and the `files` variant shows an extension badge and file size and can open the items in the file preview. |
-| `Timeline` | A numbered list of events with a done, current or upcoming state. The `pipeline` variant lays the events out in a row. |
-| `Date` | A calendar tile with a title. The `countdown` variant shows the days until or since the date, and the `range` variant shows a start and end date with the number of days. |
+| `Timeline` | A numbered list of events with a done, current or upcoming state. The `pipeline` variant lays the events out in a row, and the `log` variant shows compact lines that start with the date and time of each event. |
+| `Date` | A calendar tile with a title. The `countdown` variant shows the days until or since the date, and the `range` variant shows a start and end date with the number of days; both show the title as a caption below. |
 | `Media` | A single image, or with the `gallery` variant a grid of images with a +N overflow tile. |
 | `Code` | A preformatted value with a label and a copy button. The `secret` variant masks the value and adds a Reveal toggle. |
 | `Empty` | An empty state with an icon, a title, a description and action buttons. |

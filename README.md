@@ -11,12 +11,13 @@ Most screens show information more often than they edit it: an order summary, a 
 ## Features
 
 - **One component, 19 block kinds**: `KlyDisplay` renders headings, text, alerts, facts, statistics, breakdowns, meters, charts, tables, diffs, records, people, lists, timelines, dates, images, code values, empty states and accordions.
-- **Variants and surfaces**: a `Variant` string selects a layout within a kind (for example `row` for a statistic or `pipeline` for a timeline), and `DisplaySurface` sets the border, background and shadow.
+- **Variants and surfaces**: a `Variant` string selects a layout within a kind (for example `row` for a statistic, `ring` for a meter, `line` for a chart or `log` for a timeline), and `DisplaySurface` sets the border, background and shadow. Item tones follow the Klyroo.UI theme colors.
 - **Secret values**: the `secret` variant of the code block masks all but the last characters, with a Reveal toggle and a copy button.
 - **Progressive reveal**: `Max` and `Step` show long facts, tables, records, lists and timelines a few items at a time behind a Show more button.
 - **File preview overlay**: `KlyFilePreviewProvider` shows PDF, images, video, audio, CSV, Markdown and text in a modal, drawer or fullscreen panel, with galleries, keyboard navigation, image zoom and rotation, a details panel and downloads.
 - **Headless file helpers**: `Klyroo.Display.Core` detects a file kind from its MIME type or extension, parses CSV and TSV (RFC 4180 quoting, delimiter detection) and formats sizes, and it is NativeAOT compatible.
-- **Audio and video players with clip and play-limit rules**: `KlyAudioPlayer` and `KlyVideoPlayer` play a clip window of a file, enforce a play quota and a non-seekable timeline, and report progress and the end of each play through callbacks.
+- **Audio and video players with clip and play-limit rules**: `KlyAudioPlayer` and `KlyVideoPlayer` play a clip window of a file, enforce a play quota and a non-seekable timeline, and report progress and the end of each play through callbacks. Their control bar has volume, speed, captions, picture-in-picture and fullscreen controls, and a compact size.
+- **Translatable texts**: the built-in labels come from `DisplayTexts`, which `AddKlyrooDisplay(texts => ...)` lets you replace.
 
 ## Packages
 

@@ -6,7 +6,35 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Added
+
+- `DisplayTexts`, the built-in English texts of every component (labels, counters, accessible names), replaceable with `AddKlyrooDisplay(texts => ...)`.
+- `KlyAudioPlayer` and `KlyVideoPlayer` have a volume slider that raises `VolumeChanged` (hidden with `MediaPlayerControl.Volume`, like the mute button), `SetVolumeAsync`, and a denser bar with `Compact`.
+- `KlyVideoPlayer` has picture-in-picture and fullscreen buttons (`MediaPlayerControl.PictureInPicture` and `Fullscreen`), shown once the browser reports support, with `TogglePictureInPictureAsync` and `ToggleFullscreenAsync`. Picture-in-picture stays hidden when `Seekable` is `false`.
+- New `KlyDisplay` variants: `ring` for Meter, `line` for Chart, `sticky` for Table (a header that stays visible over rows scrolling in a box) and `log` for Timeline (a compact line per event, starting with its date and time).
+- `KlyDisplay.HeadingLevel` chooses `h1` to `h6`, and `CompareColumns` with `DisplayBreakdownLine.CompareValue` gives a Breakdown a two-column comparison layout.
+- Model members that were declared but not rendered now are: `Tone` on facts, stat items, breakdown lines, meter parts, chart points, records, people, list items and timeline events (as `data-color`, so theme and custom colors apply); `DisplayChip.Icon`; `DisplayFact.Hint`; `DisplayBreakdownLine.Detail` and `Chip`; `DisplayMeterPart.ValueLabel`, `Icon` and `Max` (with a legend); `DisplayDiffItem.Note`; `DisplayRecordItem.MetaIcon`, `ImageSrc`, `Badges`, `TrailingCaption` and `OnClick`; `DisplayPersonItem.AvatarSrc`; `DisplayContactItem.Icon` and `Href`; `DisplayListItem.Icon`; `DisplayTimelineItem.Date` and `Icon`; `DisplayAction.Target`; `FilePreviewAction.Icon` and `Href`; and `FilePreviewFile.Id`, which keys the gallery thumbnails.
+- `MaxLines` clamps a Text block to that number of lines instead of always two.
+
+### Changed
+
+- `AddKlyrooDisplay` takes an optional `Action<DisplayTexts>`. Code compiled against the previous signature must be recompiled.
+- The player keys (Space, K, M) are handled by the media module on the player root, and only when the root itself has the focus. The players no longer have a Blazor `onkeydown` handler.
+- The countdown text for a past date says "1 day overdue" in the singular, and the range length says "1 day".
+
 ### Fixed
+
+- Space on a focused player button clicked it and also toggled playback, and M on the mute button muted twice.
+- Turning captions off in `KlyVideoPlayer` was undone by the next render when a track was `Default`.
+- `OnLimitReached` was not raised when a play was requested on a locked player, although its summary said so.
+- With `Download` set and no `DownloadFileName`, the players rendered `download="True"`; the file name now comes from the URL, or the browser picks one for a `data:` or `blob:` URL.
+- `KlyFilePreviewProvider` moves the focus into its dialog when it opens, so the keyboard shortcuts work at once, and a preview expanded to fullscreen no longer stays expanded for the next one.
+- A `FilePreviewAction` with only `Href` rendered a button that did nothing; it renders a link.
+- The text preview said "1 lines" for an empty file and never used the singular.
+- The `row` Stat dropped `Title`, an Alert with an empty `Value` hid its `Description`, and countdown and range dates ignored `Title`.
+- The `group` Person ignored each person's `Description` and `Chip`; they now appear in the avatar tooltip.
+- A Stat with an unknown variant used the plain surface instead of the documented muted one.
+- A Person block without `People` or `Title` showed the name "User"; it now shows no name and a person icon.
 
 - `KlyAudioPlayer` and `KlyVideoPlayer` now play their media. A JavaScript module drives the `audio` or `video` element: the buttons play, pause, seek, mute and change the speed, the position and the duration come from the element, and playback stops at `End` and ends the play. `Autoplay` and `Volume` take effect, `OnTimeUpdate` is raised during playback, and the CC button of the video player switches the shown track.
 - `KlyVideoPlayer` has `CompletePlayAsync`, like `KlyAudioPlayer`.

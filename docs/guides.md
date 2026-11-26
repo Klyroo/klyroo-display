@@ -5,12 +5,14 @@ Task-oriented recipes. Each one is complete and compiled against the current cod
 - [Show a metric with a trend and a threshold meter](#show-a-metric-with-a-trend-and-a-threshold-meter)
 - [Mask a secret and let the user reveal it](#mask-a-secret-and-let-the-user-reveal-it)
 - [Show progress and a deadline](#show-progress-and-a-deadline)
+- [Compare two periods in a breakdown](#compare-two-periods-in-a-breakdown)
 - [Reveal a long list a few items at a time](#reveal-a-long-list-a-few-items-at-a-time)
 - [Preview a gallery with a converted Office document](#preview-a-gallery-with-a-converted-office-document)
 - [Preview CSV, Markdown and text that you already hold](#preview-csv-markdown-and-text-that-you-already-hold)
 - [Open files from an attachment list](#open-files-from-an-attachment-list)
 - [Limit how many times a clip can be started](#limit-how-many-times-a-clip-can-be-started)
 - [Detect file kinds and parse CSV on the server](#detect-file-kinds-and-parse-csv-on-the-server)
+- [Translate the built-in texts](#translate-the-built-in-texts)
 - [Test your usage](#test-your-usage)
 
 ## Show a metric with a trend and a threshold meter
@@ -68,7 +70,29 @@ Goal: a row of order stages with the current one marked, and a countdown to a du
 }
 ```
 
-A timeline item without a `State` counts as `Done`, so set the current and upcoming ones explicitly. `Time` is displayed as given. The countdown compares calendar days between `DateValue` and `Now`, and says "In 3 days" here. `Now` defaults to the current UTC time, so pass it when the output must be stable, for example in a test or when a server renders a page that is cached.
+A timeline item without a `State` counts as `Done`, so set the current and upcoming ones explicitly. `Time` is displayed as given. The countdown compares calendar days between `DateValue` and `Now`, says "In 3 days" here, and shows the title "Invoice due" as a caption under it. `Now` defaults to the current UTC time, so pass it when the output must be stable, for example in a test or when a server renders a page that is cached.
+
+## Compare two periods in a breakdown
+
+Goal: this year's costs next to last year's, with a note on one line and a discount in green.
+
+```razor
+<KlyDisplay Kind="DisplayKind.Breakdown" Title="Costs" CompareColumns="@(("2026", "2025"))"
+            BreakdownLines="_lines" BreakdownTotal="_total" />
+
+@code {
+    private readonly IReadOnlyList<DisplayBreakdownLine> _lines =
+    [
+        new("Licenses", "€9,600", CompareValue: "€8,400", Detail: "40 seats"),
+        new("Support", "€1,200", CompareValue: "€1,200"),
+        new("Loyalty discount", "-€500", Tone: KlyColor.Success, Chip: new DisplayChip("New")),
+    ];
+
+    private readonly DisplayBreakdownLine _total = new("Total", "€10,300", CompareValue: "€9,600");
+}
+```
+
+`CompareColumns` names the two amount columns: `Value` goes under the first and `CompareValue` under the second, for the lines and the total. The discount has no previous amount, so its second column shows a dash. A `CompareValue` on any line also switches the block to two columns, just without the header row. `Detail` is a smaller line under the label, `Chip` a badge after it, and `Tone` colors the amount with a theme color.
 
 ## Reveal a long list a few items at a time
 
@@ -248,6 +272,23 @@ app.MapPost("/preview/csv", async (HttpRequest request) =>
 ```
 
 `ParseCsv` never throws on malformed input: an unterminated quote reads to the end of the text. It keeps at most `maxRows` data rows (1,000 by default) and sets `Truncated` when there were more. Rows are not padded, so a row can be shorter or longer than the header.
+
+## Translate the built-in texts
+
+Goal: French labels for the buttons, counters and accessible names that the components write themselves.
+
+```csharp
+builder.Services.AddKlyrooDisplay(texts =>
+{
+    texts.ShowMore = n => $"Afficher {n} de plus";
+    texts.ReadMore = "Lire la suite";
+    texts.NoPlaysLeft = "Plus de lecture possible";
+    texts.PlaysLeft = n => n == 1 ? "1 lecture restante" : $"{n} lectures restantes";
+    texts.ClosePreview = "Fermer l'aperçu";
+});
+```
+
+Every property of `DisplayTexts` has an English default, so set only the ones you need. A text with a number or a name is a function, which lets a language choose its plural forms and word order. The instance is stored with the Klyroo.UI options and shared by the whole app: it is not switched per culture, so an app whose users change language at run time sets the properties from its own resources. Titles, labels and values you pass to the components are shown as given.
 
 ## Test your usage
 

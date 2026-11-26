@@ -27,7 +27,7 @@ Notes that apply to all modes:
 - **Copy buttons** call `navigator.clipboard.writeText` through JS interop and do nothing before the page is interactive. Browsers expose the Clipboard API only in secure contexts, so over plain HTTP, other than on localhost, copying can fail. A JavaScript error from the call is swallowed.
 - **The file preview provider and the code that opens a file must share a scope.** Put `<KlyFilePreviewProvider />` in a layout that renders interactively (for example with global interactivity on `<Routes />`), or inside the interactive page that opens files.
 - **Package stylesheets** are loaded with ordinary `<link>` elements, in any mode, see [Getting started](getting-started.md#4-add-imports-and-stylesheets).
-- **No JavaScript module of its own.** `Klyroo.Display` ships no script, and uses JS interop only for the clipboard.
+- **One JavaScript module, for the players.** The audio and video players import `_content/Klyroo.Display/klyroo-display-media.js` once interactive. It drives the media element and reports back the position, the end of the clip, the player keys, and picture-in-picture and fullscreen support. The blocks use JS interop only for the clipboard, and the preview provider only to move the focus into its dialog.
 
 ## .NET MAUI Blazor Hybrid
 
@@ -60,10 +60,9 @@ dotnet publish examples/FilePreviewCoreExample -c Release -r linux-x64 -p:Publis
 
 These are limits of the current code, not configuration errors.
 
-- **The media players need an interactive render mode.** They drive their element from JavaScript once interactive, so under static server rendering the control bar shows but does not play. `Compact` has no effect, the players have no volume slider (set `Volume` yourself), and `VolumeChanged` is never raised.
+- **The media players need an interactive render mode.** They drive their element from JavaScript once interactive, so under static server rendering the control bar shows but does not play.
 - **`Autoplay` depends on the browser.** Most browsers refuse to start a player that is not muted before the user has interacted with the page; the player then stays paused.
-- **`MediaPlayerControl.PictureInPicture` and `Fullscreen` are reserved.** Neither player renders those buttons.
-- **Some model properties are not rendered.** For example `DisplayChip.Icon`, `DisplayRecordItem.ImageSrc`, `DisplayRecordItem.Badges`, `DisplayPersonItem.AvatarSrc`, `DisplayTimelineItem.Date` and `Icon`, `DisplayBreakdownLine.CompareValue` and `Detail`, and `KlyDisplay.HeadingLevel` (a heading is always an `h3`). Each is marked as unused in its summary in the [API reference](api-reference.md).
-- **Layouts that are not implemented**: there is no comparison layout for a breakdown, no line chart or ring meter, no sticky table header, no log or schedule timeline, and no syntax highlighting in the code block. Charts are bars and a funnel only.
+- **Picture-in-picture and fullscreen depend on the browser.** The video player shows those buttons only after the media module reports that the browser supports them, and hides picture-in-picture when `Seekable` is `false`, because the element disables it then. Browsers accept these requests only shortly after a user gesture, and under Interactive Server the click makes a round trip to the server first, so a slow connection can make the browser refuse it. The audio player has neither button.
+- **Layouts that are not implemented**: there is no schedule timeline and no syntax highlighting in the code block. Charts are bars, a line and a funnel, without axes.
 - **The file preview has no renderer for Office files, archives and unknown files.** They show a download card, or their `Rendition` when you provide one.
-- **No localization of the built-in texts.** Labels such as "Show more", "Read more", "No plays left" and the preview toolbar are English strings in the components.
+- **One set of built-in texts per app.** Labels such as "Show more", "No plays left" and the preview toolbar come from `DisplayTexts`, which you change in `AddKlyrooDisplay(texts => ...)`. They are English by default and not per culture, so an app that switches language at run time sets them itself.
