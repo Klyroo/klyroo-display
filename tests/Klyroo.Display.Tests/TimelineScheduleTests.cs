@@ -97,14 +97,14 @@ public sealed class TimelineScheduleTests : BunitContext
 
         var expected = $"{At(12, 9).ToString("t", culture)} – {At(12, 10, 30).ToString("t", culture)}";
         Assert.Equal(Clean(expected), Clean(cut.Find("[data-slot=schedule-time]").TextContent));
-        Assert.Equal("1 h 30 min", cut.Find("[data-slot=schedule-duration]").TextContent);
+        Assert.Equal("1\u00a0h\u00a030\u00a0min", cut.Find("[data-slot=schedule-duration]").TextContent);
     }
 
     [Theory]
-    [InlineData(45, "45 min")]
-    [InlineData(60, "1 h")]
-    [InlineData(120, "2 h")]
-    [InlineData(150, "2 h 30 min")]
+    [InlineData(45, "45\u00a0min")]
+    [InlineData(60, "1\u00a0h")]
+    [InlineData(120, "2\u00a0h")]
+    [InlineData(150, "2\u00a0h\u00a030\u00a0min")]
     public void The_length_is_in_hours_and_minutes(int minutes, string expected)
     {
         var cut = Schedule([new("Call", Date: At(12, 9), EndDate: At(12, 9).AddMinutes(minutes))]);
@@ -157,7 +157,7 @@ public sealed class TimelineScheduleTests : BunitContext
     {
         var cut = Schedule(
         [
-            new("Conference", Date: At(12), EndDate: At(14)),
+            new("Conference", Date: At(12), EndDate: At(15)),
             new("Standup", Date: At(13, 9)),
         ]);
 
@@ -168,6 +168,40 @@ public sealed class TimelineScheduleTests : BunitContext
         Assert.Equal("3 days", conference.QuerySelector("[data-slot=schedule-duration]")!.TextContent);
         Assert.Equal("P3D", conference.QuerySelector("[data-slot=schedule-duration]")!.GetAttribute("datetime"));
         Assert.Equal("2026-03-12", cut.FindAll("[data-slot=schedule-day]")[0].GetAttribute("data-date"));
+    }
+
+    [Fact]
+    public void An_end_at_midnight_is_excluded_as_in_calendar_files()
+    {
+        var cut = Schedule([new("Holiday", Date: At(12), EndDate: At(13))]);
+
+        Assert.Equal("All day", cut.Find("[data-slot=schedule-time]").TextContent);
+        // One day: no day count is shown.
+        Assert.DoesNotContain(cut.FindAll("[data-slot=schedule-duration]"), d => d.TextContent.Length > 0);
+    }
+
+    [Theory]
+    [InlineData(3, 28, 1, 3, 30, 2)]
+    [InlineData(10, 24, 2, 10, 26, 1)]
+    public void An_all_day_event_across_a_daylight_saving_change_stays_all_day(int startMonth, int startDay, int startOffset, int endMonth, int endDay, int endOffset)
+    {
+        var cut = Schedule([new("Trip", Date: new DateTimeOffset(2026, startMonth, startDay, 0, 0, 0, TimeSpan.FromHours(startOffset)), EndDate: new DateTimeOffset(2026, endMonth, endDay, 0, 0, 0, TimeSpan.FromHours(endOffset)))]);
+
+        Assert.Equal("All day", cut.Find("[data-slot=schedule-time]").TextContent);
+        Assert.Equal("2 days", cut.Find("[data-slot=schedule-duration]").TextContent);
+        Assert.Equal("P2D", cut.Find("[data-slot=schedule-duration]").GetAttribute("datetime"));
+    }
+
+    [Fact]
+    public void A_timed_event_across_a_daylight_saving_change_keeps_its_local_end_time()
+    {
+        var culture = KlyDates.FormatCulture(KlyLocales.En);
+        // Paris moves to summer time at 02:00 on March 29: 01:00 (+01:00) to 10:00 (+02:00) is 8 hours.
+        var end = new DateTimeOffset(2026, 3, 29, 10, 0, 0, TimeSpan.FromHours(2));
+        var cut = Schedule([new("Night", Date: new DateTimeOffset(2026, 3, 29, 1, 0, 0, Paris), EndDate: end)]);
+
+        Assert.EndsWith(Clean(end.ToString("t", culture)), Clean(cut.Find("[data-slot=schedule-time]").TextContent));
+        Assert.Equal("8\u00a0h", cut.Find("[data-slot=schedule-duration]").TextContent);
     }
 
     [Fact]
@@ -189,7 +223,7 @@ public sealed class TimelineScheduleTests : BunitContext
         Assert.Equal("2026-03-12", cut.Find("[data-slot=schedule-day]").GetAttribute("data-date"));
         var expected = $"{At(12, 22).ToString("t", culture)} – {At(13, 6).ToString("d", culture)} {At(13, 6).ToString("t", culture)}";
         Assert.Equal(Clean(expected), Clean(cut.Find("[data-slot=schedule-time]").TextContent));
-        Assert.Equal("8 h", cut.Find("[data-slot=schedule-duration]").TextContent);
+        Assert.Equal("8\u00a0h", cut.Find("[data-slot=schedule-duration]").TextContent);
     }
 
     [Fact]
@@ -211,14 +245,15 @@ public sealed class TimelineScheduleTests : BunitContext
     }
 
     [Fact]
-    public void An_end_in_another_offset_is_shown_in_the_offset_of_the_start()
+    public void An_end_in_another_offset_is_shown_in_its_own_offset()
     {
         var culture = KlyDates.FormatCulture(KlyLocales.En);
-        // 10:00 UTC is 11:00 in Paris.
-        var cut = Schedule([new("Call", Date: At(12, 9), EndDate: new DateTimeOffset(2026, 3, 12, 10, 0, 0, TimeSpan.Zero))]);
+        // 10:00 UTC is 11:00 in Paris: the end reads 10:00, the time its source gave, and the length compares the instants.
+        var end = new DateTimeOffset(2026, 3, 12, 10, 0, 0, TimeSpan.Zero);
+        var cut = Schedule([new("Call", Date: At(12, 9), EndDate: end)]);
 
-        Assert.EndsWith(Clean(At(12, 11).ToString("t", culture)), Clean(cut.Find("[data-slot=schedule-time]").TextContent));
-        Assert.Equal("2 h", cut.Find("[data-slot=schedule-duration]").TextContent);
+        Assert.EndsWith(Clean(end.ToString("t", culture)), Clean(cut.Find("[data-slot=schedule-time]").TextContent));
+        Assert.Equal("2\u00a0h", cut.Find("[data-slot=schedule-duration]").TextContent);
     }
 
     [Fact]
@@ -257,7 +292,7 @@ public sealed class TimelineScheduleTests : BunitContext
         var cut = Schedule([new("Standup", Time: "Early morning", Date: At(12, 9), EndDate: At(12, 10))]);
 
         Assert.Equal("Early morning", cut.Find("[data-slot=schedule-time]").TextContent);
-        Assert.Equal("1 h", cut.Find("[data-slot=schedule-duration]").TextContent);
+        Assert.Equal("1\u00a0h", cut.Find("[data-slot=schedule-duration]").TextContent);
     }
 
     [Fact]
@@ -355,7 +390,7 @@ public sealed class TimelineScheduleTests : BunitContext
         [
             new("Réunion", Date: At(12, 9), EndDate: At(12, 10, 30)),
             new("Férié", Date: At(13)),
-            new("Séminaire", Date: At(14), EndDate: At(15)),
+            new("Séminaire", Date: At(14), EndDate: At(16)),
             new("À planifier"),
         ]);
 
@@ -374,9 +409,9 @@ public sealed class TimelineScheduleTests : BunitContext
     }
 
     [Theory]
-    [InlineData("de", "Ganztägig", "Nicht geplant", "1 Std. 30 Min.")]
+    [InlineData("de", "Ganztägig", "Nicht geplant", "1\u00a0Std.\u00a030\u00a0Min.")]
     [InlineData("ja", "終日", "未定", "1時間30分")]
-    [InlineData("ru", "Весь день", "Без даты", "1 ч 30 мин")]
+    [InlineData("ru", "Весь день", "Без даты", "1\u00a0ч\u00a030\u00a0мин")]
     public void Every_locale_has_its_schedule_texts(string code, string allDay, string unscheduled, string duration)
     {
         var texts = DisplayLocales.Tables[code];
@@ -404,7 +439,7 @@ public sealed class TimelineScheduleTests : BunitContext
         var cut = Schedule(events, now: new DateTimeOffset(2026, 3, 12, 9, 30, 0, paris));
 
         Assert.StartsWith("Today · ", Clean(cut.Find("[data-slot=schedule-day-title]").TextContent));
-        Assert.Equal(["30 min", "1 h 30 min", "3 days"], cut.FindAll("[data-slot=schedule-duration]").Select(d => d.TextContent));
+        Assert.Equal(["30\u00a0min", "1\u00a0h\u00a030\u00a0min", "2 days"], cut.FindAll("[data-slot=schedule-duration]").Select(d => d.TextContent));
         Assert.Equal("All day", cut.FindAll("[data-slot=schedule-time]")[2].TextContent);
         Assert.Equal("Unscheduled", cut.Find("[data-slot=schedule-unscheduled-title]").TextContent);
         Assert.Equal(["Standup", "Design review", "Conference", "Book the venue"], Titles(cut));

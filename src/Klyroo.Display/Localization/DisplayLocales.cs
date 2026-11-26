@@ -39,7 +39,8 @@ public static partial class DisplayLocales
         n.ToString("N0", CultureInfo.InvariantCulture).Replace(",", separator, StringComparison.Ordinal);
 
     // A length in hours and minutes, without culture data: "1 h 30 min", "45 min", "2 h". Units are abbreviations, so they do not inflect.
-    internal static string Duration(int totalMinutes, string hour, string minute, string unitSeparator = " ", string partSeparator = " ")
+    // The separators are no-break spaces, so a narrow column never puts a number and its unit on two lines.
+    internal static string Duration(int totalMinutes, string hour, string minute, string unitSeparator = "\u00a0", string partSeparator = "\u00a0")
     {
         var minutes = Math.Max(0, totalMinutes);
         var hours = minutes / 60;

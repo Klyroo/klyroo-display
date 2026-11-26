@@ -5,9 +5,9 @@ namespace Klyroo.Display;
 /// <summary>One event of the <c>schedule</c> Timeline, with what the layout derives from its dates.</summary>
 /// <param name="Item">The event.</param>
 /// <param name="Start">The start, in its own offset, or <see langword="null"/> for an event without a date.</param>
-/// <param name="End">The end in the offset of <paramref name="Start"/>, or <see langword="null"/> when there is none or it is not after the start.</param>
+/// <param name="End">The end, in its own offset, or <see langword="null"/> when there is none or it is not after the start.</param>
 /// <param name="AllDay">Whether the event lasts whole days: it starts at midnight and has no end, or ends at midnight or at the end of a day.</param>
-/// <param name="Days">The number of days an all-day event covers, the end day included (1 for any other event).</param>
+/// <param name="Days">The number of days an all-day event covers: an end at midnight is excluded, as in calendar files, and an end at the end of a day is included (1 for any other event).</param>
 /// <param name="Minutes">The length in minutes of an event with an end that is not all-day.</param>
 internal sealed record ScheduleEvent(DisplayTimelineItem Item, DateTimeOffset? Start, DateTimeOffset? End, bool AllDay, int Days, int? Minutes)
 {
@@ -26,18 +26,20 @@ internal static class ScheduleLayout
     {
         if (item.Date is not { } start) return new ScheduleEvent(item, null, null, false, 1, null);
 
-        DateTimeOffset? end = null;
-        if (item.EndDate is { } rawEnd)
-        {
-            // The end is shown in the offset of the start, so a range reads in one time zone.
-            var shifted = rawEnd.ToOffset(start.Offset);
-            if (shifted > start) end = shifted;
-        }
+        // The end keeps its own offset: across a change to or from daylight saving time, an event of the 28th to the 30th at
+        // midnight still ends at midnight, and a meeting that ends at 10:00 local time reads 10:00. Only the length compares instants.
+        DateTimeOffset? end = item.EndDate is { } rawEnd && rawEnd > start ? rawEnd : null;
         var startsAtMidnight = start.TimeOfDay == TimeSpan.Zero;
         var allDay = startsAtMidnight && (end is null || end.Value.TimeOfDay == TimeSpan.Zero || end.Value.TimeOfDay >= EndOfDay);
         if (allDay)
         {
-            var days = end is { } last ? Math.Max(1, (DateOnly.FromDateTime(last.DateTime).DayNumber - DateOnly.FromDateTime(start.DateTime).DayNumber) + 1) : 1;
+            var days = 1;
+            if (end is { } last)
+            {
+                // An end at midnight is the start of the next day, excluded as in iCal: the 12th to the 13th at midnight is one day.
+                var span = DateOnly.FromDateTime(last.DateTime).DayNumber - DateOnly.FromDateTime(start.DateTime).DayNumber;
+                days = Math.Max(1, last.TimeOfDay == TimeSpan.Zero ? span : span + 1);
+            }
             return new ScheduleEvent(item, start, end, true, days, null);
         }
         int? minutes = end is { } timedEnd ? (int)Math.Min(int.MaxValue, Math.Round((timedEnd - start).TotalMinutes)) : null;

@@ -121,6 +121,7 @@ internal sealed class CSharpLexer(string source, int start, int end, TokenWriter
         var i = index;
         while (i < limit)
         {
+            if (!SpendLookahead()) return -1;
             var c = S[i];
             if (c == '\n' && !multiline) return -1;
             if (c == '{') depth++;
@@ -272,6 +273,7 @@ internal sealed class JavaScriptLexer : Lexer
         var inClass = false;
         while (i < limit)
         {
+            if (!SpendLookahead()) return false;
             var c = S[i];
             if (c == '\n') return false;
             if (c == '\\')

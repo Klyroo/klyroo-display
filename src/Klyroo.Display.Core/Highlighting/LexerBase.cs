@@ -118,6 +118,12 @@ internal abstract class Lexer
 
     protected abstract CodeTokenKind Next();
 
+    // Look-ahead scans that can fail (an interpolation hole, a regex literal) are tried again from each later candidate, so their
+    // total length is capped at a few times the input: past it, a candidate is taken as plain text and the scan stays linear.
+    private long _lookahead;
+
+    protected bool SpendLookahead() => ++_lookahead <= 4L * End + 8192;
+
     protected char At(int index) => index >= 0 && index < End ? S[index] : '\0';
 
     protected ReadOnlySpan<char> Slice(int start, int end) => S.AsSpan(start, Math.Max(0, end - start));
