@@ -3,6 +3,10 @@
 
 const states = new WeakMap();
 
+// The keys a focused player reacts to. Only keys pressed on the player root count: a key on one of its buttons or sliders
+// belongs to that control (Space on a focused button already clicks it), so handling it here would act twice.
+const playerKeys = new Set([' ', 'k', 'K', 'm', 'M']);
+
 function apply(media, state) {
   const { muted, rate, volume, track } = state.options;
   media.muted = muted;
@@ -18,10 +22,13 @@ function report(state, method, ...args) {
   state.dotnet.invokeMethodAsync(method, ...args).catch(() => {});
 }
 
-/** Starts listening to the element. `options`: { start, end, loop, muted, rate, volume, track }. */
-export function attach(media, dotnet, options) {
+/**
+ * Starts listening to the element, and to keys and fullscreen changes of the player root when given.
+ * `options`: { start, end, loop, muted, rate, volume, track, keyboard }.
+ */
+export function attach(media, dotnet, options, root) {
   detach(media);
-  const state = { dotnet, options, clipEnding: false };
+  const state = { dotnet, options, clipEnding: false, root: root ?? null };
 
   // True when the clip end was reached and handled. "timeupdate" fires only every 250 ms or so, so a timer aimed at
   // the end also calls it, to stop within a few milliseconds instead of a quarter second late.
@@ -71,12 +78,36 @@ export function attach(media, dotnet, options) {
       }
       report(state, 'PlayingChange', false);
     },
+    enterpictureinpicture: () => report(state, 'PictureInPictureChange', true),
+    leavepictureinpicture: () => report(state, 'PictureInPictureChange', false),
   };
   for (const [type, listener] of Object.entries(state.listeners)) media.addEventListener(type, listener);
+
+  if (state.root) {
+    state.rootListeners = {
+      keydown: (event) => {
+        if (event.target !== state.root || !state.options.keyboard) return;
+        if (event.ctrlKey || event.metaKey || event.altKey || !playerKeys.has(event.key)) return;
+        // Space would also scroll the page.
+        event.preventDefault();
+        report(state, 'Key', event.key);
+      },
+      fullscreenchange: () => report(state, 'FullscreenChange', document.fullscreenElement === state.root),
+    };
+    for (const [type, listener] of Object.entries(state.rootListeners)) state.root.addEventListener(type, listener);
+  }
   states.set(media, state);
 
   apply(media, state);
   if (media.readyState >= 1) state.listeners.loadedmetadata();
+
+  const pictureInPicture = media instanceof HTMLVideoElement
+    && document.pictureInPictureEnabled === true
+    && typeof media.requestPictureInPicture === 'function';
+  const fullscreen = !!state.root
+    && document.fullscreenEnabled === true
+    && typeof state.root.requestFullscreen === 'function';
+  report(state, 'Capabilities', pictureInPicture, fullscreen);
 }
 
 /** Replaces the options of an attached element. */
@@ -107,10 +138,34 @@ export function seek(media, time) {
   media.currentTime = time;
 }
 
+/** Opens the video in a picture-in-picture window, or closes the window when it already shows this video. */
+export function togglePictureInPicture(media) {
+  if (document.pictureInPictureElement === media) {
+    document.exitPictureInPicture().catch(() => {});
+  } else if (typeof media.requestPictureInPicture === 'function' && !media.disablePictureInPicture) {
+    // Refused without a recent user gesture or when the browser forbids it; the button simply does nothing then.
+    media.requestPictureInPicture().catch(() => {});
+  }
+}
+
+/** Shows the player root fullscreen, or leaves fullscreen when the root is already fullscreen. */
+export function toggleFullscreen(media) {
+  const root = states.get(media)?.root;
+  if (!root) return;
+  if (document.fullscreenElement === root) {
+    document.exitFullscreen().catch(() => {});
+  } else if (typeof root.requestFullscreen === 'function') {
+    root.requestFullscreen().catch(() => {});
+  }
+}
+
 export function detach(media) {
   const state = states.get(media);
   if (!state) return;
   clearTimeout(state.endTimer);
   for (const [type, listener] of Object.entries(state.listeners)) media.removeEventListener(type, listener);
+  if (state.root && state.rootListeners) {
+    for (const [type, listener] of Object.entries(state.rootListeners)) state.root.removeEventListener(type, listener);
+  }
   states.delete(media);
 }

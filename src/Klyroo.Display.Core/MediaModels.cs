@@ -6,7 +6,7 @@ public enum MediaPlayerControl
     /// <summary>The elapsed and total time label.</summary>
     Time,
 
-    /// <summary>The mute button.</summary>
+    /// <summary>The mute button and the volume slider.</summary>
     Volume,
 
     /// <summary>The playback speed button.</summary>
@@ -15,10 +15,10 @@ public enum MediaPlayerControl
     /// <summary>The captions button of the video player.</summary>
     Captions,
 
-    /// <summary>Reserved: neither player renders a picture-in-picture button yet.</summary>
+    /// <summary>The picture-in-picture button of the video player. It shows only once the browser reports picture-in-picture support, and not when the player is not seekable, since the video element then disables picture-in-picture.</summary>
     PictureInPicture,
 
-    /// <summary>Reserved: neither player renders a fullscreen button yet.</summary>
+    /// <summary>The fullscreen button of the video player, which shows the whole player fullscreen. It shows only once the browser reports fullscreen support.</summary>
     Fullscreen,
 
     /// <summary>The download link.</summary>
@@ -30,7 +30,7 @@ public enum MediaPlayerControl
 /// <param name="SrcLang">The BCP 47 language code of the track, for example <c>"fr"</c>.</param>
 /// <param name="Label">The label shown in the browser's track list.</param>
 /// <param name="Kind">The <c>kind</c> attribute of the track (<c>"subtitles"</c> by default).</param>
-/// <param name="Default">Whether the track is selected initially.</param>
+/// <param name="Default">Whether the track is shown initially. With several default tracks, the first one wins.</param>
 public sealed record VideoPlayerTrack(
     string Src,
     string SrcLang,

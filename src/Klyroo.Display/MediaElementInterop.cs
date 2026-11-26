@@ -11,10 +11,20 @@ internal interface IMediaElementHost
     Task OnMediaDurationAsync(double duration);
     Task OnMediaPlayingChangedAsync(bool playing);
     Task OnMediaPlayFailedAsync();
+
+    /// <summary>A player key (Space, K or M) pressed while the player root itself had the focus.</summary>
+    Task OnMediaKeyAsync(string key);
+
+    /// <summary>Whether the browser supports picture-in-picture for the element and fullscreen for the root.</summary>
+    Task OnMediaCapabilitiesAsync(bool pictureInPicture, bool fullscreen) => Task.CompletedTask;
+
+    Task OnMediaFullscreenChangedAsync(bool fullscreen) => Task.CompletedTask;
+
+    Task OnMediaPictureInPictureChangedAsync(bool active) => Task.CompletedTask;
 }
 
 /// <summary>The element state a player pushes to the browser. <see cref="End"/> is set only for an explicit clip end.</summary>
-internal readonly record struct MediaElementOptions(double Start, double? End, bool Loop, bool Muted, double Rate, double Volume, int Track);
+internal readonly record struct MediaElementOptions(double Start, double? End, bool Loop, bool Muted, double Rate, double Volume, int Track, bool Keyboard);
 
 /// <summary>
 /// Drives a media element through <c>klyroo-display-media.js</c>. Every call is a no-op until <see cref="AttachAsync"/>
@@ -32,7 +42,8 @@ internal sealed class MediaElementInterop(IMediaElementHost host) : IAsyncDispos
     private bool _playPending;
     private double? _pendingFrom;
 
-    public async Task AttachAsync(IJSRuntime js, ElementReference element, MediaElementOptions options)
+    /// <summary>Attaches the module to the media element and to the player root, which receives the player keys and goes fullscreen.</summary>
+    public async Task AttachAsync(IJSRuntime js, ElementReference element, ElementReference root, MediaElementOptions options)
     {
         IJSObjectReference module;
         try
@@ -53,7 +64,7 @@ internal sealed class MediaElementInterop(IMediaElementHost host) : IAsyncDispos
         _reference = DotNetObjectReference.Create(this);
         _element = element;
         _options = options;
-        await module.InvokeVoidAsync("attach", element, _reference, ToScript(options));
+        await module.InvokeVoidAsync("attach", element, _reference, ToScript(options), root);
         _module = module;
         if (_disposed)
         {
@@ -99,6 +110,10 @@ internal sealed class MediaElementInterop(IMediaElementHost host) : IAsyncDispos
 
     public Task SeekAsync(double time) => InvokeAsync("seek", time);
 
+    public Task TogglePictureInPictureAsync() => InvokeAsync("togglePictureInPicture");
+
+    public Task ToggleFullscreenAsync() => InvokeAsync("toggleFullscreen");
+
     [JSInvokable("TimeUpdate")]
     public Task TimeUpdate(double time) => host.OnMediaTimeUpdateAsync(time);
 
@@ -113,6 +128,18 @@ internal sealed class MediaElementInterop(IMediaElementHost host) : IAsyncDispos
 
     [JSInvokable("PlayFailed")]
     public Task PlayFailed() => host.OnMediaPlayFailedAsync();
+
+    [JSInvokable("Key")]
+    public Task Key(string key) => host.OnMediaKeyAsync(key);
+
+    [JSInvokable("Capabilities")]
+    public Task Capabilities(bool pictureInPicture, bool fullscreen) => host.OnMediaCapabilitiesAsync(pictureInPicture, fullscreen);
+
+    [JSInvokable("FullscreenChange")]
+    public Task FullscreenChange(bool fullscreen) => host.OnMediaFullscreenChangedAsync(fullscreen);
+
+    [JSInvokable("PictureInPictureChange")]
+    public Task PictureInPictureChange(bool active) => host.OnMediaPictureInPictureChangedAsync(active);
 
     public async ValueTask DisposeAsync()
     {
@@ -161,5 +188,6 @@ internal sealed class MediaElementInterop(IMediaElementHost host) : IAsyncDispos
         ["rate"] = o.Rate,
         ["volume"] = o.Volume,
         ["track"] = o.Track,
+        ["keyboard"] = o.Keyboard,
     };
 }

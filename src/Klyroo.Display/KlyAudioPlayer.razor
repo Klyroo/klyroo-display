@@ -6,30 +6,30 @@
 @implements IMediaElementHost
 @inject IJSRuntime JS
 
-<div class="@RootClass" role="region" aria-label="@(Title ?? "Audio player")" tabindex="@(Keyboard ? 0 : -1)"
-     @onkeydown="OnKeyDown" data-slot="audio-player" data-locked="@(IsLocked ? "true" : null)" @attributes="AdditionalAttributes">
+<div @ref="_root" class="@RootClass" role="region" aria-label="@(Title ?? Texts.AudioPlayer)" tabindex="@(Keyboard ? 0 : -1)"
+     data-slot="audio-player" data-compact="@(Compact ? "true" : null)" data-locked="@(IsLocked ? "true" : null)" @attributes="AdditionalAttributes">
     <audio @ref="_media" src="@Src" preload="@Preload" muted="@Muted" loop="@(Loop && !IsRestricted)" class="hidden" data-slot="audio-element"></audio>
 
     @if (IsLocked)
     {
-        <div class="flex items-center justify-between gap-3 px-3 py-1.5 text-xs font-medium text-(--klyroo-text-muted)" data-slot="media-locked">
+        <div class="flex items-center justify-between gap-3 @(Compact ? "px-2 py-1" : "px-3 py-1.5") text-xs font-medium text-(--klyroo-text-muted)" data-slot="media-locked">
             <span class="inline-flex items-center gap-1.5">
                 @RenderIcon("lock", "size-4 text-(--klyroo-warning-text)")
-                <span>No plays left</span>
+                <span>@Texts.NoPlaysLeft</span>
             </span>
             <span class="tabular-nums" data-slot="media-time">@FormatTime(ClipPosition) / @FormatTime(ClipLength)</span>
         </div>
     }
     else
     {
-        <div class="flex flex-wrap items-center gap-2.5 px-3 py-1.5" data-slot="media-controls">
+        <div class="flex flex-wrap items-center @(Compact ? "gap-1.5 px-2 py-1" : "gap-2.5 px-3 py-1.5")" data-slot="media-controls">
             <button type="button"
-                    class="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-(--klyroo-primary) text-(--klyroo-primary-contrast) hover:opacity-90 disabled:opacity-40"
+                    class="inline-flex @(Compact ? "size-7" : "size-8") shrink-0 items-center justify-center rounded-full bg-(--klyroo-primary) text-(--klyroo-primary-contrast) hover:opacity-90 disabled:opacity-40"
                     disabled="@Disabled"
-                    aria-label="@(_playing ? "Pause" : "Play")"
+                    aria-label="@(_playing ? Texts.Pause : Texts.Play)"
                     data-slot="media-play"
                     @onclick="TogglePlayAsync">
-                @RenderIcon(_playing ? "pause" : "play", "size-4")
+                @RenderIcon(_playing ? "pause" : "play", Compact ? "size-3.5" : "size-4")
             </button>
 
             @if (!IsHidden(MediaPlayerControl.Time))
@@ -39,13 +39,13 @@
                 </span>
             }
 
-            <div class="flex min-w-24 flex-1 items-center" data-slot="media-timeline">
+            <div class="flex @(Compact ? "min-w-16" : "min-w-24") flex-1 items-center" data-slot="media-timeline">
                 @if (Seekable)
                 {
                     <input type="range" min="0" max="@ClipLength.ToString("0.##", CultureInfo.InvariantCulture)"
                            step="0.1" value="@ClipPosition.ToString("0.##", CultureInfo.InvariantCulture)"
                            disabled="@Disabled"
-                           aria-label="Seek"
+                           aria-label="@Texts.Seek"
                            class="h-1.5 w-full cursor-pointer accent-(--klyroo-primary)"
                            data-slot="media-seek"
                            @oninput="OnSeekInputAsync" />
@@ -54,7 +54,7 @@
                 {
                     var pct = ClipLength > 0 ? Math.Clamp(ClipPosition / ClipLength * 100.0, 0, 100) : 0;
                     <div class="h-1.5 w-full overflow-hidden rounded-full bg-(--klyroo-bg-muted)"
-                         role="progressbar" aria-label="Playback progress"
+                         role="progressbar" aria-label="@Texts.PlaybackProgress"
                          aria-valuenow="@Math.Round(pct)" aria-valuemin="0" aria-valuemax="100"
                          data-slot="media-progress">
                         <div class="h-full bg-(--klyroo-primary)" style="@($"width:{pct.ToString("0.#", CultureInfo.InvariantCulture)}%")"></div>
@@ -65,7 +65,7 @@
             @if (MaxPlays > 0)
             {
                 <span class="inline-flex items-center gap-1 rounded-full bg-(--klyroo-bg-muted) px-2 py-0.5 text-[11px] font-semibold tabular-nums text-(--klyroo-text-muted)"
-                      title="@($"{RemainingPlays} plays left")" data-slot="media-plays-left">
+                      title="@Texts.PlaysLeft(RemainingPlays)" data-slot="media-plays-left">
                     @RemainingPlays
                 </span>
             }
@@ -73,20 +73,26 @@
             @if (!IsHidden(MediaPlayerControl.Volume))
             {
                 <button type="button"
-                        class="inline-flex size-7 items-center justify-center rounded-full text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
-                        aria-label="@(Muted ? "Unmute" : "Mute")"
+                        class="inline-flex @(Compact ? "size-6" : "size-7") items-center justify-center rounded-full text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
+                        aria-label="@(Muted ? Texts.Unmute : Texts.Mute)"
                         aria-pressed="@(Muted ? "true" : "false")"
                         data-slot="media-mute"
                         @onclick="ToggleMuteAsync">
                     @RenderIcon(Muted ? "volume-x" : "volume-2", "size-4")
                 </button>
+                <input type="range" min="0" max="1" step="0.05"
+                       value="@Volume.ToString("0.##", CultureInfo.InvariantCulture)"
+                       aria-label="@Texts.Volume"
+                       class="h-1.5 @(Compact ? "w-14" : "w-20") shrink-0 cursor-pointer accent-(--klyroo-primary)"
+                       data-slot="media-volume"
+                       @oninput="OnVolumeInputAsync" />
             }
 
             @if (!IsHidden(MediaPlayerControl.Rate) && Rates is { Count: > 1 })
             {
                 <button type="button"
-                        class="inline-flex h-7 items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
-                        aria-label="Playback speed"
+                        class="inline-flex @(Compact ? "h-6" : "h-7") items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
+                        aria-label="@Texts.PlaybackSpeed"
                         data-slot="media-rate"
                         @onclick="CycleRateAsync">
                     @($"{Rate.ToString("0.##", CultureInfo.InvariantCulture)}×")
@@ -95,9 +101,9 @@
 
             @if (!IsHidden(MediaPlayerControl.Download) && (Download || !string.IsNullOrEmpty(DownloadUrl)))
             {
-                <a href="@(DownloadUrl ?? Src)" download="@(DownloadFileName ?? true.ToString())"
-                   class="inline-flex size-7 items-center justify-center rounded-full text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
-                   aria-label="Download" data-slot="media-download"
+                <a href="@(DownloadUrl ?? Src)" download="@DownloadName(DownloadFileName, DownloadUrl ?? Src)"
+                   class="inline-flex @(Compact ? "size-6" : "size-7") items-center justify-center rounded-full text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
+                   aria-label="@Texts.Download" data-slot="media-download"
                    @onclick="OnDownloadClickAsync">
                     @RenderIcon("download", "size-4")
                 </a>
@@ -111,6 +117,8 @@
     private bool _playActive;
     private double _currentTime;
     private ElementReference _media;
+    private ElementReference _root;
+    private DisplayTexts? _texts;
     private MediaElementInterop? _interop;
     private double? _mediaDuration;
     private bool _pauseMedia;
@@ -128,9 +136,9 @@
     [Parameter] public bool Loop { get; set; }
     /// <summary>Disables the play, seek and mute controls.</summary>
     [Parameter] public bool Disabled { get; set; }
-    /// <summary>Not used in this version.</summary>
+    /// <summary>Renders a denser control bar: less padding and spacing, smaller buttons and a shorter volume slider.</summary>
     [Parameter] public bool Compact { get; set; }
-    /// <summary>Whether the focused player reacts to keys: Space or K toggles playback, M toggles mute (<see langword="true"/> by default).</summary>
+    /// <summary>Whether the focused player reacts to keys: Space or K toggles playback, M toggles mute (<see langword="true"/> by default). Only keys pressed while the player itself has the focus count: a key on one of its buttons or sliders is left to that control.</summary>
     [Parameter] public bool Keyboard { get; set; } = true;
 
     /// <summary>The clip start, in seconds. Positions and durations are reported relative to it.</summary>
@@ -161,9 +169,9 @@
     /// <summary>The rates the speed button cycles through. The button is hidden when there are fewer than two (0.5, 0.75, 1, 1.25, 1.5 and 2 by default).</summary>
     [Parameter] public IReadOnlyList<double>? Rates { get; set; } = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-    /// <summary>The volume of the media element, from 0 to 1 (<c>1.0</c> by default). The player has no volume slider, so set it from your own control.</summary>
+    /// <summary>The volume of the media element, from 0 to 1 (<c>1.0</c> by default). The volume slider changes it and raises <see cref="VolumeChanged"/>.</summary>
     [Parameter] public double Volume { get; set; } = 1.0;
-    /// <summary>Not raised in this version: the player has no volume slider.</summary>
+    /// <summary>Raised with the new volume, from 0 to 1, when the volume slider moves or <see cref="SetVolumeAsync"/> is called.</summary>
     [Parameter] public EventCallback<double> VolumeChanged { get; set; }
 
     /// <summary>Whether the player is muted. The mute button toggles it and raises <see cref="MutedChanged"/>.</summary>
@@ -175,10 +183,10 @@
     [Parameter] public bool Download { get; set; }
     /// <summary>The target of the download link. When <see langword="null"/>, <see cref="Src"/> is used.</summary>
     [Parameter] public string? DownloadUrl { get; set; }
-    /// <summary>The file name suggested to the browser by the download link.</summary>
+    /// <summary>The file name suggested to the browser by the download link. When <see langword="null"/>, the last segment of the link URL is used, or the browser picks a name for a <c>data:</c> or <c>blob:</c> URL.</summary>
     [Parameter] public string? DownloadFileName { get; set; }
 
-    /// <summary>The controls to remove from the control bar.</summary>
+    /// <summary>The controls to remove from the control bar. <see cref="MediaPlayerControl.Volume"/> removes the mute button and the volume slider. <see cref="MediaPlayerControl.Captions"/>, <see cref="MediaPlayerControl.PictureInPicture"/> and <see cref="MediaPlayerControl.Fullscreen"/> are video controls that this player does not render.</summary>
     [Parameter] public IReadOnlyList<MediaPlayerControl>? Hide { get; set; }
 
     /// <summary>Raised when playback starts or resumes.</summary>
@@ -187,7 +195,7 @@
     [Parameter] public EventCallback OnPause { get; set; }
     /// <summary>Raised when the position reaches the end of the clip.</summary>
     [Parameter] public EventCallback OnEnded { get; set; }
-    /// <summary>Raised when no plays are left: when a play ends with <see cref="Plays"/> at <see cref="MaxPlays"/>, or when a new play is requested after that.</summary>
+    /// <summary>Raised when no plays are left: when a play ends with <see cref="Plays"/> at <see cref="MaxPlays"/>, and each time a play is requested while the player is locked (from the keyboard, a media key or <see cref="TogglePlayAsync"/>).</summary>
     [Parameter] public EventCallback OnLimitReached { get; set; }
     /// <summary>Raised with the position during playback, about four times a second, and when the user seeks.</summary>
     [Parameter] public EventCallback<MediaPlayerProgress> OnTimeUpdate { get; set; }
@@ -205,6 +213,8 @@
     public double ClipLength => Math.Max(0, ClipEnd - Start);
     /// <summary>The position inside the clip in seconds, between zero and <see cref="ClipLength"/>.</summary>
     public double ClipPosition => Math.Clamp(_currentTime - Start, 0, ClipLength);
+
+    private DisplayTexts Texts => _texts ??= Options.Extension<DisplayTexts>();
 
     private string RootClass =>
         $"rounded-full border border-(--klyroo-border) bg-(--klyroo-bg-elevated) text-(--klyroo-text) shadow-xs {Class}".Trim();
@@ -238,7 +248,7 @@
         if (_interop is null) return;
         if (firstRender)
         {
-            await _interop.AttachAsync(JS, _media, MediaOptions);
+            await _interop.AttachAsync(JS, _media, _root, MediaOptions);
             // Parameters may have changed while the module loaded.
             await _interop.UpdateAsync(MediaOptions);
             if (Autoplay) await TogglePlayAsync();
@@ -253,7 +263,7 @@
     }
 
     private MediaElementOptions MediaOptions =>
-        new(Start, End is { } end && end > Start ? end : null, Loop && !IsRestricted, Muted, Rate, Volume, -1);
+        new(Start, End is { } end && end > Start ? end : null, Loop && !IsRestricted, Muted, Rate, Volume, -1, Keyboard);
 
     async Task IMediaElementHost.OnMediaTimeUpdateAsync(double time)
     {
@@ -290,6 +300,8 @@
         return Task.CompletedTask;
     }
 
+    Task IMediaElementHost.OnMediaKeyAsync(string key) => HandleKeyAsync(key);
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
@@ -297,10 +309,15 @@
         _interop = null;
     }
 
-    /// <summary>Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of <see cref="MaxPlays"/>. It does nothing when <see cref="Disabled"/> or <see cref="IsLocked"/>.</summary>
+    /// <summary>Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of <see cref="MaxPlays"/>. It does nothing when <see cref="Disabled"/>, and only raises <see cref="OnLimitReached"/> when <see cref="IsLocked"/>.</summary>
     public async Task TogglePlayAsync()
     {
-        if (Disabled || IsLocked) return;
+        if (Disabled) return;
+        if (IsLocked)
+        {
+            await OnLimitReached.InvokeAsync();
+            return;
+        }
         if (_playing)
         {
             _playing = false;
@@ -313,12 +330,6 @@
         double? from = null;
         if (!_playActive)
         {
-            if (MaxPlays > 0 && Plays >= MaxPlays)
-            {
-                await OnLimitReached.InvokeAsync();
-                StateHasChanged();
-                return;
-            }
             _playActive = true;
             _currentTime = Start;
             Plays++;
@@ -380,6 +391,18 @@
         StateHasChanged();
     }
 
+    /// <summary>Sets <see cref="Volume"/>, as the volume slider does, and raises <see cref="VolumeChanged"/>.</summary>
+    /// <param name="volume">The new volume, clamped between 0 and 1.</param>
+    /// <returns>A task that completes when the callback has run.</returns>
+    public async Task SetVolumeAsync(double volume)
+    {
+        var clamped = double.IsNaN(volume) ? Volume : Math.Clamp(volume, 0, 1);
+        if (clamped.Equals(Volume)) return;
+        Volume = clamped;
+        await VolumeChanged.InvokeAsync(Volume);
+        StateHasChanged();
+    }
+
     /// <summary>Selects the next entry of <see cref="Rates"/> (wrapping around), and raises <see cref="RateChanged"/>. It does nothing with fewer than two rates.</summary>
     public async Task CycleRateAsync()
     {
@@ -403,14 +426,23 @@
         }
     }
 
-    private async Task OnKeyDown(KeyboardEventArgs e)
+    private async Task OnVolumeInputAsync(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var volume))
+        {
+            await SetVolumeAsync(volume);
+        }
+    }
+
+    // The media module reports keys pressed on the player root only, so a key on a focused button is not handled twice.
+    private async Task HandleKeyAsync(string key)
     {
         if (!Keyboard) return;
-        if (e.Key is " " or "k" or "K")
+        if (key is " " or "k" or "K")
         {
             await TogglePlayAsync();
         }
-        else if (e.Key is "m" or "M")
+        else if (key is "m" or "M")
         {
             await ToggleMuteAsync();
         }
@@ -423,6 +455,14 @@
 
     private bool IsHidden(MediaPlayerControl control) =>
         Hide is not null && Hide.Contains(control);
+
+    // The download attribute: the given name, else the last URL segment, else a bare attribute so the browser picks a name.
+    internal static string DownloadName(string? fileName, string url)
+    {
+        if (!string.IsNullOrWhiteSpace(fileName)) return fileName;
+        var fromUrl = FilePreviewService.FileNameFromUrl(url);
+        return fromUrl == "Untitled" ? "" : fromUrl;
+    }
 
     internal static string FormatTime(double seconds)
     {
