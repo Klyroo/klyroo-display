@@ -183,6 +183,8 @@ function tabbables(root) {
 
 /** Keeps Tab and Shift+Tab inside the element and remembers the focused element to restore on release. Call it before moving the focus in. */
 export function trapFocus(element) {
+  // The dialog may be gone already (closed while this module loaded).
+  if (!element || !element.isConnected) return;
   releaseFocus(false);
   const active = document.activeElement;
   const returnTo = active && active !== document.body && !element.contains(active) ? active : null;

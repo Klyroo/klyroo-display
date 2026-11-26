@@ -297,10 +297,20 @@
         try
         {
             _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Klyroo.Display/klyroo-display-media.js");
+            // Closed while the module loaded: the dialog is gone, there is nothing to trap.
+            if (!Preview.IsOpen) return;
             await _module.InvokeVoidAsync("trapFocus", _dialog);
-            await _dialog.FocusAsync();
         }
-        catch (JSDisconnectedException)
+        catch (Exception e) when (e is JSException or JSDisconnectedException or TaskCanceledException)
+        {
+            // The module could not load (static assets not mapped, a content security policy) or the circuit ended:
+            // the preview still works and still takes the focus, only Tab is not kept inside.
+        }
+        try
+        {
+            if (Preview.IsOpen) await _dialog.FocusAsync();
+        }
+        catch (Exception e) when (e is JSException or JSDisconnectedException or TaskCanceledException or InvalidOperationException)
         {
         }
     }
@@ -312,7 +322,7 @@
         {
             await _module.InvokeVoidAsync("releaseFocus");
         }
-        catch (JSDisconnectedException)
+        catch (Exception e) when (e is JSException or JSDisconnectedException or TaskCanceledException)
         {
         }
     }
@@ -586,8 +596,9 @@
             if (_focusedOpen) await _module.InvokeVoidAsync("releaseFocus", false);
             await _module.DisposeAsync();
         }
-        catch (JSDisconnectedException)
+        catch (Exception e) when (e is JSException or JSDisconnectedException or TaskCanceledException)
         {
+            // The circuit or the page is gone with the element.
         }
         _module = null;
     }

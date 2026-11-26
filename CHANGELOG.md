@@ -9,8 +9,8 @@ All notable changes to this project are documented in this file. The format is b
 ### Changed
 
 - `docs/concepts.md` now says that the clip rules of the players (`MaxPlays`, `Seekable`, `Start`, `End`) are enforced in the browser only, that the file stays downloadable, and how to count plays on the server with `PlaysChanged`.
-- The `bar` and `line` variants of the Chart block are now Klyroo.UI's `KlyChart`: value and index axes, a tooltip with arrow-key exploration, signed values, an image description generated from the values and a "Table" disclosure with the numbers. The public parameters are unchanged. Per-point `Tone` still colors each bar (one stacked series per tone); a `line` is one series, in the tone shared by all its points or in the primary color.
-- The `funnel` variant draws a zero or negative step with no bar (it used to show a 4% sliver, like the bars used to show 6%) and a positive step at 2% at least.
+- The `bar` and `line` variants of the Chart block are now Klyroo.UI's `KlyChart`: value and index axes, a tooltip with arrow-key exploration, signed values, an image description generated from the values and a "Table" disclosure with the numbers. The public parameters are unchanged. Bars and lines are one series, in the tone all points share or in the primary color when they differ, so the data table and screen readers get one value column; per-point `Tone` still colors the steps of a `funnel`.
+- The `funnel` variant draws a zero, negative or non-finite step with no bar (it used to show a 4% sliver, like the bars used to show 6%), scales the others to the largest positive step, and draws a positive step at 2% at least.
 
 ### Fixed
 

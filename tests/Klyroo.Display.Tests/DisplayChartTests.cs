@@ -29,7 +29,10 @@ public sealed class DisplayChartTests : BunitContext
         Assert.NotEmpty(cut.FindAll("kly-chart text"));
         Assert.NotEmpty(cut.FindAll("kly-chart [data-slot=tips] [data-tip]"));
         Assert.NotNull(cut.Find("kly-chart details table"));
-        Assert.Equal("Revenue", cut.Find("kly-chart [data-slot=plot]").GetAttribute("aria-label"));
+        // The description names the series (the title) and gives the values, not the title alone, which the heading already reads.
+        var label = cut.Find("kly-chart [data-slot=plot]").GetAttribute("aria-label")!;
+        Assert.Contains("Revenue", label);
+        Assert.Contains("20", label);
         var rows = cut.FindAll("kly-chart table tbody tr");
         Assert.Equal(2, rows.Count);
         Assert.Contains("Mon", rows[0].TextContent);
@@ -52,15 +55,25 @@ public sealed class DisplayChartTests : BunitContext
     }
 
     [Fact]
-    public void Bar_chart_tones_keep_each_bar_its_color()
+    public void Bar_chart_is_one_series_in_the_shared_tone_or_the_primary_color()
     {
-        var cut = Chart(null, [new("A", 1, KlyColor.Error), new("B", 2, KlyColor.Success), new("C", 3, KlyColor.Error)]);
+        var mixed = Chart(null, [new("A", 1, KlyColor.Error), new("B", 2, KlyColor.Success), new("C", 3, KlyColor.Error)]);
 
-        var colors = cut.FindAll("kly-chart svg g[data-series]").Select(g => g.GetAttribute("data-color")).ToList();
-        Assert.Equal(["error", "success"], colors);
+        // One series, so the data table has one value column and screen readers hear no color names.
+        Assert.Equal(["primary"], mixed.FindAll("kly-chart svg g[data-series]").Select(g => g.GetAttribute("data-color")));
+        Assert.Equal(2, mixed.FindAll("kly-chart table thead th").Count);
 
-        var single = Chart(null, [new("A", 1, KlyColor.Error)]);
+        var single = Chart(null, [new("A", 1, KlyColor.Error), new("B", 2, KlyColor.Error)]);
         Assert.Equal("error", single.Find("kly-chart svg g[data-series]").GetAttribute("data-color"));
+    }
+
+    [Fact]
+    public void A_funnel_ignores_non_finite_steps_and_scales_to_the_largest_positive_one()
+    {
+        var cut = Chart("funnel", [new("A", 0.8), new("B", 0.4), new("C", double.NaN), new("D", double.PositiveInfinity)]);
+
+        var widths = cut.FindAll("[data-slot=funnel-step] [aria-hidden=true]").Select(b => b.GetAttribute("style")).ToList();
+        Assert.Equal(["width:100%", "width:50%", "width:0%", "width:0%"], widths);
     }
 
     [Fact]
