@@ -26,6 +26,20 @@ Most screens show information more often than they edit it: an order summary, a 
 | [`Klyroo.Display.Core`](https://www.nuget.org/packages/Klyroo.Display.Core) | `FilePreviewService`, file kind detection, CSV parser and the file and media models. No UI dependency. |
 | [`Klyroo.Display`](https://www.nuget.org/packages/Klyroo.Display) | `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyFilePreviewProvider` for Blazor. Builds on [Klyroo.UI](https://github.com/klyroo/klyroo-ui) and includes the Core package. |
 
+## Prerequisites
+
+To use the library in an app:
+
+- **The .NET 10 SDK**, and an app that targets `net10.0`. The packages are prereleases, so every `dotnet add package` command needs `--prerelease`.
+- **`Klyroo.Display.Core`** alone (file kinds, CSV parsing, sizes) runs in any .NET 10 app.
+- **A Blazor app** for `Klyroo.Display`: a Blazor Web App or a .NET MAUI Blazor Hybrid app. The blocks render in static server rendering; the media players, copy buttons, Show more and the file preview need an interactive render mode. In a WebAssembly or Auto app, register the services in the server project and in the `.Client` project.
+- **Klyroo.UI set up in the app.** `Klyroo.Display` brings the Klyroo.UI package, and `AddKlyrooDisplay()` registers its services, but the layout still needs the Klyroo.UI stylesheets in `<head>` and `<KlyApp>` around the body, as described in the [Klyroo.UI installation](https://github.com/klyroo/klyroo-ui#installation).
+- **`<KlyFilePreviewProvider>` in the layout** to open file previews, and a secure context (HTTPS or `localhost`) for the copy buttons, which use the clipboard API.
+- **A browser with the native popover API**, which Klyroo.UI uses: Chrome and Edge 114, Safari 17 or Firefox 125, or later. In a .NET MAUI app, that means iOS or Mac Catalyst 17, or an Android System WebView 114 or later.
+- **Network access on the first build** only if your app self-hosts web fonts (`KlyrooFont`), uses icons outside the built-in set, or compiles Tailwind (`KlyrooTailwind`): the build downloads them once and caches them under `obj/klyroo`. Node.js is not needed.
+
+To build this repository you need the .NET 10 SDK (a newer SDK works too, see `global.json`) and a clone of `klyroo-ui` in the same parent folder: some projects reference it by relative path (`../klyroo-ui/...`). See [Contributing](CONTRIBUTING.md).
+
 ## Installation
 
 ```bash
@@ -101,7 +115,7 @@ To preview files, add `<KlyFilePreviewProvider />` once to an interactive layout
 | [API reference](docs/api-reference.md) | Every public type and member |
 | [FAQ](docs/faq.md) | Troubleshooting and limitations |
 
-## Requirements
+## Compatibility
 
 - .NET 10 SDK.
 - `Klyroo.Display.Core` runs anywhere .NET 10 runs and is marked `IsAotCompatible` and `IsTrimmable`.

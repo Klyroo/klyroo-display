@@ -1,6 +1,8 @@
 # Getting started
 
-This tutorial builds a small order page: first the headless pieces in plain C#, then a Blazor page that shows the order with `KlyDisplay` and opens an invoice in the file preview overlay. It takes about ten minutes and assumes a Blazor Web App on .NET 10 with interactive rendering enabled.
+This tutorial builds a small order page: first the headless pieces in plain C#, then a Blazor page that shows the order with `KlyDisplay` and opens an invoice in the file preview overlay. It takes about ten minutes.
+
+Check the [prerequisites](../README.md#prerequisites) first: the .NET 10 SDK, and for the components a Blazor app with Klyroo.UI set up.
 
 ## 1. Install the packages
 
