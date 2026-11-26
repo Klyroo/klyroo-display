@@ -70,6 +70,6 @@ public static partial class DisplayLocales
         MarkdownPreview = "Aperçu",
         MarkdownSource = "Source",
         LineCount = n => n <= 1 ? $"{n} ligne" : $"{n} lignes",
-        WrapLines = "Renvoyer à la ligne",
+        WrapLines = "Retour automatique à la ligne",
     };
 }
