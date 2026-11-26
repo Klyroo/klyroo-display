@@ -74,6 +74,15 @@ public sealed record DisplayTexts
     /// <summary>The length of a <c>range</c> Date, given the number of days (<c>"7 days"</c>).</summary>
     public Func<int, string> DayCount { get; init; } = n => n == 1 ? "1 day" : $"{n} days";
 
+    /// <summary>The time of a <c>schedule</c> Timeline event that lasts whole days (<c>"All day"</c>).</summary>
+    public string AllDay { get; init; } = "All day";
+
+    /// <summary>The heading of the events of a <c>schedule</c> Timeline that have no date (<c>"Unscheduled"</c>).</summary>
+    public string Unscheduled { get; init; } = "Unscheduled";
+
+    /// <summary>The length of a <c>schedule</c> Timeline event, given its total number of minutes (<c>"1 h 30 min"</c>, <c>"45 min"</c>, <c>"2 h"</c>). The length is never negative.</summary>
+    public Func<int, string> Duration { get; init; } = m => DisplayLocales.Duration(m, "h", "min");
+
     /// <summary>The alternative text of a gallery image when the block has no title, given its one-based position (<c>"Image 2"</c>).</summary>
     public Func<int, string> ImageAlt { get; init; } = n => $"Image {n}";
 

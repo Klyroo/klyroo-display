@@ -392,11 +392,12 @@ public enum DisplayTimelineState
 /// <param name="Title">The event title.</param>
 /// <param name="Description">A line under the title.</param>
 /// <param name="Time">The time text shown beside the title. It is displayed as given and takes precedence over <paramref name="Date"/> for the text; in the <c>log</c> variant it replaces the time part of the date.</param>
-/// <param name="Date">When the event happened. It is shown in the short date and time format of the resolved culture when <paramref name="Time"/> is not set, set as the <c>datetime</c> of the <c>time</c> element, and starts each line of the <c>log</c> variant. It is shown in its own offset.</param>
+/// <param name="Date">When the event happened or starts. It is shown in the short date and time format of the resolved culture when <paramref name="Time"/> is not set, set as the <c>datetime</c> of the <c>time</c> element, and starts each line of the <c>log</c> variant. It is shown in its own offset. In the <c>schedule</c> variant it places the event on its day and orders the events; an event without a date is listed last, under the unscheduled heading.</param>
 /// <param name="Icon">An icon name shown in the marker instead of the event number (or the dot of the <c>log</c> variant).</param>
 /// <param name="ActorName">The name of the person behind the event.</param>
-/// <param name="State">The event state. When <see langword="null"/>, <see cref="DisplayTimelineState.Done"/> is used.</param>
+/// <param name="State">The event state. When <see langword="null"/>, <see cref="DisplayTimelineState.Done"/> is used, except in the <c>schedule</c> variant, where an event without a state is shown as a plain upcoming event: only an explicit <see cref="DisplayTimelineState.Done"/> is muted and only <see cref="DisplayTimelineState.Current"/> is emphasized and gets <c>aria-current</c>.</param>
 /// <param name="Tone">A color for the marker, replacing the primary color of done and current events and the border of upcoming ones.</param>
+/// <param name="EndDate">When the event ends. Only the <c>schedule</c> variant reads it: it shows the time range and the length of the event. It is ignored when <paramref name="Date"/> is not set or when it is not after <paramref name="Date"/>, and it is shown in the offset of <paramref name="Date"/>. An event that starts at midnight and has no end, or ends at midnight or at the end of a day, is an all-day event, and its end day is included (a <paramref name="Date"/> of the 12th and an <paramref name="EndDate"/> of the 14th at midnight is three days).</param>
 public sealed record DisplayTimelineItem(
     string Title,
     string? Description = null,
@@ -405,7 +406,8 @@ public sealed record DisplayTimelineItem(
     string? Icon = null,
     string? ActorName = null,
     DisplayTimelineState? State = null,
-    KlyColor? Tone = null);
+    KlyColor? Tone = null,
+    DateTimeOffset? EndDate = null);
 
 /// <summary>One section of a <see cref="DisplayKind.Accordion"/> block.</summary>
 /// <param name="Label">The section header.</param>

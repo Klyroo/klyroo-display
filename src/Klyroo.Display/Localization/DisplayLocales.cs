@@ -38,6 +38,18 @@ public static partial class DisplayLocales
     internal static string Grouped(int n, string separator) =>
         n.ToString("N0", CultureInfo.InvariantCulture).Replace(",", separator, StringComparison.Ordinal);
 
+    // A length in hours and minutes, without culture data: "1 h 30 min", "45 min", "2 h". Units are abbreviations, so they do not inflect.
+    internal static string Duration(int totalMinutes, string hour, string minute, string unitSeparator = " ", string partSeparator = " ")
+    {
+        var minutes = Math.Max(0, totalMinutes);
+        var hours = minutes / 60;
+        var rest = minutes % 60;
+        var invariant = CultureInfo.InvariantCulture;
+        if (hours == 0) return string.Create(invariant, $"{rest}{unitSeparator}{minute}");
+        if (rest == 0) return string.Create(invariant, $"{hours}{unitSeparator}{hour}");
+        return string.Create(invariant, $"{hours}{unitSeparator}{hour}{partSeparator}{rest}{unitSeparator}{minute}");
+    }
+
     // Russian plural forms: one (1, 21, 31...), few (2-4, 22-24...), many (the rest, 11-14 included).
     internal static string RussianPlural(int n, string one, string few, string many)
     {

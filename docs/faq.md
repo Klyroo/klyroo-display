@@ -89,6 +89,10 @@ No. The table is a plain table of text cells, and the charts are small bars, a l
 
 The block colors a code only when `Language` names a supported language (`csharp`, `javascript`, `typescript`, `json`, `html`, `xml`, `css`, `scss`, `less`, `sql`, `python`, `bash`, `yaml`, or an alias such as `cs`, `ts` or `yml`), `Highlight` is not `false`, the variant is not `secret`, and the code is within 100,000 characters and 5,000 lines. Otherwise it renders as plain text. The file preview colors a text file from its extension, so a `Name` or `Src` without a supported extension (`Dockerfile`, `.txt`) stays plain. If colors are missing for a supported language, check that `klyroo-display.css` is loaded, see [The block renders but has no styling](#the-block-renders-but-has-no-styling).
 
+### A schedule event is not on the day I expect
+
+The `schedule` variant places an event on the calendar day of its `Date` in the offset the `DateTimeOffset` carries, not in the offset of the server or the browser. A `DateTimeOffset` built from a UTC value (offset `+00:00`) therefore stays on its UTC day. Convert it with `ToOffset` to the offset you want to show before you pass it. An event without a `Date` goes last under "Unscheduled", and an end that is not after the start is ignored.
+
 ### Does the secret variant protect a secret?
 
 No. It masks the value on screen. The real value is held by the component, and the copy button copies it, so only render secrets that the user is allowed to see.

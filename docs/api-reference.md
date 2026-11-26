@@ -416,7 +416,7 @@ Renders a read-only block of information: a heading, a text, an alert, a list of
 | `Trend` | `IReadOnlyList<double>?` | The series of a Stat sparkline. It is drawn from two points or more. |
 | `Unit` | `string?` | The unit shown beside a Stat value, or at the end of a Chart title. |
 | `Value` | `string?` | The main text of the block: the Text body, the Alert message, the Stat value, the Meter value label, or the Code content. |
-| `Variant` | `string?` | Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: `eyebrow`. Text: `quote`. Stat: `row`. Breakdown: `collapsible`. Meter: `ring`, `scale`. Chart: `line`, `funnel`. Table: `sticky`. Person: `group`. List: `steps`, `checks`, `files`. Timeline: `pipeline`, `log`. Date: `countdown`, `range`. Media: `gallery`. Code: `secret`. |
+| `Variant` | `string?` | Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: `eyebrow`. Text: `quote`. Stat: `row`. Breakdown: `collapsible`. Meter: `ring`, `scale`. Chart: `line`, `funnel`. Table: `sticky`. Person: `group`. List: `steps`, `checks`, `files`. Timeline: `pipeline`, `log`, `schedule`. Date: `countdown`, `range`. Media: `gallery`. Code: `secret`. |
 | `VisibleChars` | `int` | The number of trailing characters left visible by a `secret` Code block (`4` by default). A longer value shows eight bullets followed by those characters. A value that is not longer than this number is fully masked. |
 | `WarningThreshold` | `double?` | The percentage of `KlyDisplay.MeterMax` from which the Meter bar turns to the warning color. |
 
@@ -857,6 +857,7 @@ The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyF
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
+| `AllDay` (init) | `string` | The time of a `schedule` Timeline event that lasts whole days (`"All day"`). |
 | `AudioPlayer` (init) | `string` | The accessible name of an audio player without a title (`"Audio player"`). |
 | `Captions` (init) | `string` | The captions button of the video player (`"Subtitles"`). |
 | `ClosePreview` (init) | `string` | The close button of the preview (`"Close preview"`). |
@@ -875,6 +876,7 @@ The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyF
 | `DetailType` (init) | `string` | The file type row of the details panel (`"Type"`). |
 | `Download` (init) | `string` | The download link of the players and the file preview (`"Download"`). |
 | `DownloadOriginal` (init) | `string` | The download link of the rendition notice (`"Download original"`). |
+| `Duration` (init) | `Func<int, string>` | The length of a `schedule` Timeline event, given its total number of minutes (`"1 h 30 min"`, `"45 min"`, `"2 h"`). The length is never negative. |
 | `ExitFullscreen` (init) | `string` | The fullscreen button of the video player while it is fullscreen (`"Exit fullscreen"`). |
 | `ExpandPreview` (init) | `string` | The button that expands a modal or drawer to the whole viewport (`"Expand preview"`). |
 | `Fullscreen` (init) | `string` | The fullscreen button of the video player (`"Fullscreen"`). |
@@ -915,6 +917,7 @@ The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyF
 | `Today` (init) | `string` | The `countdown` Date text for the current day (`"Today"`). |
 | `Tomorrow` (init) | `string` | The `countdown` Date text for the next day (`"Tomorrow"`). |
 | `Unmute` (init) | `string` | The mute button of a muted player (`"Unmute"`). |
+| `Unscheduled` (init) | `string` | The heading of the events of a `schedule` Timeline that have no date (`"Unscheduled"`). |
 | `VideoPlayer` (init) | `string` | The accessible name of a video player without a title (`"Video player"`). |
 | `Volume` (init) | `string` | The volume slider (`"Volume"`). |
 | `WrapLines` (init) | `string` | The toggle that wraps long lines of a text file (`"Wrap lines"`). |
@@ -929,15 +932,16 @@ One event of a `DisplayKind.Timeline` block.
 
 | Constructor | Description |
 | :--- | :--- |
-| `DisplayTimelineItem(string Title, string? Description = null, string? Time = null, DateTimeOffset? Date = null, string? Icon = null, string? ActorName = null, DisplayTimelineState? State = null, KlyColor? Tone = null)` | One event of a `DisplayKind.Timeline` block. |
+| `DisplayTimelineItem(string Title, string? Description = null, string? Time = null, DateTimeOffset? Date = null, string? Icon = null, string? ActorName = null, DisplayTimelineState? State = null, KlyColor? Tone = null, DateTimeOffset? EndDate = null)` | One event of a `DisplayKind.Timeline` block. |
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `ActorName` (init) | `string?` | The name of the person behind the event. |
-| `Date` (init) | `DateTimeOffset?` | When the event happened. It is shown in the short date and time format of the resolved culture when `Time` is not set, set as the `datetime` of the `time` element, and starts each line of the `log` variant. It is shown in its own offset. |
+| `Date` (init) | `DateTimeOffset?` | When the event happened or starts. It is shown in the short date and time format of the resolved culture when `Time` is not set, set as the `datetime` of the `time` element, and starts each line of the `log` variant. It is shown in its own offset. In the `schedule` variant it places the event on its day and orders the events; an event without a date is listed last, under the unscheduled heading. |
 | `Description` (init) | `string?` | A line under the title. |
+| `EndDate` (init) | `DateTimeOffset?` | When the event ends. Only the `schedule` variant reads it: it shows the time range and the length of the event. It is ignored when `Date` is not set or when it is not after `Date`, and it is shown in the offset of `Date`. An event that starts at midnight and has no end, or ends at midnight or at the end of a day, is an all-day event, and its end day is included (a `Date` of the 12th and an `EndDate` of the 14th at midnight is three days). |
 | `Icon` (init) | `string?` | An icon name shown in the marker instead of the event number (or the dot of the `log` variant). |
-| `State` (init) | `DisplayTimelineState?` | The event state. When `null`, `DisplayTimelineState.Done` is used. |
+| `State` (init) | `DisplayTimelineState?` | The event state. When `null`, `DisplayTimelineState.Done` is used, except in the `schedule` variant, where an event without a state is shown as a plain upcoming event: only an explicit `DisplayTimelineState.Done` is muted and only `DisplayTimelineState.Current` is emphasized and gets `aria-current`. |
 | `Time` (init) | `string?` | The time text shown beside the title. It is displayed as given and takes precedence over `Date` for the text; in the `log` variant it replaces the time part of the date. |
 | `Title` (init) | `string` | The event title. |
 | `Tone` (init) | `KlyColor?` | A color for the marker, replacing the primary color of done and current events and the border of upcoming ones. |

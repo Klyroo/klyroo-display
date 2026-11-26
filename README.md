@@ -11,9 +11,10 @@ Most screens show information more often than they edit it: an order summary, a 
 ## Features
 
 - **One component, 19 block kinds**: `KlyDisplay` renders headings, text, alerts, facts, statistics, breakdowns, meters, charts, tables, diffs, records, people, lists, timelines, dates, images, code values, empty states and accordions.
-- **Variants and surfaces**: a `Variant` string selects a layout within a kind (for example `row` for a statistic, `ring` for a meter, `line` for a chart or `log` for a timeline), and `DisplaySurface` sets the border, background and shadow. Item tones follow the Klyroo.UI theme colors.
+- **Variants and surfaces**: a `Variant` string selects a layout within a kind (for example `row` for a statistic, `ring` for a meter, `line` for a chart or `log` and `schedule` for a timeline), and `DisplaySurface` sets the border, background and shadow. Item tones follow the Klyroo.UI theme colors.
 - **Syntax highlighting**: the code block colors C#, JavaScript, TypeScript, JSON, HTML, XML, CSS, SCSS, Less, SQL, Python, Bash and YAML from its `Language`, and the file preview does the same from the file extension. The scanner is `CodeHighlighter` in `Klyroo.Display.Core`: dependency-free, trim and AOT safe, and it never throws.
 - **Secret values**: the `secret` variant of the code block masks all but the last characters, with a Reveal toggle and a copy button.
+- **Schedule timeline**: the `schedule` variant of the timeline lays events out as an agenda, grouped by day, with a time range, a length, all-day events and an unscheduled group, all in the texts and date formats of the current locale.
 - **Progressive reveal**: `Max` and `Step` show long facts, tables, records, lists and timelines a few items at a time behind a Show more button.
 - **File preview overlay**: `KlyFilePreviewProvider` shows PDF, images, video, audio, CSV, Markdown and text in a modal, drawer or fullscreen panel, with galleries, keyboard navigation, image zoom and rotation, a details panel and downloads.
 - **Headless file helpers**: `Klyroo.Display.Core` detects a file kind from its MIME type or extension, parses CSV and TSV (RFC 4180 quoting, delimiter detection) and formats sizes, and it is NativeAOT compatible.

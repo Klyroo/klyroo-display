@@ -93,7 +93,7 @@
     /// <summary>The kind of block to render (<see cref="DisplayKind.Facts"/> by default).</summary>
     [Parameter] public DisplayKind Kind { get; set; } = DisplayKind.Facts;
 
-    /// <summary>Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: <c>eyebrow</c>. Text: <c>quote</c>. Stat: <c>row</c>. Breakdown: <c>collapsible</c>. Meter: <c>ring</c>, <c>scale</c>. Chart: <c>line</c>, <c>funnel</c>. Table: <c>sticky</c>. Person: <c>group</c>. List: <c>steps</c>, <c>checks</c>, <c>files</c>. Timeline: <c>pipeline</c>, <c>log</c>. Date: <c>countdown</c>, <c>range</c>. Media: <c>gallery</c>. Code: <c>secret</c>.</summary>
+    /// <summary>Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: <c>eyebrow</c>. Text: <c>quote</c>. Stat: <c>row</c>. Breakdown: <c>collapsible</c>. Meter: <c>ring</c>, <c>scale</c>. Chart: <c>line</c>, <c>funnel</c>. Table: <c>sticky</c>. Person: <c>group</c>. List: <c>steps</c>, <c>checks</c>, <c>files</c>. Timeline: <c>pipeline</c>, <c>log</c>, <c>schedule</c>. Date: <c>countdown</c>, <c>range</c>. Media: <c>gallery</c>. Code: <c>secret</c>.</summary>
     [Parameter] public string? Variant { get; set; }
 
     /// <summary>The surface treatment (<see cref="DisplaySurface.Plain"/>, <see cref="DisplaySurface.Muted"/>, <see cref="DisplaySurface.Bordered"/> or <see cref="DisplaySurface.Elevated"/>). When <see langword="null"/>, a default is chosen from <see cref="Kind"/>: bordered for Facts, Breakdown, Table, Record and Code, muted for Alert and Stat (Stat is bordered for its <c>row</c> variant, and muted for any other variant), and plain for the others.</summary>
@@ -1404,6 +1404,7 @@
 
     private RenderFragment RenderTimeline()
     {
+        if (string.Equals(Variant, "schedule", StringComparison.OrdinalIgnoreCase)) return RenderSchedule();
         var (visible, remaining) = ApplyReveal(TimelineItems);
         var isPipeline = string.Equals(Variant, "pipeline", StringComparison.OrdinalIgnoreCase);
         var isLog = string.Equals(Variant, "log", StringComparison.OrdinalIgnoreCase);
@@ -1489,6 +1490,127 @@
             }
         </div>;
     }
+
+    // The agenda layout: events by day, each with a time column. Events are sorted first and Max cuts the sorted list, so "Show more"
+    // reveals later events. An event is listed once, on its first day. Events without a date come last, under their own heading.
+    private RenderFragment RenderSchedule()
+    {
+        var sorted = ScheduleLayout.Sort(TimelineItems);
+        var (visible, remaining) = ApplyReveal(sorted);
+        var days = ScheduleLayout.Group(visible);
+        var today = Now ?? DateTimeOffset.UtcNow;
+        var hasDatedDays = days.Any(d => d.Day is not null);
+        return @<div class="flex flex-col gap-4" data-slot="display-timeline" data-variant="schedule">
+            @foreach (var day in days)
+            {
+                <div class="flex flex-col gap-1.5" data-slot="schedule-day" data-date="@(day.Day?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))">
+                    @if (day.Day is { } date)
+                    {
+                        <h4 class="m-0 text-xs font-semibold text-(--klyroo-text-highlighted)" data-slot="schedule-day-title">
+                            <time datetime="@date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@ScheduleDayTitle(day, today)</time>
+                        </h4>
+                    }
+                    else if (hasDatedDays)
+                    {
+                        <h4 class="m-0 text-xs font-semibold text-(--klyroo-text-muted)" data-slot="schedule-unscheduled-title">@Texts.Unscheduled</h4>
+                    }
+                    <ol class="m-0 flex list-none flex-col gap-1 p-0">
+                        @foreach (var e in day.Events)
+                        {
+                            @RenderScheduleEvent(e)
+                        }
+                    </ol>
+                </div>
+            }
+            @if (remaining > 0 && TimelineItems is not null)
+            {
+                @RenderRevealButton(remaining, TimelineItems.Count)
+            }
+        </div>;
+    }
+
+    private RenderFragment RenderScheduleEvent(ScheduleEvent e)
+    {
+        var item = e.Item;
+        var state = item.State;
+        var timeText = ScheduleTimeText(e);
+        var durationText = ScheduleDurationText(e);
+        return @<li class="flex flex-col gap-1 border-s-2 py-1.5 ps-3 sm:flex-row sm:gap-4 @ScheduleRowClass(state, item.Tone)"
+                    aria-current="@(state == DisplayTimelineState.Current ? "step" : null)" data-slot="schedule-event"
+                    data-state="@(state?.ToString().ToLowerInvariant())" data-color="@ToneValue(item.Tone)">
+            <div class="flex shrink-0 flex-row flex-wrap items-baseline gap-x-2 text-xs tabular-nums text-(--klyroo-text-muted) sm:w-40 sm:flex-col sm:gap-x-0 sm:gap-y-0.5" data-slot="schedule-time-column">
+                @if (!string.IsNullOrEmpty(timeText))
+                {
+                    <time class="font-medium text-(--klyroo-text)" datetime="@ScheduleIso(e)" data-slot="schedule-time">@timeText</time>
+                }
+                @if (!string.IsNullOrEmpty(durationText))
+                {
+                    <time datetime="@ScheduleLayout.IsoDuration(e)" data-slot="schedule-duration">@durationText</time>
+                }
+            </div>
+            <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+                <div class="flex min-w-0 items-center gap-1.5">
+                    @if (!string.IsNullOrEmpty(item.Icon))
+                    {
+                        <span class="inline-flex shrink-0 @(item.Tone is null ? "text-(--klyroo-text-muted)" : "text-(--kly-color-text)")" aria-hidden="true" data-slot="schedule-icon">@RenderIcon(item.Icon, "size-3.5")</span>
+                    }
+                    <span class="min-w-0 break-words @(state == DisplayTimelineState.Done ? "font-medium text-(--klyroo-text-muted)" : state == DisplayTimelineState.Current ? "font-semibold text-(--klyroo-text-highlighted)" : "font-medium text-(--klyroo-text-highlighted)")" data-slot="timeline-title">@item.Title</span>
+                </div>
+                @if (!string.IsNullOrEmpty(item.Description))
+                {
+                    <p class="m-0 break-words text-xs text-(--klyroo-text-muted)" data-slot="schedule-description">@item.Description</p>
+                }
+                @if (!string.IsNullOrEmpty(item.ActorName))
+                {
+                    <span class="text-xs font-medium text-(--klyroo-text-muted)" data-slot="schedule-actor">@item.ActorName</span>
+                }
+            </div>
+        </li>;
+    }
+
+    // The left rule of an event: the tone when there is one, else the primary color of the current event and a neutral line for the others.
+    private static string ScheduleRowClass(DisplayTimelineState? state, KlyColor? tone) => (state, tone is null) switch
+    {
+        (DisplayTimelineState.Current, true) => "border-(--klyroo-primary-text) bg-(--klyroo-bg-muted)",
+        (DisplayTimelineState.Current, false) => "border-(--kly-color-text) bg-(--klyroo-bg-muted)",
+        (DisplayTimelineState.Done, true) => "border-(--klyroo-border)",
+        (DisplayTimelineState.Done, false) => "border-(--kly-color-text) opacity-70",
+        (_, true) => "border-(--klyroo-border-accented)",
+        _ => "border-(--kly-color-text)",
+    };
+
+    // "Today" and "Tomorrow" come first when the day is one of them, then the long date of the resolved culture.
+    private string ScheduleDayTitle(ScheduleDay day, DateTimeOffset reference)
+    {
+        var sample = day.Sample!.Value;
+        var longDate = sample.ToString("D", FormatCulture);
+        var referenceDay = DateOnly.FromDateTime(reference.ToOffset(sample.Offset).DateTime);
+        if (day.Day == referenceDay) return $"{Texts.Today} · {longDate}";
+        if (day.Day == referenceDay.AddDays(1)) return $"{Texts.Tomorrow} · {longDate}";
+        return longDate;
+    }
+
+    // The time text wins when given. Otherwise: the all-day label, or the start with the end (and the end date when it is on another day).
+    private string ScheduleTimeText(ScheduleEvent e)
+    {
+        if (!string.IsNullOrEmpty(e.Item.Time)) return e.Item.Time;
+        if (e.Start is not { } start) return "";
+        if (e.AllDay) return Texts.AllDay;
+        var from = start.ToString("t", FormatCulture);
+        if (e.End is not { } end) return from;
+        var to = end.Date == start.Date ? end.ToString("t", FormatCulture) : $"{end.ToString("d", FormatCulture)} {end.ToString("t", FormatCulture)}";
+        return $"{from} – {to}";
+    }
+
+    private string ScheduleDurationText(ScheduleEvent e)
+    {
+        if (e.AllDay) return e.Days > 1 ? Texts.DayCount(e.Days) : "";
+        return e.Minutes is { } minutes ? Texts.Duration(minutes) : "";
+    }
+
+    private static string? ScheduleIso(ScheduleEvent e) => e.Start is not { } start
+        ? null
+        : e.AllDay ? start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : start.ToString("O", CultureInfo.InvariantCulture);
 
     private static string TimelineMarkerClass(DisplayTimelineState state, KlyColor? tone) => (state, tone is null) switch
     {

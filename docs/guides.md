@@ -65,6 +65,31 @@ Goal: show a snippet with syntax colors and a copy button.
 
 You can call the scanner yourself, without any UI, with `CodeHighlighter.Tokenize(code, "sql")`: it returns tokens with a `Kind` and a `Text`, and the texts concatenate to exactly the code.
 
+## Show an agenda
+
+Goal: list the events of a few days, with their time range, length and the current one marked.
+
+```razor
+<KlyDisplay Kind="DisplayKind.Timeline" Variant="schedule" TimelineItems="_events" Now="_now" />
+
+@code {
+    private static readonly TimeSpan Paris = TimeSpan.FromHours(1);
+    private readonly DateTimeOffset _now = new(2026, 3, 12, 9, 30, 0, Paris);
+
+    private readonly IReadOnlyList<DisplayTimelineItem> _events =
+    [
+        new("Standup", Date: new(2026, 3, 12, 9, 0, 0, Paris), EndDate: new(2026, 3, 12, 9, 30, 0, Paris), State: DisplayTimelineState.Current),
+        new("Design review", "Bring the mockups", Date: new(2026, 3, 12, 14, 0, 0, Paris), EndDate: new(2026, 3, 12, 15, 30, 0, Paris), ActorName: "Alice"),
+        new("Conference", Date: new(2026, 3, 14, 0, 0, 0, Paris), EndDate: new(2026, 3, 16, 0, 0, 0, Paris)),
+        new("Book the venue"),
+    ];
+}
+```
+
+The events are sorted by `Date` and grouped by day; the first day reads "Today" because `Now` is that day (pass `Now` for a stable output, it defaults to the current UTC time). The standup shows `9:00 AM – 9:30 AM` and `30 min` in the format of the current locale, the review `1 h 30 min`, and the conference, which starts at midnight and ends at midnight three days later, says "All day" and "3 days": for an all-day event the end day counts, so the 14th to the 16th is three days. The last event has no date, so it goes under "Unscheduled".
+
+`EndDate` is optional: without it only the start time shows. An end that is not after the start is ignored. An event that ends on another day stays under its start day and shows the end date in its range. Each event is shown in the offset of its own `Date`, and `EndDate` in the offset of `Date`. `Time` replaces the computed range with your own text. In this variant an event without a `State` is a normal event, and only `Done` is muted and `Current` is emphasized and gets `aria-current`. `Max` and `Step` apply to the sorted list.
+
 ## Show progress and a deadline
 
 Goal: a row of order stages with the current one marked, and a countdown to a due date.
