@@ -226,7 +226,7 @@ A control of `KlyAudioPlayer` or `KlyVideoPlayer` that can be hidden through the
 
 ## Klyroo.Display
 
-Components (4) · Static classes and extensions (1) · Classes (5) · Records (12) · Enums (3)
+Components (4) · Static classes and extensions (2) · Classes (5) · Records (13) · Enums (3)
 
 ### Components
 
@@ -442,6 +442,29 @@ Also accepts the parameters of `KlyComponentBase`.
 
 ### Static classes and extensions
 
+#### `DisplayLocales`
+
+`Klyroo.Display` · service
+
+The built-in texts of Klyroo.Display, one set per locale of `KlyLocales.All` and keyed by the same codes. A component picks the set of its current `KlyLocale.Code` with `KlyLocales.ResolveCode`, so "pt-PT" gets "pt" and an unknown language gets English. Change a set with `KlyrooDisplayOptions.Texts`.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `static Ar` | `DisplayTexts` | العربية (ar). Needs review. |
+| `static De` | `DisplayTexts` | Deutsch (de). Needs review. |
+| `static En` | `DisplayTexts` | English. |
+| `static Es` | `DisplayTexts` | Español (es). Needs review. |
+| `static Fr` | `DisplayTexts` | Français (fr). Reviewed. |
+| `static It` | `DisplayTexts` | Italiano (it). Needs review. |
+| `static Ja` | `DisplayTexts` | 日本語 (ja). Needs review. |
+| `static Nl` | `DisplayTexts` | Nederlands (nl). Needs review. |
+| `static Pt` | `DisplayTexts` | Português (pt). Needs review. |
+| `static PtBr` | `DisplayTexts` | Português (Brasil) (pt-BR). Needs review. |
+| `static ReviewedCodes` | `IReadOnlyList<string>` | The codes whose texts were reviewed by a native speaker. The other sets are drafts waiting for review. |
+| `static Ru` | `DisplayTexts` | Русский (ru). Needs review. |
+| `static Tables` | `IReadOnlyDictionary<string, DisplayTexts>` | Every set by locale code: the codes of `KlyLocales.All`. |
+| `static ZhCn` | `DisplayTexts` | 简体中文 (zh-Hans). Needs review. |
+
 #### `KlyrooDisplayServiceCollectionExtensions`
 
 `Klyroo.Display` · service
@@ -450,7 +473,7 @@ Service registration for Klyroo.Display.
 
 | Method | Returns | Description |
 | :--- | :--- | :--- |
-| `static AddKlyrooDisplay(IServiceCollection services, Action<DisplayTexts>? configureTexts = null)` | `IServiceCollection` | Registers `FilePreviewService` as a scoped service and calls `AddKlyrooUi()`, which Klyroo.Display depends on. Call it once in `Program.cs`, and also in the client project of an Interactive WebAssembly or Auto app. |
+| `static AddKlyrooDisplay(IServiceCollection services, Action<KlyrooDisplayOptions>? configure = null)` | `IServiceCollection` | Registers `FilePreviewService` as a scoped service and calls `AddKlyrooUi()`, which Klyroo.Display depends on. Call it once in `Program.cs`, and also in the client project of an Interactive WebAssembly or Auto app. |
 
 ### Classes
 
@@ -551,81 +574,19 @@ One row of a `DisplayKind.Record` block.
 | `Trailing` (init) | `string?` | A value shown at the end of the row, such as an amount. |
 | `TrailingCaption` (init) | `string?` | A line of smaller text under the trailing value, such as a date. |
 
-#### `DisplayTexts`
+#### `KlyrooDisplayOptions`
 
 `Klyroo.Display` · class
 
-The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyFilePreviewProvider`: button labels, accessible names, empty states and counters. They are English by default. Change them once in `AddKlyrooDisplay(texts => ...)`; every component of the app reads the same instance.
+Configuration of Klyroo.Display: the built-in texts of each locale. It is an extension of `KlyrooOptions` (`KlyrooOptions.Extension``). Configure it with `services.AddKlyrooDisplay(d => ...)`, in code shared by the server and the WebAssembly client.
 
 | Constructor | Description |
 | :--- | :--- |
-| `DisplayTexts()` | Creates the texts with their English defaults. |
+| `KlyrooDisplayOptions()` | Creates the options with the built-in texts of `DisplayLocales`. |
 
-| Property | Type | Description |
+| Method | Returns | Description |
 | :--- | :--- | :--- |
-| `AudioPlayer` (get, set) | `string` | The accessible name of an audio player without a title (`"Audio player"`). |
-| `Captions` (get, set) | `string` | The captions button of the video player (`"Subtitles"`). |
-| `ClosePreview` (get, set) | `string` | The close button of the preview (`"Close preview"`). |
-| `Code` (get, set) | `string` | The label of a Code block without a title or language (`"Code"`). |
-| `Conceal` (get, set) | `string` | The button that masks a revealed `secret` Code block again (`"Conceal"`). |
-| `ConvertedPreview` (get, set) | `Func<string, string>` | The notice above a rendition, given the kind of the original file (`"Converted preview · The original is a Office file."`). |
-| `CopyCode` (get, set) | `string` | The accessible name of the copy button of a Code block (`"Copy code"`). |
-| `CopyValue` (get, set) | `Func<string, string>` | The accessible name of a copy button, given the label or value it copies (`"Copy Email"`). |
-| `CsvSummary` (get, set) | `Func<int, int, string, string>` | The footer of a CSV table, given the number of rows, the number of columns and the delimiter (`"12 rows · 4 columns · delimiter ','"`, with `"tab"` for a tab). |
-| `CsvTruncated` (get, set) | `Func<int, string>` | The notice of a CSV table cut to its first rows, given the number of rows shown (`"Showing first 1,000 rows"`). |
-| `DayCount` (get, set) | `Func<int, string>` | The length of a `range` Date, given the number of days (`"7 days"`). |
-| `DaysOverdue` (get, set) | `Func<int, string>` | The `countdown` Date text for a past date, given the number of days (`"3 days overdue"`). |
-| `DetailName` (get, set) | `string` | The file name row of the details panel (`"Name"`). |
-| `Details` (get, set) | `string` | The toggle that opens the lines of a `collapsible` Breakdown, and the details button and panel title of the file preview (`"Details"`). |
-| `DetailSize` (get, set) | `string` | The file size row of the details panel (`"Size"`). |
-| `DetailType` (get, set) | `string` | The file type row of the details panel (`"Type"`). |
-| `Download` (get, set) | `string` | The download link of the players and the file preview (`"Download"`). |
-| `DownloadOriginal` (get, set) | `string` | The download link of the rendition notice (`"Download original"`). |
-| `ExitFullscreen` (get, set) | `string` | The fullscreen button of the video player while it is fullscreen (`"Exit fullscreen"`). |
-| `ExpandPreview` (get, set) | `string` | The button that expands a modal or drawer to the whole viewport (`"Expand preview"`). |
-| `Fullscreen` (get, set) | `string` | The fullscreen button of the video player (`"Fullscreen"`). |
-| `HideDetails` (get, set) | `string` | The toggle that closes the details of an Alert or the lines of a `collapsible` Breakdown (`"Hide details"`). |
-| `ImageAlt` (get, set) | `Func<int, string>` | The alternative text of a gallery image when the block has no title, given its one-based position (`"Image 2"`). |
-| `InDays` (get, set) | `Func<int, string>` | The `countdown` Date text for a date two days away or more, given the number of days (`"In 5 days"`). |
-| `LineCount` (get, set) | `Func<int, string>` | The line count of a text file (`"1 line"`, `"12 lines"`). |
-| `MarkdownPreview` (get, set) | `string` | The tab that shows rendered Markdown (`"Preview"`). |
-| `MarkdownSource` (get, set) | `string` | The tab that shows Markdown source (`"Source"`). |
-| `MediaAlt` (get, set) | `string` | The alternative text of a Media image when the block has no title (`"Media"`). |
-| `Meter` (get, set) | `string` | The accessible name of a Meter without a title (`"Meter"`). |
-| `Mute` (get, set) | `string` | The mute button of an unmuted player (`"Mute"`). |
-| `NextFile` (get, set) | `string` | The next file button of a gallery (`"Next file"`). |
-| `NoData` (get, set) | `string` | The text of a Chart block without data (`"No data"`). |
-| `NoPlaysLeft` (get, set) | `string` | The message of a locked player (`"No plays left"`). |
-| `NoPreview` (get, set) | `string` | The title of the card shown for a file without a renderer (`"No preview available"`). |
-| `NoPreviewHint` (get, set) | `string` | The text of the card shown for a file without a renderer (`"Download this file to open it in another application."`). |
-| `NothingToShow` (get, set) | `string` | The title of an Empty block without a title (`"Nothing to show"`). |
-| `Pause` (get, set) | `string` | The pause button (`"Pause"`). |
-| `PictureInPicture` (get, set) | `string` | The picture-in-picture button of the video player (`"Picture in picture"`). |
-| `Play` (get, set) | `string` | The play button (`"Play"`). |
-| `PlaybackProgress` (get, set) | `string` | The read-only timeline of a non-seekable player (`"Playback progress"`). |
-| `PlaybackSpeed` (get, set) | `string` | The playback speed button (`"Playback speed"`). |
-| `PlaysLeft` (get, set) | `Func<int, string>` | The remaining plays of a player with a quota, given their number (`"2 plays left"`). |
-| `PlayVideo` (get, set) | `string` | The large play button over a paused video (`"Play the video"`). |
-| `PreviewPosition` (get, set) | `Func<int, int, string, string>` | The announcement of gallery navigation for screen readers, given the one-based position, the number of files and the file name (`"2 of 5: report.pdf"`). |
-| `PreviousFile` (get, set) | `string` | The previous file button of a gallery (`"Previous file"`). |
-| `ReadMore` (get, set) | `string` | The toggle that expands a clamped Text block (`"Read more"`). |
-| `ResetZoom` (get, set) | `string` | The button that resets the zoom of an image (`"Reset zoom"`). |
-| `RestorePreview` (get, set) | `string` | The button that returns an expanded preview to its container (`"Restore preview size"`). |
-| `Reveal` (get, set) | `string` | The button that unmasks a `secret` Code block (`"Reveal"`). |
-| `Rotate` (get, set) | `string` | The rotate button of an image (`"Rotate 90 degrees"`). |
-| `Secret` (get, set) | `string` | The label of a `secret` Code block without a title or language (`"Secret"`). |
-| `Seek` (get, set) | `string` | The timeline slider (`"Seek"`). |
-| `ShowDetails` (get, set) | `string` | The toggle that opens the details of an Alert (`"Show details"`). |
-| `ShowLess` (get, set) | `string` | The toggle that clamps an expanded Text block again (`"Show less"`). |
-| `ShowMore` (get, set) | `Func<int, string>` | The Show more button of a list, given the number of items the next click reveals (`"Show more · 3"`). |
-| `Today` (get, set) | `string` | The `countdown` Date text for the current day (`"Today"`). |
-| `Tomorrow` (get, set) | `string` | The `countdown` Date text for the next day (`"Tomorrow"`). |
-| `Unmute` (get, set) | `string` | The mute button of a muted player (`"Unmute"`). |
-| `VideoPlayer` (get, set) | `string` | The accessible name of a video player without a title (`"Video player"`). |
-| `Volume` (get, set) | `string` | The volume slider (`"Volume"`). |
-| `WrapLines` (get, set) | `string` | The toggle that wraps long lines of a text file (`"Wrap lines"`). |
-| `ZoomIn` (get, set) | `string` | The zoom in button of an image (`"Zoom in"`). |
-| `ZoomOut` (get, set) | `string` | The zoom out button of an image (`"Zoom out"`). |
+| `Texts(string localeCode, Func<DisplayTexts, DisplayTexts> change)` | `KlyrooDisplayOptions` | Changes the texts of a locale, like `KlyLocales.Extend` does for Klyroo.UI: `change` receives the set the locale resolves to and returns the one to use, usually `t => t with { ... }`. `localeCode` is a code of `KlyLocales.All` ("fr"), or the code of a locale you added ("en-AU", "tlh"): a locale without a set of its own starts from the set `KlyLocales.ResolveCode` picks for it, then its changes apply. The texts become read-only the first time a component resolves one. |
 
 ### Records
 
@@ -822,6 +783,82 @@ One column of a `DisplayKind.Table` block.
 | `Label` (init) | `string` | The header text. |
 | `Mono` (init) | `bool` | Renders the cells in a monospace font. |
 | `Numeric` (init) | `bool` | Aligns the column to the end and uses tabular figures. |
+
+#### `DisplayTexts`
+
+`Klyroo.Display` · record
+
+The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyFilePreviewProvider`: button labels, accessible names, empty states and counters. There is one set per locale of Klyroo.UI (`DisplayLocales`), and a component shows the set of its current locale, the one its `Messages` come from. Change a set with `KlyrooDisplayOptions.Texts` in `AddKlyrooDisplay(d => ...)`.
+
+| Constructor | Description |
+| :--- | :--- |
+| `DisplayTexts()` | Creates the texts with their English defaults. |
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `AudioPlayer` (init) | `string` | The accessible name of an audio player without a title (`"Audio player"`). |
+| `Captions` (init) | `string` | The captions button of the video player (`"Subtitles"`). |
+| `ClosePreview` (init) | `string` | The close button of the preview (`"Close preview"`). |
+| `Code` (init) | `string` | The label of a Code block without a title or language (`"Code"`). |
+| `Conceal` (init) | `string` | The button that masks a revealed `secret` Code block again (`"Conceal"`). |
+| `ConvertedPreview` (init) | `Func<string, string>` | The notice above a rendition, given the kind of the original file (`"Converted preview · The original is a Office file."`). |
+| `CopyCode` (init) | `string` | The accessible name of the copy button of a Code block (`"Copy code"`). |
+| `CopyValue` (init) | `Func<string, string>` | The accessible name of a copy button, given the label or value it copies (`"Copy Email"`). |
+| `CsvSummary` (init) | `Func<int, int, string, string>` | The footer of a CSV table, given the number of rows, the number of columns and the delimiter (`"12 rows · 4 columns · delimiter ','"`, with `"tab"` for a tab). |
+| `CsvTruncated` (init) | `Func<int, string>` | The notice of a CSV table cut to its first rows, given the number of rows shown (`"Showing first 1,000 rows"`). |
+| `DayCount` (init) | `Func<int, string>` | The length of a `range` Date, given the number of days (`"7 days"`). |
+| `DaysOverdue` (init) | `Func<int, string>` | The `countdown` Date text for a past date, given the number of days (`"3 days overdue"`). |
+| `DetailName` (init) | `string` | The file name row of the details panel (`"Name"`). |
+| `Details` (init) | `string` | The toggle that opens the lines of a `collapsible` Breakdown, and the details button and panel title of the file preview (`"Details"`). |
+| `DetailSize` (init) | `string` | The file size row of the details panel (`"Size"`). |
+| `DetailType` (init) | `string` | The file type row of the details panel (`"Type"`). |
+| `Download` (init) | `string` | The download link of the players and the file preview (`"Download"`). |
+| `DownloadOriginal` (init) | `string` | The download link of the rendition notice (`"Download original"`). |
+| `ExitFullscreen` (init) | `string` | The fullscreen button of the video player while it is fullscreen (`"Exit fullscreen"`). |
+| `ExpandPreview` (init) | `string` | The button that expands a modal or drawer to the whole viewport (`"Expand preview"`). |
+| `Fullscreen` (init) | `string` | The fullscreen button of the video player (`"Fullscreen"`). |
+| `HideDetails` (init) | `string` | The toggle that closes the details of an Alert or the lines of a `collapsible` Breakdown (`"Hide details"`). |
+| `ImageAlt` (init) | `Func<int, string>` | The alternative text of a gallery image when the block has no title, given its one-based position (`"Image 2"`). |
+| `InDays` (init) | `Func<int, string>` | The `countdown` Date text for a date two days away or more, given the number of days (`"In 5 days"`). |
+| `LineCount` (init) | `Func<int, string>` | The line count of a text file (`"1 line"`, `"12 lines"`). |
+| `MarkdownPreview` (init) | `string` | The tab that shows rendered Markdown (`"Preview"`). |
+| `MarkdownSource` (init) | `string` | The tab that shows Markdown source (`"Source"`). |
+| `MediaAlt` (init) | `string` | The alternative text of a Media image when the block has no title (`"Media"`). |
+| `Meter` (init) | `string` | The accessible name of a Meter without a title (`"Meter"`). |
+| `Mute` (init) | `string` | The mute button of an unmuted player (`"Mute"`). |
+| `NextFile` (init) | `string` | The next file button of a gallery (`"Next file"`). |
+| `NoData` (init) | `string` | The text of a Chart block without data (`"No data"`). |
+| `NoPlaysLeft` (init) | `string` | The message of a locked player (`"No plays left"`). |
+| `NoPreview` (init) | `string` | The title of the card shown for a file without a renderer (`"No preview available"`). |
+| `NoPreviewHint` (init) | `string` | The text of the card shown for a file without a renderer (`"Download this file to open it in another application."`). |
+| `NothingToShow` (init) | `string` | The title of an Empty block without a title (`"Nothing to show"`). |
+| `Pause` (init) | `string` | The pause button (`"Pause"`). |
+| `PictureInPicture` (init) | `string` | The picture-in-picture button of the video player (`"Picture in picture"`). |
+| `Play` (init) | `string` | The play button (`"Play"`). |
+| `PlaybackProgress` (init) | `string` | The read-only timeline of a non-seekable player (`"Playback progress"`). |
+| `PlaybackSpeed` (init) | `string` | The playback speed button (`"Playback speed"`). |
+| `PlaysLeft` (init) | `Func<int, string>` | The remaining plays of a player with a quota, given their number (`"2 plays left"`). |
+| `PlayVideo` (init) | `string` | The large play button over a paused video (`"Play the video"`). |
+| `PreviewPosition` (init) | `Func<int, int, string, string>` | The announcement of gallery navigation for screen readers, given the one-based position, the number of files and the file name (`"2 of 5: report.pdf"`). |
+| `PreviousFile` (init) | `string` | The previous file button of a gallery (`"Previous file"`). |
+| `ReadMore` (init) | `string` | The toggle that expands a clamped Text block (`"Read more"`). |
+| `ResetZoom` (init) | `string` | The button that resets the zoom of an image (`"Reset zoom"`). |
+| `RestorePreview` (init) | `string` | The button that returns an expanded preview to its container (`"Restore preview size"`). |
+| `Reveal` (init) | `string` | The button that unmasks a `secret` Code block (`"Reveal"`). |
+| `Rotate` (init) | `string` | The rotate button of an image (`"Rotate 90 degrees"`). |
+| `Secret` (init) | `string` | The label of a `secret` Code block without a title or language (`"Secret"`). |
+| `Seek` (init) | `string` | The timeline slider (`"Seek"`). |
+| `ShowDetails` (init) | `string` | The toggle that opens the details of an Alert (`"Show details"`). |
+| `ShowLess` (init) | `string` | The toggle that clamps an expanded Text block again (`"Show less"`). |
+| `ShowMore` (init) | `Func<int, string>` | The Show more button of a list, given the number of items the next click reveals (`"Show more · 3"`). |
+| `Today` (init) | `string` | The `countdown` Date text for the current day (`"Today"`). |
+| `Tomorrow` (init) | `string` | The `countdown` Date text for the next day (`"Tomorrow"`). |
+| `Unmute` (init) | `string` | The mute button of a muted player (`"Unmute"`). |
+| `VideoPlayer` (init) | `string` | The accessible name of a video player without a title (`"Video player"`). |
+| `Volume` (init) | `string` | The volume slider (`"Volume"`). |
+| `WrapLines` (init) | `string` | The toggle that wraps long lines of a text file (`"Wrap lines"`). |
+| `ZoomIn` (init) | `string` | The zoom in button of an image (`"Zoom in"`). |
+| `ZoomOut` (init) | `string` | The zoom out button of an image (`"Zoom out"`). |
 
 #### `DisplayTimelineItem`
 

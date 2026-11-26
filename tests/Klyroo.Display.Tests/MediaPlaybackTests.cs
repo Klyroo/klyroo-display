@@ -70,6 +70,23 @@ public sealed class MediaPlaybackTests : BunitContext
     }
 
     [Fact]
+    public async Task A_play_the_browser_refuses_still_counts_toward_MaxPlays()
+    {
+        var plays = 0;
+        var cut = Render<KlyVideoPlayer>(p => p
+            .Add(x => x.Src, "/media/demo.mp4")
+            .Add(x => x.MaxPlays, 2)
+            .Add(x => x.PlaysChanged, v => plays = v));
+
+        await cut.InvokeAsync(() => cut.Instance.TogglePlayAsync());
+        await cut.InvokeAsync(() => CallFromMediaAsync("PlayFailed"));
+
+        // The quota counts what the user asked for, so a refused play cannot be turned into an extra one.
+        Assert.Equal(1, plays);
+        Assert.Equal("1 play left", cut.Find("[data-slot=video-plays-badge]").TextContent.Trim());
+    }
+
+    [Fact]
     public async Task Mute_and_speed_are_pushed_to_the_element()
     {
         var cut = Render<KlyAudioPlayer>(p => p.Add(x => x.Src, "/media/brief.mp3"));

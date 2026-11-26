@@ -242,7 +242,6 @@
     private bool _expanded;
     private bool _focusedOpen;
     private ElementReference _dialog;
-    private DisplayTexts? _texts;
     private bool _wrapLines;
     private bool _markdownSource;
     private double _zoom = 1.0;
@@ -261,7 +260,8 @@
         Preview.Changed += OnPreviewChanged;
     }
 
-    private DisplayTexts Texts => _texts ??= Options.Extension<DisplayTexts>();
+    // The texts of the current locale, the one the Messages of Klyroo.UI come from; cached per locale by the options.
+    private DisplayTexts Texts => Options.Extension<KlyrooDisplayOptions>().ResolveTexts(CurrentLocale.Code);
 
     private void OnPreviewChanged()
     {

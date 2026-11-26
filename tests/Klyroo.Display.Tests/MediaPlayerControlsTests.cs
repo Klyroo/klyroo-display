@@ -192,11 +192,11 @@ public sealed class MediaPlayerControlsTests : BunitContext
     [Fact]
     public void Player_texts_come_from_DisplayTexts()
     {
-        Services.AddKlyrooDisplay(texts =>
+        Services.AddKlyrooDisplay(d => d.Texts("en", t => t with
         {
-            texts.NoPlaysLeft = "Plus de lecture";
-            texts.PlaysLeft = n => $"{n} restante(s)";
-        });
+            NoPlaysLeft = "Plus de lecture",
+            PlaysLeft = n => $"{n} restante(s)",
+        }));
 
         var locked = Render<KlyAudioPlayer>(p => p
             .Add(x => x.Src, "/media/brief.mp3")

@@ -55,7 +55,7 @@ The service is registered as scoped. In Interactive Server that means one instan
 `KlyAudioPlayer` and `KlyVideoPlayer` share one model, defined by a clip and a set of restrictions:
 
 - **Clip**: `Start` and `End` bound the playable range. Without `End`, the clip runs to the end of the file, whose length the element reports once its metadata loads (`Duration` is the fallback until then). `ClipLength` and `ClipPosition` are relative to `Start`.
-- **Play quota**: with `MaxPlays` above zero, starting a play consumes one. Pausing and resuming within a play does not. When the quota is spent and the last play ends, the player locks, shows that no plays are left, and raises `OnLimitReached`.
+- **Play quota**: with `MaxPlays` above zero, starting a play consumes one, even when the browser then refuses to play (an autoplay policy, an unsupported format, a missing file): the quota counts what the user asked for, so a failure cannot be turned into an extra play. Pausing and resuming within a play does not. When the quota is spent and the last play ends, the player locks, shows that no plays are left, and raises `OnLimitReached`.
 - **Seekability**: with `Seekable` false the timeline is a read-only progress bar and `SeekAsync` does nothing. A restricted player (a quota or no seeking) also ignores `Loop`.
 
 `Plays` is an input parameter that the component also increments. It reports the new value through `PlaysChanged`, and you keep the number in your own state with `@bind-Plays`; otherwise a parent re-render passes the old value back and the quota resets.

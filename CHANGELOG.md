@@ -8,7 +8,7 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Added
 
-- `DisplayTexts`, the built-in English texts of every component (labels, counters, accessible names), replaceable with `AddKlyrooDisplay(texts => ...)`.
+- `DisplayTexts`, the built-in texts of every component (labels, counters, accessible names), with one set per locale of Klyroo.UI in `DisplayLocales` (English and French reviewed, the ten others drafts). A component shows the set of its current Klyroo.UI locale. `KlyrooDisplayOptions.Texts(localeCode, change)` changes the set of a locale, and a locale added to Klyroo.UI starts from the set of the language it resolves to.
 - `KlyAudioPlayer` and `KlyVideoPlayer` have a volume slider that raises `VolumeChanged` (hidden with `MediaPlayerControl.Volume`, like the mute button), `SetVolumeAsync`, and a denser bar with `Compact`.
 - `KlyVideoPlayer` has picture-in-picture and fullscreen buttons (`MediaPlayerControl.PictureInPicture` and `Fullscreen`), shown once the browser reports support, with `TogglePictureInPictureAsync` and `ToggleFullscreenAsync`. Picture-in-picture stays hidden when `Seekable` is `false`.
 - New `KlyDisplay` variants: `ring` for Meter, `line` for Chart, `sticky` for Table (a header that stays visible over rows scrolling in a box) and `log` for Timeline (a compact line per event, starting with its date and time).
@@ -18,7 +18,7 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Changed
 
-- `AddKlyrooDisplay` takes an optional `Action<DisplayTexts>`. Code compiled against the previous signature must be recompiled.
+- `AddKlyrooDisplay` takes an optional `Action<KlyrooDisplayOptions>`. Code compiled against the previous signature must be recompiled.
 - The player keys (Space, K, M) are handled by the media module on the player root, and only when the root itself has the focus. The players no longer have a Blazor `onkeydown` handler.
 - The countdown text for a past date says "1 day overdue" in the singular, and the range length says "1 day".
 

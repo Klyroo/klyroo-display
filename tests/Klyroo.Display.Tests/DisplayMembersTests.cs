@@ -388,11 +388,11 @@ public sealed class DisplayMembersTests : BunitContext
     [Fact]
     public void Display_texts_come_from_DisplayTexts()
     {
-        Services.AddKlyrooDisplay(texts =>
+        Services.AddKlyrooDisplay(d => d.Texts("en", t => t with
         {
-            texts.ShowMore = n => $"Afficher {n} de plus";
-            texts.DayCount = n => $"{n} jours";
-        });
+            ShowMore = n => $"Afficher {n} de plus",
+            DayCount = n => $"{n} jours",
+        }));
 
         var list = Render<KlyDisplay>(p => p
             .Add(x => x.Kind, DisplayKind.List)

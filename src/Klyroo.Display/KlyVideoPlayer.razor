@@ -200,7 +200,6 @@
     private double _currentTime;
     private ElementReference _media;
     private ElementReference _root;
-    private DisplayTexts? _texts;
     private bool _tracksInitialized;
     private bool _pictureInPictureSupported;
     private bool _fullscreenSupported;
@@ -306,7 +305,8 @@
     /// <summary>The position inside the clip in seconds, between zero and <see cref="ClipLength"/>.</summary>
     public double ClipPosition => Math.Clamp(_currentTime - Start, 0, ClipLength);
 
-    private DisplayTexts Texts => _texts ??= Options.Extension<DisplayTexts>();
+    // The texts of the current locale, the one the Messages of Klyroo.UI come from; cached per locale by the options.
+    private DisplayTexts Texts => Options.Extension<KlyrooDisplayOptions>().ResolveTexts(CurrentLocale.Code);
 
     private string RootClass =>
         $"relative overflow-hidden rounded-(--klyroo-radius-md) bg-black text-white shadow-sm {Class}".Trim();

@@ -46,7 +46,7 @@ Troubleshooting, known limitations and common questions. Each problem is explain
 
 ### The audio or video player shows Play but nothing plays
 
-**Cause:** the page is not interactive, or the browser refused to play. The players drive their element from `klyroo-display-media.js` once the page is interactive, so under static server rendering the button does nothing. When the browser refuses a play (an autoplay policy, an unsupported format, a missing file), the button goes back to Play.
+**Cause:** the page is not interactive, or the browser refused to play. The players drive their element from `klyroo-display-media.js` once the page is interactive, so under static server rendering the button does nothing. When the browser refuses a play (an autoplay policy, an unsupported format, a missing file), the button goes back to Play, and with `MaxPlays` that play still counts.
 **Fix:** render the page or the player in an interactive render mode, and check the browser console and network tab for the media request.
 
 ### A parameter has no effect
@@ -67,7 +67,7 @@ Troubleshooting, known limitations and common questions. Each problem is explain
 ## Known limitations
 
 - The audio and video players need an interactive render mode, and picture-in-picture and fullscreen depend on the browser. [Platforms](platforms.md#known-limitations) has the full list, which also covers the layouts that are not implemented.
-- The built-in texts are English unless you replace them through `DisplayTexts`, and there is one set per app rather than one per culture.
+- The built-in texts follow the locale of Klyroo.UI, but only the English and French sets are reviewed by a native speaker; the others are drafts you can correct with `KlyrooDisplayOptions.Texts`.
 - The file preview has no renderer for Office files, archives or unknown types, and relies on the browser for PDF.
 - `Klyroo.Display` is not declared NativeAOT compatible. `Klyroo.Display.Core` is.
 
@@ -95,15 +95,14 @@ No. `MarkdownRenderer` returns HTML that the provider inserts as markup. Use a r
 
 ### How do I localize the texts or the dates?
 
-Dates in the `Date` block and timeline dates follow the culture Klyroo.UI resolves, and file sizes accept a `CultureInfo` in `FormatFileSize`. The component labels come from `DisplayTexts`, which you change once at startup:
+Dates in the `Date` block and timeline dates follow the culture Klyroo.UI resolves, and file sizes accept a `CultureInfo` in `FormatFileSize`. The component labels come from `DisplayTexts`, with one built-in set per locale of Klyroo.UI (`DisplayLocales`): a component shows the set of the locale its Klyroo.UI texts come from, so a user who switches language with `KlyLocaleSelect` gets the labels in that language too. English and French are reviewed; the other sets are drafts. Change the texts of one locale at startup:
 
 ```csharp
-builder.Services.AddKlyrooDisplay(texts =>
+builder.Services.AddKlyrooDisplay(d => d.Texts("fr", t => t with
 {
-    texts.ShowMore = n => $"Afficher {n} de plus";
-    texts.NoPlaysLeft = "Plus de lecture possible";
-    texts.PlaysLeft = n => n == 1 ? "1 lecture restante" : $"{n} lectures restantes";
-});
+    NoPlaysLeft = "Vous avez utilisé toutes vos lectures",
+    PlaysLeft = n => n == 1 ? "Encore 1 lecture" : $"Encore {n} lectures",
+}));
 ```
 
-A text with a number or a name is a function, so each language can choose its plural forms. The texts are shared by the whole app and are not switched per culture: if users pick their language at run time, set the properties from your own resources when it changes.
+A text with a number or a name is a function, so each language can choose its plural forms. A locale you add to Klyroo.UI ("fr-CA") starts from the set of the language it resolves to, and takes the changes you register for its own code.

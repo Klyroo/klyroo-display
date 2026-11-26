@@ -275,20 +275,22 @@ app.MapPost("/preview/csv", async (HttpRequest request) =>
 
 ## Translate the built-in texts
 
-Goal: French labels for the buttons, counters and accessible names that the components write themselves.
+Goal: change the labels, counters and accessible names that the components write themselves, in one language.
+
+The components already speak the twelve languages of Klyroo.UI: each shows the `DisplayTexts` set of its current locale (`DisplayLocales.Fr`, `DisplayLocales.De`...), the locale its Klyroo.UI texts come from, so switching language with `KlyLocaleSelect` switches these labels too. English and French are reviewed by a native speaker; the other sets are drafts. To change some texts of a locale, give a function that returns the new set:
 
 ```csharp
-builder.Services.AddKlyrooDisplay(texts =>
-{
-    texts.ShowMore = n => $"Afficher {n} de plus";
-    texts.ReadMore = "Lire la suite";
-    texts.NoPlaysLeft = "Plus de lecture possible";
-    texts.PlaysLeft = n => n == 1 ? "1 lecture restante" : $"{n} lectures restantes";
-    texts.ClosePreview = "Fermer l'aperçu";
-});
+builder.Services.AddKlyrooDisplay(d => d
+    .Texts("fr", t => t with
+    {
+        ShowMore = n => $"Voir {n} de plus",
+        NoPlaysLeft = "Vous avez utilisé toutes vos lectures",
+        PlaysLeft = n => n == 1 ? "Encore 1 lecture" : $"Encore {n} lectures",
+    })
+    .Texts("de", t => t with { ClosePreview = "Schließen" }));
 ```
 
-Every property of `DisplayTexts` has an English default, so set only the ones you need. A text with a number or a name is a function, which lets a language choose its plural forms and word order. The instance is stored with the Klyroo.UI options and shared by the whole app: it is not switched per culture, so an app whose users change language at run time sets the properties from its own resources. Titles, labels and values you pass to the components are shown as given.
+`DisplayTexts` is a record, so `with` keeps every text you do not name. A text with a number or a name is a function, which lets a language choose its plural forms and word order. A locale you added to Klyroo.UI ("fr-CA", "tlh") starts from the set `KlyLocales.ResolveCode` picks for it (French for "fr-CA", English for an unknown language), then the changes registered for its own code apply. The sets become read-only once a component has resolved a text, so register the changes in `AddKlyrooDisplay`. Titles, labels and values you pass to the components are shown as given.
 
 ## Test your usage
 

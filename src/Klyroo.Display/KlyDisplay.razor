@@ -86,7 +86,6 @@
     private int _revealedCount;
     private readonly HashSet<int> _openAccordionIndices = [];
     private bool _accordionInitialized;
-    private DisplayTexts? _texts;
 
     [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private IServiceProvider Services { get; set; } = default!;
@@ -297,7 +296,8 @@
         }
     }
 
-    private DisplayTexts Texts => _texts ??= Options.Extension<DisplayTexts>();
+    // The texts of the current locale, the one the Messages of Klyroo.UI come from; cached per locale by the options.
+    private DisplayTexts Texts => Options.Extension<KlyrooDisplayOptions>().ResolveTexts(CurrentLocale.Code);
 
     // The data-color attribute of a tone: the Klyroo.UI theme sets --kly-color and --kly-color-text from it, for built-in and custom colors.
     private static string? ToneValue(KlyColor? tone) => tone?.Value;

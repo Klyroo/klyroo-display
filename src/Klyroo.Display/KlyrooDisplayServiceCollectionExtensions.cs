@@ -11,16 +11,16 @@ public static class KlyrooDisplayServiceCollectionExtensions
     /// Call it once in <c>Program.cs</c>, and also in the client project of an Interactive WebAssembly or Auto app.
     /// </summary>
     /// <param name="services">The service collection.</param>
-    /// <param name="configureTexts">
-    /// Changes the built-in texts of the components, see <see cref="DisplayTexts"/>. The texts are stored with the Klyroo.UI options,
-    /// so a second call changes the same instance.
+    /// <param name="configure">
+    /// Changes the options, such as the built-in texts of a locale with <see cref="KlyrooDisplayOptions.Texts"/>. The options are stored with
+    /// the Klyroo.UI options, so a second call changes the same instance.
     /// </param>
     /// <returns>The same collection, for chaining.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="services"/> is <see langword="null"/>.</exception>
-    public static IServiceCollection AddKlyrooDisplay(this IServiceCollection services, Action<DisplayTexts>? configureTexts = null)
+    public static IServiceCollection AddKlyrooDisplay(this IServiceCollection services, Action<KlyrooDisplayOptions>? configure = null)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddKlyrooUi(options => configureTexts?.Invoke(options.Extension<DisplayTexts>()));
+        services.AddKlyrooUi(options => configure?.Invoke(options.Extension<KlyrooDisplayOptions>()));
         services.TryAddScoped<FilePreviewService>();
         return services;
     }

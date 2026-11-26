@@ -120,7 +120,6 @@
     private double _currentTime;
     private ElementReference _media;
     private ElementReference _root;
-    private DisplayTexts? _texts;
     private MediaElementInterop? _interop;
     private double? _mediaDuration;
     private bool _pauseMedia;
@@ -216,7 +215,8 @@
     /// <summary>The position inside the clip in seconds, between zero and <see cref="ClipLength"/>.</summary>
     public double ClipPosition => Math.Clamp(_currentTime - Start, 0, ClipLength);
 
-    private DisplayTexts Texts => _texts ??= Options.Extension<DisplayTexts>();
+    // The texts of the current locale, the one the Messages of Klyroo.UI come from; cached per locale by the options.
+    private DisplayTexts Texts => Options.Extension<KlyrooDisplayOptions>().ResolveTexts(CurrentLocale.Code);
 
     private string RootClass =>
         $"rounded-full border border-(--klyroo-border) bg-(--klyroo-bg-elevated) text-(--klyroo-text) shadow-xs {Class}".Trim();

@@ -100,11 +100,11 @@ public sealed class FilePreviewProviderTests : BunitContext
     [Fact]
     public void Provider_texts_come_from_DisplayTexts()
     {
-        Services.AddKlyrooDisplay(texts =>
+        Services.AddKlyrooDisplay(d => d.Texts("en", t => t with
         {
-            texts.ClosePreview = "Fermer";
-            texts.LineCount = n => $"{n} ligne(s)";
-        });
+            ClosePreview = "Fermer",
+            LineCount = n => $"{n} ligne(s)",
+        }));
         var (provider, service) = RenderProvider();
         service.Open(new FilePreviewFile { Src = "/files/notes.txt", Content = "x" });
         provider.Render();
