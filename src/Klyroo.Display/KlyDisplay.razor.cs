@@ -8,6 +8,8 @@ namespace Klyroo.Display;
 /// <remarks>
 /// Every kind is one component with the union of all parameters, so a parameter only has an effect on the kinds its summary names.
 /// Copy buttons and expanding toggles need an interactive render mode; in static server rendering the block is shown but they do nothing.
+/// Item colors (the <c>Tone</c> of facts, lines, parts, points, records, people, list items and events) are set as <c>data-color</c>,
+/// so they follow the Klyroo.UI theme, custom colors included. The built-in texts come from <see cref="DisplayTexts"/>.
 /// </remarks>
 public partial class KlyDisplay
 {

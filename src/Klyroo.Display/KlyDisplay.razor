@@ -86,6 +86,7 @@
     private int _revealedCount;
     private readonly HashSet<int> _openAccordionIndices = [];
     private bool _accordionInitialized;
+    private DisplayTexts? _texts;
 
     [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private IServiceProvider Services { get; set; } = default!;
@@ -93,25 +94,25 @@
     /// <summary>The kind of block to render (<see cref="DisplayKind.Facts"/> by default).</summary>
     [Parameter] public DisplayKind Kind { get; set; } = DisplayKind.Facts;
 
-    /// <summary>Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: <c>eyebrow</c>. Text: <c>quote</c>. Stat: <c>row</c>. Breakdown: <c>collapsible</c>. Meter: <c>scale</c>. Chart: <c>funnel</c>. Person: <c>group</c>. List: <c>steps</c>, <c>checks</c>, <c>files</c>. Timeline: <c>pipeline</c>. Date: <c>countdown</c>, <c>range</c>. Media: <c>gallery</c>. Code: <c>secret</c>.</summary>
+    /// <summary>Selects a variant of the kind. Matching is case-insensitive and an unknown value renders the default layout. Heading: <c>eyebrow</c>. Text: <c>quote</c>. Stat: <c>row</c>. Breakdown: <c>collapsible</c>. Meter: <c>ring</c>, <c>scale</c>. Chart: <c>line</c>, <c>funnel</c>. Table: <c>sticky</c>. Person: <c>group</c>. List: <c>steps</c>, <c>checks</c>, <c>files</c>. Timeline: <c>pipeline</c>, <c>log</c>. Date: <c>countdown</c>, <c>range</c>. Media: <c>gallery</c>. Code: <c>secret</c>.</summary>
     [Parameter] public string? Variant { get; set; }
 
-    /// <summary>The surface treatment (<see cref="DisplaySurface.Plain"/>, <see cref="DisplaySurface.Muted"/>, <see cref="DisplaySurface.Bordered"/> or <see cref="DisplaySurface.Elevated"/>). When <see langword="null"/>, a default is chosen from <see cref="Kind"/>: bordered for Facts, Breakdown, Table, Record and Code, muted for Alert and Stat (Stat is bordered for its <c>row</c> variant), and plain for the others.</summary>
+    /// <summary>The surface treatment (<see cref="DisplaySurface.Plain"/>, <see cref="DisplaySurface.Muted"/>, <see cref="DisplaySurface.Bordered"/> or <see cref="DisplaySurface.Elevated"/>). When <see langword="null"/>, a default is chosen from <see cref="Kind"/>: bordered for Facts, Breakdown, Table, Record and Code, muted for Alert and Stat (Stat is bordered for its <c>row</c> variant, and muted for any other variant), and plain for the others.</summary>
     [Parameter] public DisplaySurface? Surface { get; set; }
 
-    /// <summary>The tone of the block. Only <see cref="DisplayKind.Alert"/> reads it: it selects the default icon and sets <c>role="status"</c> for <see cref="KlyColor.Warning"/> and <see cref="KlyColor.Error"/>.</summary>
+    /// <summary>The tone of the block. Only <see cref="DisplayKind.Alert"/> reads it: it selects the default icon and sets <c>role="status"</c> for <see cref="KlyColor.Warning"/> and <see cref="KlyColor.Error"/>. Items have their own <c>Tone</c>.</summary>
     [Parameter] public KlyColor Tone { get; set; } = KlyColor.Primary;
 
     /// <summary>Shows a skeleton placeholder instead of the block.</summary>
     [Parameter] public bool Loading { get; set; }
 
-    /// <summary>The title of the block: the heading text, the bold first line of a Text, the Alert title, the label of a Stat, Meter or Code block, and the title of the other kinds that show one. For a Person block it is the name of the single person, or the caption of a <c>group</c>. For a Date block it replaces the formatted date, and for a Media block it is the alt text.</summary>
+    /// <summary>The title of the block: the heading text, the bold first line of a Text, the Alert title, the label of a Stat, Meter or Code block, the line above a <c>row</c> Stat, and the title of the other kinds that show one. For a Person block it is the name of the single person when <see cref="People"/> is empty (no name is shown when it is not set either), or the caption of a <c>group</c>. For a Date block it replaces the formatted date, or is a caption under the <c>countdown</c> and <c>range</c> text, and for a Media block it is the alt text.</summary>
     [Parameter] public string? Title { get; set; }
 
     /// <summary>The main text of the block: the Text body, the Alert message, the Stat value, the Meter value label, or the Code content.</summary>
     [Parameter] public string? Value { get; set; }
 
-    /// <summary>A secondary line: under the title of a Heading, Stat, Meter, Date, Media (caption) or Empty block, under the name of a single Person, or the Alert message when <see cref="Value"/> is not set.</summary>
+    /// <summary>A secondary line: under the title of a Heading, Stat, Meter, Date, Media (caption) or Empty block, under the name of a single Person when <see cref="People"/> is empty, or the Alert message when <see cref="Value"/> is empty.</summary>
     [Parameter] public string? Description { get; set; }
 
     /// <summary>The unit shown beside a Stat value, or at the end of a Chart title.</summary>
@@ -120,7 +121,7 @@
     /// <summary>The name of the leading icon of a Heading, Alert or Empty block. For an Alert, an empty string hides the icon.</summary>
     [Parameter] public string? Icon { get; set; }
 
-    /// <summary>Not used in this version: a Heading always renders an <c>h3</c>, and the <c>eyebrow</c> variant renders no heading element.</summary>
+    /// <summary>The level of the heading element of a Heading block, from <c>1</c> (<c>h1</c>) to <c>6</c> (<c>h6</c>); <c>3</c> by default, and values outside are clamped. Choose it from the page outline: the look does not change with the level. The <c>eyebrow</c> variant renders no heading element.</summary>
     [Parameter] public int HeadingLevel { get; set; } = 3;
 
     /// <summary>Count text shown beside the title of a Heading or Record block.</summary>
@@ -144,7 +145,7 @@
     /// <summary>Extra text shown in the footer of a Text block, after <see cref="Author"/>.</summary>
     [Parameter] public string? Meta { get; set; }
 
-    /// <summary>When greater than zero, clamps <see cref="Value"/> of a Text block to two lines and adds a Read more toggle. The number itself is not used, and <see cref="Paragraphs"/> are not clamped.</summary>
+    /// <summary>When greater than zero, clamps <see cref="Value"/> of a Text block to this number of lines and adds a Read more toggle. The toggle shows even when the text is shorter, and <see cref="Paragraphs"/> are not clamped.</summary>
     [Parameter] public int? MaxLines { get; set; }
 
     /// <summary>The collapsible details of an Alert (opened with Show details), or the footnote of a Breakdown.</summary>
@@ -168,7 +169,7 @@
     /// <summary>The series of a Stat sparkline. It is drawn from two points or more.</summary>
     [Parameter] public IReadOnlyList<double>? Trend { get; set; }
 
-    /// <summary>The metrics of a Stat block with <c>Variant="row"</c>.</summary>
+    /// <summary>The metrics of a Stat block with <c>Variant="row"</c>. That variant shows <see cref="Title"/> above them and ignores <see cref="Value"/>, <see cref="Unit"/>, <see cref="Delta"/>, <see cref="Trend"/> and <see cref="Description"/>.</summary>
     [Parameter] public IReadOnlyList<DisplayStatItem>? StatItems { get; set; }
 
     /// <summary>The lines of a Breakdown block.</summary>
@@ -177,7 +178,7 @@
     /// <summary>The total row of a Breakdown block, shown below the lines.</summary>
     [Parameter] public DisplayBreakdownLine? BreakdownTotal { get; set; }
 
-    /// <summary>Not used in this version: a Breakdown has no comparison layout.</summary>
+    /// <summary>The headers of the two amount columns of a Breakdown, for example <c>("2026", "2025")</c>: <see cref="DisplayBreakdownLine.Value"/> goes under <c>First</c> and <see cref="DisplayBreakdownLine.CompareValue"/> under <c>Second</c>, for the lines and the total. A line without a second amount shows a dash.</summary>
     [Parameter] public (string First, string Second)? CompareColumns { get; set; }
 
     /// <summary>The current value of a Meter block, clamped between 0 and <see cref="MeterMax"/>.</summary>
@@ -192,7 +193,7 @@
     /// <summary>The percentage of <see cref="MeterMax"/> from which the Meter bar turns to the error color. It wins over <see cref="WarningThreshold"/>.</summary>
     [Parameter] public double? ErrorThreshold { get; set; }
 
-    /// <summary>The segments of a Meter block. When set, they replace the single bar and the thresholds do not apply.</summary>
+    /// <summary>The segments of a Meter block, stacked in the bar or around the ring. When set, they replace the single value and the thresholds do not apply. A legend lists them when one of them has a <see cref="DisplayMeterPart.ValueLabel"/>, an <see cref="DisplayMeterPart.Icon"/> or a <see cref="DisplayMeterPart.Max"/>.</summary>
     [Parameter] public IReadOnlyList<DisplayMeterPart>? MeterParts { get; set; }
 
     /// <summary>The level labels of a Meter block with <c>Variant="scale"</c>.</summary>
@@ -201,7 +202,7 @@
     /// <summary>The zero-based index of the current level of a <c>scale</c> Meter. The levels up to it are highlighted.</summary>
     [Parameter] public int? CurrentLevel { get; set; }
 
-    /// <summary>The bars of a Chart block, or the steps of a <c>funnel</c> Chart.</summary>
+    /// <summary>The bars of a Chart block, the points of a <c>line</c> Chart, or the steps of a <c>funnel</c> Chart.</summary>
     [Parameter] public IReadOnlyList<DisplayChartPoint>? ChartData { get; set; }
 
     /// <summary>The columns of a Table block.</summary>
@@ -222,7 +223,7 @@
     /// <summary>The rows of a Record block.</summary>
     [Parameter] public IReadOnlyList<DisplayRecordItem>? Records { get; set; }
 
-    /// <summary>The people of a Person block. Without the <c>group</c> variant, only the first person is shown.</summary>
+    /// <summary>The people of a Person block. Without the <c>group</c> variant, only the first person is shown. When empty, the person comes from <see cref="Title"/>, <see cref="Description"/> and <see cref="Chip"/>, and the avatar shows a person icon when there is no name.</summary>
     [Parameter] public IReadOnlyList<DisplayPersonItem>? People { get; set; }
 
     /// <summary>The contact lines of a Person block. They are shown under the person and are ignored by the <c>group</c> variant.</summary>
@@ -296,14 +297,30 @@
         }
     }
 
+    private DisplayTexts Texts => _texts ??= Options.Extension<DisplayTexts>();
+
+    // The data-color attribute of a tone: the Klyroo.UI theme sets --kly-color and --kly-color-text from it, for built-in and custom colors.
+    private static string? ToneValue(KlyColor? tone) => tone?.Value;
+
+    private RenderFragment RenderChip(DisplayChip chip) =>
+        @<KlyBadge Label="@chip.Label" Color="@(chip.Color ?? KlyColor.Neutral)" Variant="KlyVariant.Subtle" Size="KlySize.Sm"
+                  LeadingIcon="@(string.IsNullOrEmpty(chip.Icon) ? null : RenderIcon(chip.Icon, "size-3"))" data-slot="display-chip" />;
+
+    private RenderFragment RenderHeadingTitle() => builder =>
+    {
+        builder.OpenElement(0, $"h{Math.Clamp(HeadingLevel, 1, 6)}");
+        builder.AddAttribute(1, "class", "m-0 truncate text-base font-semibold text-(--klyroo-text-highlighted)");
+        builder.AddAttribute(2, "data-slot", "heading-title");
+        builder.AddContent(3, Title);
+        builder.CloseElement();
+    };
+
     private string KindKey => Kind.ToString().ToLowerInvariant();
 
     private DisplaySurface EffectiveSurface => Surface ?? Kind switch
     {
         DisplayKind.Facts or DisplayKind.Breakdown or DisplayKind.Table or DisplayKind.Record or DisplayKind.Code => DisplaySurface.Bordered,
-        DisplayKind.Stat => string.Equals(Variant, "row", StringComparison.OrdinalIgnoreCase) ? DisplaySurface.Bordered
-            : string.Equals(Variant, "hero", StringComparison.OrdinalIgnoreCase) || Variant is null ? DisplaySurface.Muted
-            : DisplaySurface.Plain,
+        DisplayKind.Stat => string.Equals(Variant, "row", StringComparison.OrdinalIgnoreCase) ? DisplaySurface.Bordered : DisplaySurface.Muted,
         DisplayKind.Alert => DisplaySurface.Muted,
         _ => DisplaySurface.Plain,
     };
@@ -341,7 +358,7 @@
     private RenderFragment RenderRevealButton(int nextCount, int totalCount) =>
         @<button type="button" class="inline-flex items-center gap-1.5 self-start rounded-(--klyroo-radius) px-2 py-1 text-xs font-medium text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text) focus-visible:outline-2 focus-visible:outline-(--klyroo-primary-text)"
                  data-slot="display-more" @onclick="@(() => RevealMore(totalCount))">
-            <span>Show more · @nextCount</span>
+            <span>@Texts.ShowMore(nextCount)</span>
             @RenderIcon("chevron-down", "size-3.5")
         </button>;
 
@@ -381,7 +398,7 @@
                         }
                         else
                         {
-                            <h3 class="m-0 truncate text-base font-semibold text-(--klyroo-text-highlighted)" data-slot="heading-title">@Title</h3>
+                            @RenderHeadingTitle()
                         }
                         @if (!string.IsNullOrEmpty(Count))
                         {
@@ -415,13 +432,13 @@
             }
             else if (!string.IsNullOrEmpty(Value))
             {
-                <p class="m-0 @(MaxLines is > 0 && !_textExpanded ? "line-clamp-2" : "")" data-slot="text-body">@Value</p>
+                <p class="m-0 @(MaxLines is > 0 && !_textExpanded ? "line-clamp-2" : "")" style="@(MaxLines is > 0 && !_textExpanded ? $"-webkit-line-clamp:{MaxLines}" : null)" data-slot="text-body">@Value</p>
             }
             @if (MaxLines is > 0)
             {
                 <button type="button" class="self-start text-xs font-medium text-(--klyroo-primary-text) hover:underline"
                         data-slot="text-toggle" @onclick="@(() => _textExpanded = !_textExpanded)">
-                    @(_textExpanded ? "Show less" : "Read more")
+                    @(_textExpanded ? Texts.ShowLess : Texts.ReadMore)
                 </button>
             }
             @if (!string.IsNullOrEmpty(Author) || !string.IsNullOrEmpty(Meta))
@@ -450,14 +467,14 @@
                 }
                 @if (!string.IsNullOrEmpty(Value) || !string.IsNullOrEmpty(Description))
                 {
-                    <p class="m-0 text-(--klyroo-text-muted)" data-slot="alert-message">@(Value ?? Description)</p>
+                    <p class="m-0 text-(--klyroo-text-muted)" data-slot="alert-message">@(!string.IsNullOrEmpty(Value) ? Value : Description)</p>
                 }
                 @if (!string.IsNullOrEmpty(Details))
                 {
                     <button type="button" class="inline-flex items-center gap-1 self-start text-xs font-medium text-(--klyroo-text-highlighted) hover:underline"
                             aria-expanded="@(_detailsOpen ? "true" : "false")" data-slot="alert-details-toggle"
                             @onclick="@(() => _detailsOpen = !_detailsOpen)">
-                        <span>@(_detailsOpen ? "Hide details" : "Show details")</span>
+                        <span>@(_detailsOpen ? Texts.HideDetails : Texts.ShowDetails)</span>
                         @RenderIcon(_detailsOpen ? "chevron-up" : "chevron-down", "size-3.5")
                     </button>
                     @if (_detailsOpen)
@@ -518,22 +535,32 @@
             @foreach (var fact in items)
             {
                 var isEmpty = string.IsNullOrWhiteSpace(fact.Value) && fact.Chip is null;
+                var valueColor = fact.Tone is not null ? "text-(--kly-color-text)"
+                    : fact.Emphasis ? "text-(--klyroo-text-highlighted)"
+                    : "text-(--klyroo-text)";
                 <div class="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0" data-slot="fact-item">
-                    <dt class="flex items-center gap-1.5 text-xs font-medium text-(--klyroo-text-muted)" data-slot="fact-label">
-                        @if (!string.IsNullOrEmpty(fact.Icon))
+                    <dt class="flex min-w-0 flex-col gap-0.5 text-xs font-medium text-(--klyroo-text-muted)" data-slot="fact-label">
+                        <span class="flex items-center gap-1.5">
+                            @if (!string.IsNullOrEmpty(fact.Icon))
+                            {
+                                @RenderIcon(fact.Icon, "size-3.5 shrink-0")
+                            }
+                            <span>@fact.Label</span>
+                        </span>
+                        @if (!string.IsNullOrEmpty(fact.Hint))
                         {
-                            @RenderIcon(fact.Icon, "size-3.5 shrink-0")
+                            <span class="font-normal text-(--klyroo-text-dimmed)" data-slot="fact-hint">@fact.Hint</span>
                         }
-                        <span>@fact.Label</span>
                     </dt>
-                    <dd class="m-0 flex items-center gap-1.5 text-end @(fact.Mono ? "font-mono" : "") @(fact.Emphasis ? "font-semibold text-(--klyroo-text-highlighted)" : "text-(--klyroo-text)")" data-slot="fact-value">
+                    <dd class="m-0 flex items-center gap-1.5 text-end @(fact.Mono ? "font-mono" : "") @(fact.Emphasis ? "font-semibold" : "") @valueColor"
+                        data-color="@ToneValue(fact.Tone)" data-slot="fact-value">
                         @if (fact.Loading)
                         {
                             <KlySkeleton Class="h-4 w-20" />
                         }
                         else if (fact.Chip is { } chip)
                         {
-                            <KlyBadge Label="@chip.Label" Color="@(chip.Color ?? KlyColor.Neutral)" Variant="KlyVariant.Subtle" Size="KlySize.Sm" />
+                            @RenderChip(chip)
                         }
                         else if (isEmpty)
                         {
@@ -551,7 +578,7 @@
                         {
                             var toCopy = fact.CopyText ?? fact.Value;
                             <button type="button" class="inline-flex size-6 items-center justify-center rounded-(--klyroo-radius) text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
-                                    aria-label="@($"Copy {fact.Label}")" data-slot="fact-copy"
+                                    aria-label="@Texts.CopyValue(fact.Label)" data-slot="fact-copy"
                                     @onclick="@(() => CopyToClipboardAsync(toCopy))">
                                 @RenderIcon("copy", "size-3.5")
                             </button>
@@ -565,12 +592,17 @@
         @<div class="flex flex-col gap-2" data-slot="display-stat">
             @if (string.Equals(Variant, "row", StringComparison.OrdinalIgnoreCase) && StatItems is { Count: > 0 })
             {
+                @if (!string.IsNullOrEmpty(Title))
+                {
+                    <span class="text-xs font-semibold text-(--klyroo-text-highlighted)" data-slot="stat-row-title">@Title</span>
+                }
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3" data-slot="stat-row">
                     @foreach (var item in StatItems)
                     {
                         <div class="flex flex-col gap-0.5" data-slot="stat-item">
                             <span class="text-xs font-medium text-(--klyroo-text-muted)">@item.Label</span>
-                            <span class="text-xl font-bold tabular-nums text-(--klyroo-text-highlighted)">@item.Value</span>
+                            <span class="text-xl font-bold tabular-nums @(item.Tone is null ? "text-(--klyroo-text-highlighted)" : "text-(--kly-color-text)")"
+                                  data-color="@ToneValue(item.Tone)" data-slot="stat-item-value">@item.Value</span>
                             @if (!string.IsNullOrEmpty(item.Caption))
                             {
                                 <span class="text-xs text-(--klyroo-text-muted)">@item.Caption</span>
@@ -633,107 +665,222 @@
         </svg>;
     }
 
-    private RenderFragment RenderBreakdown() =>
-        @<div class="flex flex-col gap-2" data-slot="display-breakdown">
+    private RenderFragment RenderBreakdown()
+    {
+        var isCollapsible = string.Equals(Variant, "collapsible", StringComparison.OrdinalIgnoreCase);
+        // The comparison layout lines the amounts up in two columns: Value under First, CompareValue under Second.
+        var compare = CompareColumns is not null
+            || BreakdownLines?.Any(l => l.CompareValue is not null) == true
+            || BreakdownTotal?.CompareValue is not null;
+        return @<div class="flex flex-col gap-2" data-slot="display-breakdown" data-compare="@(compare ? "true" : null)">
             @if (!string.IsNullOrEmpty(Title))
             {
                 <p class="m-0 font-semibold text-(--klyroo-text-highlighted)">@Title</p>
             }
-            @if (string.Equals(Variant, "collapsible", StringComparison.OrdinalIgnoreCase))
+            @if (isCollapsible)
             {
                 <button type="button" class="inline-flex items-center gap-1 self-start text-xs font-medium text-(--klyroo-primary-text) hover:underline"
                         aria-expanded="@(_detailsOpen ? "true" : "false")" data-slot="breakdown-toggle"
                         @onclick="@(() => _detailsOpen = !_detailsOpen)">
-                    <span>@(_detailsOpen ? "Hide details" : "Details")</span>
+                    <span>@(_detailsOpen ? Texts.HideDetails : Texts.Details)</span>
                     @RenderIcon(_detailsOpen ? "chevron-up" : "chevron-down", "size-3.5")
                 </button>
             }
-            @if (!string.Equals(Variant, "collapsible", StringComparison.OrdinalIgnoreCase) || _detailsOpen)
+            @if (CompareColumns is { } columns && (!isCollapsible || _detailsOpen || BreakdownTotal is not null))
+            {
+                <div class="grid grid-cols-[minmax(0,1fr)_6rem_6rem] gap-2 text-xs font-medium text-(--klyroo-text-muted)" data-slot="breakdown-columns">
+                    <span></span>
+                    <span class="text-end">@columns.First</span>
+                    <span class="text-end">@columns.Second</span>
+                </div>
+            }
+            @if (!isCollapsible || _detailsOpen)
             {
                 @if (BreakdownLines is { Count: > 0 })
                 {
                     <div class="flex flex-col gap-1.5" data-slot="breakdown-lines">
                         @foreach (var line in BreakdownLines)
                         {
-                            <div class="flex items-baseline justify-between gap-2 @(line.IsSubtotal ? "border-t border-(--klyroo-border) pt-1.5 font-semibold text-(--klyroo-text-highlighted)" : line.IsMuted ? "text-(--klyroo-text-dimmed)" : "")" data-slot="breakdown-line">
-                                <span>@line.Label</span>
-                                <span class="tabular-nums">@(line.Value ?? "—")</span>
-                            </div>
+                            @RenderBreakdownRow(line, "breakdown-line", line.IsSubtotal ? "border-t border-(--klyroo-border) pt-1.5 font-semibold text-(--klyroo-text-highlighted)" : line.IsMuted ? "text-(--klyroo-text-dimmed)" : "", compare)
                         }
                     </div>
                 }
             }
             @if (BreakdownTotal is { } total)
             {
-                <div class="flex items-baseline justify-between gap-2 border-t border-(--klyroo-border-accented) pt-2 font-semibold text-(--klyroo-text-highlighted)" data-slot="breakdown-total">
-                    <span>@total.Label</span>
-                    <span class="tabular-nums">@total.Value</span>
-                </div>
+                @RenderBreakdownRow(total, "breakdown-total", "border-t border-(--klyroo-border-accented) pt-2 font-semibold text-(--klyroo-text-highlighted)", compare)
             }
             @if (!string.IsNullOrEmpty(Details))
             {
                 <p class="m-0 text-xs text-(--klyroo-text-muted)" data-slot="breakdown-footnote">@Details</p>
             }
         </div>;
+    }
+
+    private RenderFragment RenderBreakdownRow(DisplayBreakdownLine line, string slot, string rowClass, bool compare) =>
+        @<div class="@(compare ? "grid grid-cols-[minmax(0,1fr)_6rem_6rem] items-baseline gap-2" : "flex items-baseline justify-between gap-2") @rowClass" data-slot="@slot">
+            <span class="flex min-w-0 flex-col">
+                <span class="inline-flex flex-wrap items-center gap-1.5">
+                    <span>@line.Label</span>
+                    @if (line.Chip is { } chip)
+                    {
+                        @RenderChip(chip)
+                    }
+                </span>
+                @if (!string.IsNullOrEmpty(line.Detail))
+                {
+                    <span class="text-xs font-normal text-(--klyroo-text-muted)" data-slot="breakdown-detail">@line.Detail</span>
+                }
+            </span>
+            <span class="text-end tabular-nums @(line.Tone is null ? "" : "text-(--kly-color-text)")" data-color="@ToneValue(line.Tone)" data-slot="breakdown-value">@(line.Value ?? "—")</span>
+            @if (compare)
+            {
+                <span class="text-end tabular-nums text-(--klyroo-text-muted)" data-slot="breakdown-compare">@(line.CompareValue ?? "—")</span>
+            }
+        </div>;
 
     private RenderFragment RenderMeter()
     {
-        var max = MeterMax > 0 ? MeterMax : (MeterParts is { Count: > 0 } ? Math.Max(1, MeterParts.Sum(p => p.Value)) : 100);
+        var max = MeterMax > 0 ? MeterMax : (MeterParts is { Count: > 0 } ? Math.Max(1, MeterParts.Sum(PartAmount)) : 100);
         var val = Math.Clamp(MeterValue, 0, max);
         var pct = Math.Clamp(val / max * 100.0, 0, 100);
-        var effectiveTone = ErrorThreshold is { } err && pct >= err ? "bg-(--klyroo-error)"
-            : WarningThreshold is { } warn && pct >= warn ? "bg-(--klyroo-warning)"
-            : "bg-(--klyroo-primary)";
+        var level = ErrorThreshold is { } err && pct >= err ? "error" : WarningThreshold is { } warn && pct >= warn ? "warning" : "primary";
+        var barTone = level switch { "error" => "bg-(--klyroo-error)", "warning" => "bg-(--klyroo-warning)", _ => "bg-(--klyroo-primary)" };
+        var ringTone = level switch { "error" => "text-(--klyroo-error)", "warning" => "text-(--klyroo-warning)", _ => "text-(--klyroo-primary)" };
+        var isRing = string.Equals(Variant, "ring", StringComparison.OrdinalIgnoreCase);
+        var isScale = string.Equals(Variant, "scale", StringComparison.OrdinalIgnoreCase) && MeterLevels is { Count: > 0 };
+        var hasParts = MeterParts is { Count: > 0 };
+        var showLegend = hasParts && MeterParts!.Any(p => p.ValueLabel is not null || p.Icon is not null || p.Max is not null);
+        var valueText = Value ?? $"{val:0.##} / {max:0.##}";
 
-        return @<div class="flex flex-col gap-2" data-slot="display-meter" data-tone="@(ErrorThreshold is { } e && pct >= e ? "error" : WarningThreshold is { } w && pct >= w ? "warning" : "primary")">
-            @if (!string.IsNullOrEmpty(Title) || !string.IsNullOrEmpty(Value))
+        return @<div class="flex flex-col gap-2" data-slot="display-meter" data-tone="@level">
+            @if (isRing)
             {
-                <div class="flex items-baseline justify-between gap-2">
-                    <span class="text-xs font-medium text-(--klyroo-text-muted)" data-slot="meter-label">@Title</span>
-                    <span class="text-xs font-semibold tabular-nums text-(--klyroo-text-highlighted)" data-slot="meter-value">@(Value ?? $"{val:0.##} / {max:0.##}")</span>
-                </div>
-            }
-            @if (string.Equals(Variant, "scale", StringComparison.OrdinalIgnoreCase) && MeterLevels is { Count: > 0 })
-            {
-                <div class="grid gap-1.5" style="@($"grid-template-columns:repeat({MeterLevels.Count},minmax(0,1fr))")" data-slot="meter-scale">
-                    @for (var i = 0; i < MeterLevels.Count; i++)
-                    {
-                        var reached = CurrentLevel is { } cur && i <= cur;
-                        <div class="rounded-(--klyroo-radius) border px-2 py-1 text-center text-xs font-medium @(reached ? "border-(--klyroo-primary-text) bg-(--klyroo-bg-muted) text-(--klyroo-text-highlighted)" : "border-(--klyroo-border) text-(--klyroo-text-muted)")"
-                             data-slot="meter-level" data-active="@(CurrentLevel == i ? "true" : null)">
-                            @MeterLevels[i]
-                        </div>
-                    }
+                <div class="flex items-center gap-4" data-slot="meter-ring">
+                    <div class="relative size-20 shrink-0" role="meter" aria-label="@(Title ?? Texts.Meter)"
+                         aria-valuenow="@val.ToString("0.##", CultureInfo.InvariantCulture)" aria-valuemin="0"
+                         aria-valuemax="@max.ToString("0.##", CultureInfo.InvariantCulture)" aria-valuetext="@valueText">
+                        <svg viewBox="0 0 36 36" class="size-full -rotate-90" aria-hidden="true">
+                            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="currentColor" stroke-width="3.5" class="text-(--klyroo-bg-muted)" />
+                            @if (hasParts)
+                            {
+                                var offset = 0.0;
+                                @foreach (var part in MeterParts!)
+                                {
+                                    var partPct = Math.Clamp(PartAmount(part) / max * 100.0, 0, 100 - offset);
+                                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="currentColor" stroke-width="3.5"
+                                            class="@(part.Tone is null ? "text-(--klyroo-primary)" : "text-(--kly-color)")" data-color="@ToneValue(part.Tone)"
+                                            stroke-dasharray="@($"{Num(partPct)} {Num(100 - partPct)}")" stroke-dashoffset="@Num(-offset)"
+                                            data-slot="meter-ring-part"><title>@PartTooltip(part)</title></circle>
+                                    offset += partPct;
+                                }
+                            }
+                            else if (pct > 0)
+                            {
+                                <circle cx="18" cy="18" r="15.9155" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"
+                                        class="@ringTone" stroke-dasharray="@($"{Num(pct)} {Num(100 - pct)}")" data-slot="meter-ring-value" />
+                            }
+                        </svg>
+                        <span class="absolute inset-0 flex items-center justify-center text-sm font-semibold tabular-nums text-(--klyroo-text-highlighted)"
+                              data-slot="meter-value">@(Value ?? $"{Math.Round(pct).ToString(CultureInfo.InvariantCulture)}%")</span>
+                    </div>
+                    <div class="flex min-w-0 flex-col gap-0.5">
+                        @if (!string.IsNullOrEmpty(Title))
+                        {
+                            <span class="text-xs font-medium text-(--klyroo-text-muted)" data-slot="meter-label">@Title</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Description))
+                        {
+                            <span class="text-xs text-(--klyroo-text-muted)" data-slot="meter-caption">@Description</span>
+                        }
+                    </div>
                 </div>
             }
             else
             {
-                <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-(--klyroo-bg-muted)"
-                     role="meter" aria-label="@(Title ?? "Meter")"
-                     aria-valuenow="@val.ToString("0.##", CultureInfo.InvariantCulture)"
-                     aria-valuemin="0"
-                     aria-valuemax="@max.ToString("0.##", CultureInfo.InvariantCulture)"
-                     data-slot="meter-track">
-                    @if (MeterParts is { Count: > 0 })
-                    {
-                        @foreach (var part in MeterParts)
+                @if (!string.IsNullOrEmpty(Title) || !string.IsNullOrEmpty(Value))
+                {
+                    <div class="flex items-baseline justify-between gap-2">
+                        <span class="text-xs font-medium text-(--klyroo-text-muted)" data-slot="meter-label">@Title</span>
+                        <span class="text-xs font-semibold tabular-nums text-(--klyroo-text-highlighted)" data-slot="meter-value">@valueText</span>
+                    </div>
+                }
+                @if (isScale)
+                {
+                    <div class="grid gap-1.5" style="@($"grid-template-columns:repeat({MeterLevels!.Count},minmax(0,1fr))")" data-slot="meter-scale">
+                        @for (var i = 0; i < MeterLevels.Count; i++)
                         {
-                            var partPct = Math.Clamp(part.Value / max * 100.0, 0, 100).ToString("0.##", CultureInfo.InvariantCulture);
-                            <div class="h-full bg-(--klyroo-primary) first:rounded-s-full last:rounded-e-full" style="@($"width:{partPct}%")" title="@($"{part.Label}: {part.Value}")" data-slot="meter-part"></div>
+                            var reached = CurrentLevel is { } cur && i <= cur;
+                            <div class="rounded-(--klyroo-radius) border px-2 py-1 text-center text-xs font-medium @(reached ? "border-(--klyroo-primary-text) bg-(--klyroo-bg-muted) text-(--klyroo-text-highlighted)" : "border-(--klyroo-border) text-(--klyroo-text-muted)")"
+                                 data-slot="meter-level" data-active="@(CurrentLevel == i ? "true" : null)">
+                                @MeterLevels[i]
+                            </div>
                         }
-                    }
-                    else
-                    {
-                        <div class="h-full rounded-full @effectiveTone" style="@($"width:{pct.ToString("0.##", CultureInfo.InvariantCulture)}%")" data-slot="meter-bar"></div>
-                    }
-                </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-(--klyroo-bg-muted)"
+                         role="meter" aria-label="@(Title ?? Texts.Meter)"
+                         aria-valuenow="@val.ToString("0.##", CultureInfo.InvariantCulture)"
+                         aria-valuemin="0"
+                         aria-valuemax="@max.ToString("0.##", CultureInfo.InvariantCulture)"
+                         data-slot="meter-track">
+                        @if (hasParts)
+                        {
+                            @foreach (var part in MeterParts!)
+                            {
+                                var partPct = Num(Math.Clamp(PartAmount(part) / max * 100.0, 0, 100));
+                                <div class="h-full first:rounded-s-full last:rounded-e-full @(part.Tone is null ? "bg-(--klyroo-primary)" : "bg-(--kly-color)")"
+                                     data-color="@ToneValue(part.Tone)" style="@($"width:{partPct}%")" title="@PartTooltip(part)" data-slot="meter-part"></div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="h-full rounded-full @barTone" style="@($"width:{Num(pct)}%")" data-slot="meter-bar"></div>
+                        }
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Description))
+                {
+                    <span class="text-xs text-(--klyroo-text-muted)" data-slot="meter-caption">@Description</span>
+                }
             }
-            @if (!string.IsNullOrEmpty(Description))
+            @if (showLegend && !isScale)
             {
-                <span class="text-xs text-(--klyroo-text-muted)" data-slot="meter-caption">@Description</span>
+                <ul class="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-xs" data-slot="meter-legend">
+                    @foreach (var part in MeterParts!)
+                    {
+                        <li class="inline-flex items-center gap-1.5" data-color="@ToneValue(part.Tone)" data-slot="meter-legend-item">
+                            @if (!string.IsNullOrEmpty(part.Icon))
+                            {
+                                @RenderIcon(part.Icon, part.Tone is null ? "size-3.5 text-(--klyroo-primary-text)" : "size-3.5 text-(--kly-color-text)")
+                            }
+                            else
+                            {
+                                <span class="size-2 rounded-full @(part.Tone is null ? "bg-(--klyroo-primary)" : "bg-(--kly-color)")" aria-hidden="true"></span>
+                            }
+                            <span class="text-(--klyroo-text-muted)">@part.Label</span>
+                            <span class="font-semibold tabular-nums text-(--klyroo-text-highlighted)">@PartValueText(part)</span>
+                        </li>
+                    }
+                </ul>
             }
         </div>;
     }
+
+    // A part's size on the meter: its value, capped by its own maximum when it has one.
+    private static double PartAmount(DisplayMeterPart part) =>
+        Math.Max(0, part.Max is { } partMax ? Math.Min(part.Value, partMax) : part.Value);
+
+    private string PartValueText(DisplayMeterPart part) =>
+        part.ValueLabel ?? (part.Max is { } partMax
+            ? $"{part.Value.ToString("0.##", FormatCulture)} / {partMax.ToString("0.##", FormatCulture)}"
+            : part.Value.ToString("0.##", FormatCulture));
+
+    private string PartTooltip(DisplayMeterPart part) => $"{part.Label}: {PartValueText(part)}";
+
+    private static string Num(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     private RenderFragment RenderChart() =>
         @<div class="flex flex-col gap-2.5" data-slot="display-chart">
@@ -749,7 +896,7 @@
             }
             @if (ChartData is not { Count: > 0 })
             {
-                <p class="m-0 text-xs text-(--klyroo-text-muted)" data-slot="chart-empty">No data</p>
+                <p class="m-0 text-xs text-(--klyroo-text-muted)" data-slot="chart-empty">@Texts.NoData</p>
             }
             else if (string.Equals(Variant, "funnel", StringComparison.OrdinalIgnoreCase))
             {
@@ -765,10 +912,14 @@
                                 <span class="font-medium text-(--klyroo-text)">@pt.Label</span>
                                 <span class="tabular-nums text-(--klyroo-text-muted)">@pt.Value @(rate is not null ? $"({rate})" : "")</span>
                             </div>
-                            <div class="h-2 rounded-full bg-(--klyroo-primary)" style="@($"width:{widthPct}%")"></div>
+                            <div class="h-2 rounded-full @ChartFill(pt.Tone)" data-color="@ToneValue(pt.Tone)" style="@($"width:{widthPct}%")"></div>
                         </div>
                     }
                 </div>
+            }
+            else if (string.Equals(Variant, "line", StringComparison.OrdinalIgnoreCase))
+            {
+                @RenderLineChart(ChartData)
             }
             else
             {
@@ -778,7 +929,7 @@
                     {
                         var hPct = Math.Clamp(pt.Value / max * 100.0, 6, 100).ToString("0.#", CultureInfo.InvariantCulture);
                         <div class="flex flex-1 flex-col items-center gap-1" title="@($"{pt.Label}: {pt.Value}")" data-slot="chart-bar">
-                            <div class="w-full rounded-t-sm bg-(--klyroo-primary)" style="@($"height:{hPct}%")"></div>
+                            <div class="w-full rounded-t-sm @ChartFill(pt.Tone)" data-color="@ToneValue(pt.Tone)" style="@($"height:{hPct}%")"></div>
                             <span class="max-w-full truncate text-[11px] text-(--klyroo-text-muted)">@pt.Label</span>
                         </div>
                     }
@@ -786,14 +937,61 @@
             }
         </div>;
 
+    private static string ChartFill(KlyColor? tone) => tone is null ? "bg-(--klyroo-primary)" : "bg-(--kly-color)";
+
+    private RenderFragment RenderLineChart(IReadOnlyList<DisplayChartPoint> data)
+    {
+        // The plot spans from zero (or the lowest negative value) to the highest value; points are spread evenly.
+        var max = Math.Max(1.0, data.Max(d => d.Value));
+        var min = Math.Min(0.0, data.Min(d => d.Value));
+        var range = max - min <= 0 ? 1 : max - min;
+        var positions = new List<(double X, double Y)>(data.Count);
+        for (var i = 0; i < data.Count; i++)
+        {
+            var x = data.Count == 1 ? 50.0 : i * 100.0 / (data.Count - 1);
+            var y = 100.0 - ((data[i].Value - min) / range * 100.0);
+            positions.Add((x, y));
+        }
+        var polyline = string.Join(' ', positions.Select(p => $"{Num(p.X)},{Num(p.Y)}"));
+        return @<div class="flex flex-col gap-1.5 pt-2" data-slot="chart-line">
+            <div class="relative h-24">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="absolute inset-0 size-full overflow-visible text-(--klyroo-primary)" aria-hidden="true">
+                    <polyline fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                              vector-effect="non-scaling-stroke" points="@polyline" data-slot="chart-line-path" />
+                </svg>
+                @for (var i = 0; i < data.Count; i++)
+                {
+                    var pt = data[i];
+                    <span class="absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-(--klyroo-bg) @ChartFill(pt.Tone)"
+                          data-color="@ToneValue(pt.Tone)" style="@($"left:{Num(positions[i].X)}%;top:{Num(positions[i].Y)}%")"
+                          title="@($"{pt.Label}: {pt.Value}")" data-slot="chart-point"></span>
+                }
+            </div>
+            <div class="flex gap-1 @(data.Count == 1 ? "justify-center" : "justify-between")">
+                @foreach (var pt in data)
+                {
+                    <span class="min-w-0 truncate text-[11px] text-(--klyroo-text-muted)">@pt.Label</span>
+                }
+            </div>
+        </div>;
+    }
+
     private RenderFragment RenderTable()
     {
         var cols = TableColumns ?? [];
         var (visibleRows, remaining) = ApplyReveal(TableRows);
+        var isSticky = string.Equals(Variant, "sticky", StringComparison.OrdinalIgnoreCase);
+        // A sticky header needs a background that hides the rows scrolling under it: the one of the surface.
+        var headerBackground = EffectiveSurface switch
+        {
+            DisplaySurface.Muted => "bg-(--klyroo-bg-muted)",
+            DisplaySurface.Elevated => "bg-(--klyroo-bg-elevated)",
+            _ => "bg-(--klyroo-bg)",
+        };
         return @<div class="flex flex-col gap-2" data-slot="display-table">
-            <div class="overflow-x-auto">
+            <div class="@(isSticky ? "max-h-80 overflow-auto" : "overflow-x-auto")" data-slot="display-table-scroll">
                 <table class="min-w-full text-sm">
-                    <thead class="border-b border-(--klyroo-border) text-xs font-semibold text-(--klyroo-text-muted)">
+                    <thead class="border-b border-(--klyroo-border) text-xs font-semibold text-(--klyroo-text-muted) @(isSticky ? $"sticky top-0 z-10 {headerBackground}" : "")" data-slot="display-table-head">
                         <tr>
                             @foreach (var col in cols)
                             {
@@ -846,7 +1044,13 @@
                 @foreach (var item in items)
                 {
                     <div class="flex flex-wrap items-center justify-between gap-2 py-2 first:pt-0 last:pb-0" data-slot="diff-item" data-changed="@(item.Changed ? "true" : "false")">
-                        <span class="text-xs font-medium text-(--klyroo-text-muted)">@item.Label</span>
+                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-(--klyroo-text-muted)">
+                            <span>@item.Label</span>
+                            @if (item.Note is { } note)
+                            {
+                                @RenderChip(note)
+                            }
+                        </span>
                         <div class="flex items-center gap-2 text-xs">
                             @if (item.Changed)
                             {
@@ -887,11 +1091,17 @@
             }
             @foreach (var rec in visible)
             {
-                <div class="flex items-center justify-between gap-3 py-1.5" data-slot="record-item">
+                var secondary = !string.IsNullOrEmpty(rec.Meta) ? rec.Meta : rec.Description;
+                <div class="flex items-center justify-between gap-3 py-1.5" data-color="@ToneValue(rec.Tone)" data-slot="record-item">
                     <div class="flex min-w-0 items-center gap-3">
-                        @if (!string.IsNullOrEmpty(rec.AvatarText) || !string.IsNullOrEmpty(rec.Icon))
+                        @if (!string.IsNullOrEmpty(rec.ImageSrc))
                         {
-                            <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-(--klyroo-radius) bg-(--klyroo-bg-muted) text-xs font-semibold text-(--klyroo-text-highlighted)">
+                            <img src="@rec.ImageSrc" alt="" loading="lazy" class="size-8 shrink-0 rounded-(--klyroo-radius) object-cover" data-slot="record-image" />
+                        }
+                        else if (!string.IsNullOrEmpty(rec.AvatarText) || !string.IsNullOrEmpty(rec.Icon))
+                        {
+                            <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-(--klyroo-radius) text-xs font-semibold @(rec.Tone is null ? "bg-(--klyroo-bg-muted) text-(--klyroo-text-highlighted)" : "bg-(--kly-color)/15 text-(--kly-color-text)")"
+                                  data-slot="record-avatar">
                                 @if (!string.IsNullOrEmpty(rec.Icon))
                                 {
                                     @RenderIcon(rec.Icon, "size-4")
@@ -909,26 +1119,54 @@
                             }
                             @if (!string.IsNullOrEmpty(rec.Href))
                             {
-                                <a href="@rec.Href" class="truncate font-medium text-(--klyroo-text-highlighted) hover:underline" data-slot="record-title">@rec.Title</a>
+                                <a href="@rec.Href" class="truncate font-medium text-(--klyroo-text-highlighted) hover:underline" data-slot="record-title"
+                                   @onclick="@(() => OnRecordClickAsync(rec))">@rec.Title</a>
+                            }
+                            else if (rec.OnClick.HasDelegate)
+                            {
+                                <button type="button" class="truncate text-start font-medium text-(--klyroo-text-highlighted) hover:underline focus-visible:outline-2 focus-visible:outline-(--klyroo-primary-text)"
+                                        data-slot="record-title" @onclick="@(() => OnRecordClickAsync(rec))">@rec.Title</button>
                             }
                             else
                             {
                                 <span class="truncate font-medium text-(--klyroo-text-highlighted)" data-slot="record-title">@rec.Title</span>
                             }
-                            @if (!string.IsNullOrEmpty(rec.Meta) || !string.IsNullOrEmpty(rec.Description))
+                            @if (!string.IsNullOrEmpty(secondary))
                             {
-                                <span class="truncate text-xs text-(--klyroo-text-muted)">@(rec.Meta ?? rec.Description)</span>
+                                <span class="flex min-w-0 items-center gap-1 text-xs text-(--klyroo-text-muted)" data-slot="record-meta">
+                                    @if (!string.IsNullOrEmpty(rec.MetaIcon))
+                                    {
+                                        @RenderIcon(rec.MetaIcon, "size-3 shrink-0")
+                                    }
+                                    <span class="truncate">@secondary</span>
+                                </span>
                             }
                         </div>
                     </div>
                     <div class="flex shrink-0 items-center gap-2">
+                        @if (rec.Badges is { Count: > 0 })
+                        {
+                            @foreach (var badge in rec.Badges)
+                            {
+                                @RenderChip(badge)
+                            }
+                        }
                         @if (rec.Chip is { } chip)
                         {
-                            <KlyBadge Label="@chip.Label" Color="@(chip.Color ?? KlyColor.Neutral)" Variant="KlyVariant.Subtle" Size="KlySize.Sm" />
+                            @RenderChip(chip)
                         }
-                        @if (!string.IsNullOrEmpty(rec.Trailing))
+                        @if (!string.IsNullOrEmpty(rec.Trailing) || !string.IsNullOrEmpty(rec.TrailingCaption))
                         {
-                            <span class="font-semibold tabular-nums text-(--klyroo-text-highlighted)" data-slot="record-trailing">@rec.Trailing</span>
+                            <div class="flex flex-col items-end">
+                                @if (!string.IsNullOrEmpty(rec.Trailing))
+                                {
+                                    <span class="font-semibold tabular-nums @(rec.Tone is null ? "text-(--klyroo-text-highlighted)" : "text-(--kly-color-text)")" data-slot="record-trailing">@rec.Trailing</span>
+                                }
+                                @if (!string.IsNullOrEmpty(rec.TrailingCaption))
+                                {
+                                    <span class="text-xs text-(--klyroo-text-muted)" data-slot="record-trailing-caption">@rec.TrailingCaption</span>
+                                }
+                            </div>
                         }
                     </div>
                 </div>
@@ -938,6 +1176,11 @@
                 @RenderRevealButton(remaining, Records.Count)
             }
         </div>;
+    }
+
+    private static async Task OnRecordClickAsync(DisplayRecordItem record)
+    {
+        if (record.OnClick.HasDelegate) await record.OnClick.InvokeAsync();
     }
 
     private RenderFragment RenderPerson() =>
@@ -951,8 +1194,9 @@
                     <div class="flex -space-x-2">
                         @foreach (var p in shown)
                         {
-                            <span class="inline-flex size-8 items-center justify-center rounded-full border-2 border-(--klyroo-bg) bg-(--klyroo-bg-muted) text-xs font-semibold text-(--klyroo-text-highlighted)"
-                                  title="@p.Name" data-slot="person-avatar">@InitialsOf(p.Name)</span>
+                            // The stack has no room for text: the description and the chip go in the tooltip.
+                            var tooltip = string.Join(" · ", new[] { p.Name, p.Description, p.Chip?.Label }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                            @RenderAvatar(p.Name, p.AvatarSrc, p.Tone, "size-8 border-2 border-(--klyroo-bg)", tooltip)
                         }
                         @if (extra > 0)
                         {
@@ -968,22 +1212,28 @@
             }
             else
             {
-                var person = People is { Count: > 0 } ? People[0] : new DisplayPersonItem(Title ?? "User", Description, null, Tone, Chip);
+                var single = People is { Count: > 0 } ? People[0] : null;
+                // Without People, the person comes from Title, Description and Chip; without a Title it has no name.
+                var name = single?.Name ?? (string.IsNullOrWhiteSpace(Title) ? null : Title);
+                var description = single is null ? Description : single.Description;
+                var chip = single is null ? Chip : single.Chip;
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex min-w-0 items-center gap-2.5">
-                        <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-(--klyroo-bg-muted) text-xs font-semibold text-(--klyroo-text-highlighted)"
-                              data-slot="person-avatar">@InitialsOf(person.Name)</span>
+                        @RenderAvatar(name, single?.AvatarSrc, single?.Tone, "size-9 shrink-0", null)
                         <div class="flex min-w-0 flex-col">
-                            <span class="truncate font-semibold text-(--klyroo-text-highlighted)" data-slot="person-name">@person.Name</span>
-                            @if (!string.IsNullOrEmpty(person.Description))
+                            @if (!string.IsNullOrWhiteSpace(name))
                             {
-                                <span class="truncate text-xs text-(--klyroo-text-muted)">@person.Description</span>
+                                <span class="truncate font-semibold text-(--klyroo-text-highlighted)" data-slot="person-name">@name</span>
+                            }
+                            @if (!string.IsNullOrEmpty(description))
+                            {
+                                <span class="truncate text-xs text-(--klyroo-text-muted)" data-slot="person-description">@description</span>
                             }
                         </div>
                     </div>
-                    @if (person.Chip is { } chip)
+                    @if (chip is not null)
                     {
-                        <KlyBadge Label="@chip.Label" Color="@(chip.Color ?? KlyColor.Neutral)" Variant="KlyVariant.Subtle" Size="KlySize.Sm" />
+                        @RenderChip(chip)
                     }
                 </div>
                 @if (Contacts is { Count: > 0 })
@@ -991,12 +1241,25 @@
                     <div class="flex flex-col gap-1.5 border-t border-(--klyroo-border) pt-2" data-slot="person-contacts">
                         @foreach (var c in Contacts)
                         {
-                            <div class="flex items-center justify-between gap-2 text-xs">
-                                <span class="truncate text-(--klyroo-text)">@c.Value</span>
+                            <div class="flex items-center justify-between gap-2 text-xs" data-slot="person-contact">
+                                <span class="flex min-w-0 items-center gap-1.5">
+                                    @if (!string.IsNullOrEmpty(c.Icon))
+                                    {
+                                        @RenderIcon(c.Icon, "size-3.5 shrink-0 text-(--klyroo-text-muted)")
+                                    }
+                                    @if (!string.IsNullOrEmpty(c.Href))
+                                    {
+                                        <a href="@c.Href" class="truncate text-(--klyroo-primary-text) hover:underline">@c.Value</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="truncate text-(--klyroo-text)">@c.Value</span>
+                                    }
+                                </span>
                                 @if (c.Copy)
                                 {
                                     <button type="button" class="inline-flex size-6 items-center justify-center rounded-(--klyroo-radius) text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted)"
-                                            aria-label="@($"Copy {c.Value}")" @onclick="@(() => CopyToClipboardAsync(c.Value))">
+                                            aria-label="@Texts.CopyValue(c.Value)" @onclick="@(() => CopyToClipboardAsync(c.Value))">
                                         @RenderIcon("copy", "size-3.5")
                                     </button>
                                 }
@@ -1006,6 +1269,24 @@
                 }
             }
         </div>;
+
+    // An image when there is one, else the initials of the name, else a person icon. A tone tints the initials tile.
+    private RenderFragment RenderAvatar(string? name, string? src, KlyColor? tone, string sizeClass, string? tooltip) =>
+        @<span class="inline-flex items-center justify-center overflow-hidden rounded-full text-xs font-semibold @sizeClass @(tone is null ? "bg-(--klyroo-bg-muted) text-(--klyroo-text-highlighted)" : "bg-(--kly-color)/15 text-(--kly-color-text)")"
+               data-color="@ToneValue(tone)" title="@tooltip" data-slot="person-avatar">
+            @if (!string.IsNullOrEmpty(src))
+            {
+                <img src="@src" alt="" loading="lazy" class="size-full object-cover" data-slot="person-image" />
+            }
+            else if (!string.IsNullOrWhiteSpace(name))
+            {
+                @InitialsOf(name)
+            }
+            else
+            {
+                @RenderIcon("user", "size-4")
+            }
+        </span>;
 
     private static string InitialsOf(string? name)
     {
@@ -1054,9 +1335,15 @@
                                     }
                                 </span>
                             }
+                            else if (!string.IsNullOrEmpty(item.Icon))
+                            {
+                                <span class="inline-flex shrink-0 @(item.Tone is null ? "text-(--klyroo-text-muted)" : "text-(--kly-color-text)")" data-color="@ToneValue(item.Tone)" data-slot="list-icon">
+                                    @RenderIcon(item.Icon, "size-4")
+                                </span>
+                            }
                             else
                             {
-                                <span class="size-1.5 shrink-0 rounded-full bg-(--klyroo-text-muted)"></span>
+                                <span class="size-1.5 shrink-0 rounded-full @(item.Tone is null ? "bg-(--klyroo-text-muted)" : "bg-(--kly-color)")" data-color="@ToneValue(item.Tone)" data-slot="list-bullet"></span>
                             }
                             <div class="flex min-w-0 flex-col">
                                 @if (!string.IsNullOrEmpty(item.Href))
@@ -1116,36 +1403,83 @@
     {
         var (visible, remaining) = ApplyReveal(TimelineItems);
         var isPipeline = string.Equals(Variant, "pipeline", StringComparison.OrdinalIgnoreCase);
+        var isLog = string.Equals(Variant, "log", StringComparison.OrdinalIgnoreCase);
         return @<div class="flex flex-col gap-2" data-slot="display-timeline">
-            <ol class="m-0 flex list-none @(isPipeline ? "flex-row flex-wrap items-center gap-4" : "flex-col gap-3") p-0">
-                @for (var i = 0; i < visible.Count; i++)
-                {
-                    var item = visible[i];
-                    var state = item.State ?? DisplayTimelineState.Done;
-                    <li class="flex items-start gap-3" aria-current="@(state == DisplayTimelineState.Current ? "step" : null)" data-slot="timeline-item" data-state="@state.ToString().ToLowerInvariant()">
-                        <span class="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full @(state == DisplayTimelineState.Done ? "bg-(--klyroo-primary) text-(--klyroo-primary-contrast)" : state == DisplayTimelineState.Current ? "border-2 border-(--klyroo-primary-text) text-(--klyroo-primary-text)" : "border border-(--klyroo-border) text-(--klyroo-text-muted)") text-[11px] font-semibold">
-                            @(i + 1)
-                        </span>
-                        <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-                            <div class="flex items-baseline justify-between gap-2">
-                                <span class="font-medium text-(--klyroo-text-highlighted)" data-slot="timeline-title">@item.Title</span>
-                                @if (!string.IsNullOrEmpty(item.Time))
+            @if (isLog)
+            {
+                <ol class="m-0 flex list-none flex-col divide-y divide-(--klyroo-border) p-0 text-xs" data-slot="timeline-log">
+                    @foreach (var item in visible)
+                    {
+                        var state = item.State ?? DisplayTimelineState.Done;
+                        <li class="flex items-baseline gap-3 py-1.5 first:pt-0 last:pb-0" aria-current="@(state == DisplayTimelineState.Current ? "step" : null)"
+                            data-slot="timeline-item" data-state="@state.ToString().ToLowerInvariant()">
+                            <time class="w-32 shrink-0 font-mono tabular-nums text-(--klyroo-text-muted)" datetime="@IsoDate(item.Date)" data-slot="timeline-timestamp">@LogTimestamp(item)</time>
+                            <span class="inline-flex shrink-0 self-center @(item.Tone is null ? "text-(--klyroo-text-muted)" : "text-(--kly-color-text)")" data-color="@ToneValue(item.Tone)" aria-hidden="true">
+                                @if (!string.IsNullOrEmpty(item.Icon))
                                 {
-                                    <span class="text-xs text-(--klyroo-text-muted)" data-slot="timeline-time">@item.Time</span>
+                                    @RenderIcon(item.Icon, "size-3.5")
+                                }
+                                else
+                                {
+                                    <span class="size-1.5 rounded-full bg-current"></span>
+                                }
+                            </span>
+                            <div class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
+                                <span class="font-medium text-(--klyroo-text-highlighted)" data-slot="timeline-title">@item.Title</span>
+                                @if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    <span class="text-(--klyroo-text-muted)">@item.Description</span>
+                                }
+                                @if (!string.IsNullOrEmpty(item.ActorName))
+                                {
+                                    <span class="font-medium text-(--klyroo-text-muted)">@item.ActorName</span>
                                 }
                             </div>
-                            @if (!string.IsNullOrEmpty(item.Description))
-                            {
-                                <p class="m-0 text-xs text-(--klyroo-text-muted)">@item.Description</p>
-                            }
-                            @if (!string.IsNullOrEmpty(item.ActorName))
-                            {
-                                <span class="text-xs font-medium text-(--klyroo-text-muted)">@item.ActorName</span>
-                            }
-                        </div>
-                    </li>
-                }
-            </ol>
+                        </li>
+                    }
+                </ol>
+            }
+            else
+            {
+                <ol class="m-0 flex list-none @(isPipeline ? "flex-row flex-wrap items-center gap-4" : "flex-col gap-3") p-0">
+                    @for (var i = 0; i < visible.Count; i++)
+                    {
+                        var item = visible[i];
+                        var state = item.State ?? DisplayTimelineState.Done;
+                        var timeText = !string.IsNullOrEmpty(item.Time) ? item.Time : item.Date?.ToString("g", FormatCulture);
+                        <li class="flex items-start gap-3" aria-current="@(state == DisplayTimelineState.Current ? "step" : null)" data-slot="timeline-item" data-state="@state.ToString().ToLowerInvariant()">
+                            <span class="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full @TimelineMarkerClass(state, item.Tone) text-[11px] font-semibold"
+                                  data-color="@ToneValue(item.Tone)" data-slot="timeline-marker">
+                                @if (!string.IsNullOrEmpty(item.Icon))
+                                {
+                                    @RenderIcon(item.Icon, "size-3")
+                                }
+                                else
+                                {
+                                    @(i + 1)
+                                }
+                            </span>
+                            <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+                                <div class="flex items-baseline justify-between gap-2">
+                                    <span class="font-medium text-(--klyroo-text-highlighted)" data-slot="timeline-title">@item.Title</span>
+                                    @if (!string.IsNullOrEmpty(timeText))
+                                    {
+                                        <time class="text-xs text-(--klyroo-text-muted)" datetime="@IsoDate(item.Date)" data-slot="timeline-time">@timeText</time>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    <p class="m-0 text-xs text-(--klyroo-text-muted)">@item.Description</p>
+                                }
+                                @if (!string.IsNullOrEmpty(item.ActorName))
+                                {
+                                    <span class="text-xs font-medium text-(--klyroo-text-muted)">@item.ActorName</span>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ol>
+            }
             @if (remaining > 0 && TimelineItems is not null)
             {
                 @RenderRevealButton(remaining, TimelineItems.Count)
@@ -1153,11 +1487,36 @@
         </div>;
     }
 
+    private static string TimelineMarkerClass(DisplayTimelineState state, KlyColor? tone) => (state, tone is null) switch
+    {
+        (DisplayTimelineState.Done, true) => "bg-(--klyroo-primary) text-(--klyroo-primary-contrast)",
+        (DisplayTimelineState.Done, false) => "bg-(--kly-color) text-(--kly-color-contrast)",
+        (DisplayTimelineState.Current, true) => "border-2 border-(--klyroo-primary-text) text-(--klyroo-primary-text)",
+        (DisplayTimelineState.Current, false) => "border-2 border-(--kly-color-text) text-(--kly-color-text)",
+        (_, true) => "border border-(--klyroo-border) text-(--klyroo-text-muted)",
+        _ => "border border-(--kly-color-text) text-(--kly-color-text)",
+    };
+
+    // The log line shows the date and the time of each event: from Date, with Time replacing the time part when given.
+    private string LogTimestamp(DisplayTimelineItem item)
+    {
+        if (item.Date is { } date)
+        {
+            var time = !string.IsNullOrEmpty(item.Time) ? item.Time : date.ToString("t", FormatCulture);
+            return $"{date.ToString("d", FormatCulture)} {time}";
+        }
+        return item.Time ?? "";
+    }
+
+    private static string? IsoDate(DateTimeOffset? date) => date?.ToString("O", CultureInfo.InvariantCulture);
+
     private RenderFragment RenderDate()
     {
         var date = DateValue ?? DateTimeOffset.UtcNow;
         var now = Now ?? DateTimeOffset.UtcNow;
         var days = (int)Math.Round((date.Date - now.Date).TotalDays);
+        var isCountdown = string.Equals(Variant, "countdown", StringComparison.OrdinalIgnoreCase);
+        var isRange = string.Equals(Variant, "range", StringComparison.OrdinalIgnoreCase) && EndDateValue is not null;
         return @<div class="flex items-center gap-3" data-slot="display-date">
             <div class="flex size-12 shrink-0 flex-col items-center justify-center rounded-(--klyroo-radius) border border-(--klyroo-border) bg-(--klyroo-bg-muted) text-center" data-slot="date-tile">
                 <span class="text-[10px] font-bold uppercase text-(--klyroo-primary-text)">@date.ToString("MMM", FormatCulture)</span>
@@ -1165,20 +1524,25 @@
             </div>
             <div class="flex min-w-0 flex-col gap-0.5">
                 <span class="font-semibold text-(--klyroo-text-highlighted)" data-slot="date-title">
-                    @if (string.Equals(Variant, "countdown", StringComparison.OrdinalIgnoreCase))
+                    @if (isCountdown)
                     {
-                        @(days == 0 ? "Today" : days == 1 ? "Tomorrow" : days > 1 ? $"In {days} days" : $"{Math.Abs(days)} days overdue")
+                        @(days == 0 ? Texts.Today : days == 1 ? Texts.Tomorrow : days > 1 ? Texts.InDays(days) : Texts.DaysOverdue(Math.Abs(days)))
                     }
-                    else if (string.Equals(Variant, "range", StringComparison.OrdinalIgnoreCase) && EndDateValue is { } end)
+                    else if (isRange)
                     {
+                        var end = EndDateValue!.Value;
                         var spanDays = Math.Max(1, (int)Math.Round((end.Date - date.Date).TotalDays) + 1);
-                        @($"{date.ToString("yyyy-MM-dd", FormatCulture)} → {end.ToString("yyyy-MM-dd", FormatCulture)} ({spanDays} days)")
+                        @($"{date.ToString("yyyy-MM-dd", FormatCulture)} → {end.ToString("yyyy-MM-dd", FormatCulture)} ({Texts.DayCount(spanDays)})")
                     }
                     else
                     {
                         @(Title ?? date.ToString("D", FormatCulture))
                     }
                 </span>
+                @if ((isCountdown || isRange) && !string.IsNullOrEmpty(Title))
+                {
+                    <span class="text-xs font-medium text-(--klyroo-text-muted)" data-slot="date-caption">@Title</span>
+                }
                 @if (!string.IsNullOrEmpty(Description))
                 {
                     <span class="text-xs text-(--klyroo-text-muted)">@Description</span>
@@ -1199,7 +1563,7 @@
                     {
                         var isLastWithOverflow = i == shown.Count - 1 && hiddenCount > 0;
                         <div class="relative overflow-hidden rounded-(--klyroo-radius) border border-(--klyroo-border)" data-slot="media-tile">
-                            <img src="@shown[i]" alt="@(Title ?? $"Image {i + 1}")" loading="lazy" class="h-24 w-full object-cover" />
+                            <img src="@shown[i]" alt="@(Title ?? Texts.ImageAlt(i + 1))" loading="lazy" class="h-24 w-full object-cover" />
                             @if (isLastWithOverflow)
                             {
                                 <span class="absolute inset-0 flex items-center justify-center bg-black/60 text-sm font-bold text-white" data-slot="media-overflow">+@hiddenCount</span>
@@ -1210,7 +1574,7 @@
             }
             else if (!string.IsNullOrEmpty(Src))
             {
-                <img src="@Src" alt="@(Title ?? "Media")" loading="lazy" class="max-h-64 w-full rounded-(--klyroo-radius) object-cover" data-slot="media-image" />
+                <img src="@Src" alt="@(Title ?? Texts.MediaAlt)" loading="lazy" class="max-h-64 w-full rounded-(--klyroo-radius) object-cover" data-slot="media-image" />
             }
             @if (!string.IsNullOrEmpty(Description))
             {
@@ -1225,7 +1589,7 @@
         var shown = isSecret && !_secretRevealed ? MaskSecret(raw, VisibleChars) : raw;
         return @<div class="flex flex-col gap-2" data-slot="display-code" data-variant="@(Variant ?? "block")">
             <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-semibold uppercase text-(--klyroo-text-muted)" data-slot="code-label">@(Title ?? Language ?? (isSecret ? "Secret" : "Code"))</span>
+                <span class="text-xs font-semibold uppercase text-(--klyroo-text-muted)" data-slot="code-label">@(Title ?? Language ?? (isSecret ? Texts.Secret : Texts.Code))</span>
                 <div class="flex items-center gap-1">
                     @if (isSecret)
                     {
@@ -1233,13 +1597,13 @@
                                 aria-pressed="@(_secretRevealed ? "true" : "false")" data-slot="code-secret-toggle"
                                 @onclick="@(() => _secretRevealed = !_secretRevealed)">
                             @RenderIcon(_secretRevealed ? "eye-off" : "eye", "size-3.5")
-                            <span>@(_secretRevealed ? "Conceal" : "Reveal")</span>
+                            <span>@(_secretRevealed ? Texts.Conceal : Texts.Reveal)</span>
                         </button>
                     }
                     @if (Copy)
                     {
                         <button type="button" class="inline-flex items-center gap-1 rounded-(--klyroo-radius) px-2 py-1 text-xs font-medium text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text)"
-                                aria-label="Copy code" data-slot="code-copy"
+                                aria-label="@Texts.CopyCode" data-slot="code-copy"
                                 @onclick="@(() => CopyToClipboardAsync(raw))">
                             @RenderIcon("copy", "size-3.5")
                         </button>
@@ -1260,7 +1624,7 @@
     private RenderFragment RenderEmpty() =>
         @<div class="flex flex-col items-center justify-center gap-2 rounded-(--klyroo-radius) border border-dashed border-(--klyroo-border-accented) p-6 text-center" data-slot="display-empty">
             @RenderIcon(!string.IsNullOrEmpty(Icon) ? Icon : "inbox", "size-8 text-(--klyroo-text-muted)")
-            <p class="m-0 font-semibold text-(--klyroo-text-highlighted)" data-slot="empty-title">@(Title ?? "Nothing to show")</p>
+            <p class="m-0 font-semibold text-(--klyroo-text-highlighted)" data-slot="empty-title">@(Title ?? Texts.NothingToShow)</p>
             @if (!string.IsNullOrEmpty(Description))
             {
                 <p class="m-0 text-xs text-(--klyroo-text-muted)" data-slot="empty-description">@Description</p>
@@ -1330,7 +1694,7 @@
     }
 
     private RenderFragment RenderAction(DisplayAction act) =>
-        @<KlyButton Label="@act.Label" Href="@act.Href" Color="@act.Color" Variant="@act.Variant" Size="KlySize.Sm"
+        @<KlyButton Label="@act.Label" Href="@act.Href" Target="@act.Target" Color="@act.Color" Variant="@act.Variant" Size="KlySize.Sm"
                    LeadingIcon="@(string.IsNullOrEmpty(act.Icon) ? null : RenderIcon(act.Icon, "size-4"))"
                    OnClick="@(() => act.OnClick.InvokeAsync())" data-slot="display-action" />;
 }
