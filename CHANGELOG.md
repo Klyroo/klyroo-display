@@ -20,6 +20,9 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Fixed
 
+- The control bar of `KlyVideoPlayer` and `KlyAudioPlayer` answers the width of the player itself (container queries): under 672 px (576 px for the audio player) the timeline takes its own full row above the buttons, the volume slider goes under 448 px, the speed and picture-in-picture buttons under 320 px and the time under 240 px. On a phone the bar no longer wraps over the video, the seek slider no longer runs into the play button or the duration, and the centre play button leaves the bar its room. The audio player is a rounded box instead of a pill (still a pill on one row).
+- `KlyFileList` draws the extension when the `Icon` of an item is not an icon the app has (it drew an empty badge), and the generic file icon for a file with no extension and no type; the badges have one minimum width and an idle one a hairline ring, so the names line up and the badge shows on a dark page; the Show more button lines its label up with the rows.
+- The emphasised lines of `KlyCodeBlock` (`HighlightLines`) are filled with a tint of the primary color, visible in light mode where the neutral fill was almost the color of the block.
 - `KlyFilePreviewProvider` traps Tab and Shift+Tab inside its dialog and returns the focus to the element that had it before the overlay opened, the way `KlyModal` does. Before, Tab walked out into the page behind the overlay and closing left the focus on the page body.
 
 ### Added

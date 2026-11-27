@@ -26,7 +26,7 @@
 
     @if (!_playing)
     {
-        <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40 p-4 text-center text-white" data-slot="video-overlay">
+        <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40 p-4 text-center text-white @@max-2xl:pb-24" data-slot="video-overlay">
             @if (IsLocked)
             {
                 <span class="inline-flex size-12 items-center justify-center rounded-full bg-black/70 text-white" data-slot="video-locked-badge">
@@ -37,7 +37,7 @@
             else
             {
                 <button type="button"
-                        class="pointer-events-auto inline-flex size-12 items-center justify-center rounded-full bg-(--klyroo-primary) text-(--klyroo-primary-contrast) shadow-md hover:opacity-95 disabled:opacity-40"
+                        class="pointer-events-auto inline-flex size-12 items-center justify-center rounded-full bg-(--klyroo-primary) text-(--klyroo-primary-contrast) shadow-md hover:opacity-95 disabled:opacity-40 @@max-xs:size-10 @@max-[15rem]:size-8"
                         disabled="@Disabled"
                         aria-label="@Texts.PlayVideo"
                         data-slot="video-start"
@@ -46,7 +46,7 @@
                 </button>
                 @if (MaxPlays > 0)
                 {
-                    <span class="rounded-full bg-black/65 px-2.5 py-0.5 text-xs font-medium tabular-nums" data-slot="video-plays-badge">
+                    <span class="rounded-full bg-black/65 px-2.5 py-0.5 text-xs font-medium tabular-nums @@max-xs:hidden" data-slot="video-plays-badge">
                         @Texts.PlaysLeft(RemainingPlays)
                     </span>
                 }
@@ -54,7 +54,7 @@
         </div>
     }
 
-    <div class="absolute inset-x-0 bottom-0 flex flex-wrap items-center bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white @(Compact ? "gap-1.5 px-2 pb-1.5 pt-4" : "gap-2.5 px-3 pb-2.5 pt-6")" data-slot="media-controls">
+    <div class="absolute inset-x-0 bottom-0 flex flex-wrap items-center bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white @(Compact ? "gap-x-1.5 gap-y-1 px-2 pb-1.5 pt-4" : "gap-x-2.5 gap-y-2 px-3 pb-2.5 pt-6 @max-md:pt-4")" data-slot="media-controls">
         @if (IsLocked)
         {
             <span class="inline-flex items-center gap-1.5 text-xs font-medium" data-slot="media-locked">
@@ -78,12 +78,14 @@
 
             @if (!IsHidden(MediaPlayerControl.Time))
             {
-                <span class="shrink-0 font-mono text-xs tabular-nums text-white/90" data-slot="media-time">
+                <span class="shrink-0 font-mono text-xs tabular-nums text-white/90 @@max-[15rem]:hidden" data-slot="media-time">
                     @KlyAudioPlayer.FormatTime(ClipPosition) / @KlyAudioPlayer.FormatTime(ClipLength)
                 </span>
             }
 
-            <div class="flex @(Compact ? "min-w-16" : "min-w-24") flex-1 items-center" data-slot="media-timeline">
+            <span class="hidden flex-1 @@max-2xl:block" aria-hidden="true"></span>
+
+            <div class="flex @(Compact ? "min-w-16" : "min-w-24") flex-1 items-center @@max-2xl:order-first @@max-2xl:basis-full" data-slot="media-timeline">
                 @if (Seekable)
                 {
                     <input type="range" min="0" max="@ClipLength.ToString("0.##", CultureInfo.InvariantCulture)"
@@ -129,7 +131,7 @@
                 <input type="range" min="0" max="1" step="0.05"
                        value="@Volume.ToString("0.##", CultureInfo.InvariantCulture)"
                        aria-label="@Texts.Volume"
-                       class="h-1.5 @(Compact ? "w-14" : "w-20") shrink-0 cursor-pointer accent-(--klyroo-primary)"
+                       class="hidden h-1.5 @(Compact ? "w-14" : "w-20") shrink-0 cursor-pointer accent-(--klyroo-primary) @@md:block"
                        disabled="@Disabled"
                        data-slot="media-volume"
                        @oninput="OnVolumeInputAsync" />
@@ -138,7 +140,7 @@
             @if (!IsHidden(MediaPlayerControl.Rate) && Rates is { Count: > 1 })
             {
                 <button type="button"
-                        class="inline-flex @(Compact ? "h-6" : "h-7") items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums text-white/90 hover:bg-white/15"
+                        class="hidden @(Compact ? "h-6" : "h-7") items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums text-white/90 hover:bg-white/15 @@xs:inline-flex"
                         aria-label="@Texts.PlaybackSpeed"
                         data-slot="media-rate"
                         @onclick="CycleRateAsync">
@@ -161,7 +163,7 @@
             @if (!IsHidden(MediaPlayerControl.PictureInPicture) && _pictureInPictureSupported && Seekable)
             {
                 <button type="button"
-                        class="inline-flex @(Compact ? "size-6" : "size-7") items-center justify-center rounded-full text-white/90 hover:bg-white/15"
+                        class="hidden @(Compact ? "size-6" : "size-7") items-center justify-center rounded-full text-white/90 hover:bg-white/15 @@xs:inline-flex"
                         aria-label="@Texts.PictureInPicture"
                         aria-pressed="@(_pictureInPicture ? "true" : "false")"
                         data-slot="media-pip"
@@ -313,7 +315,7 @@
     private DisplayTexts Texts => Options.Extension<KlyrooDisplayOptions>().ResolveTexts(CurrentLocale.Code);
 
     private string RootClass =>
-        $"relative overflow-hidden rounded-(--klyroo-radius-md) bg-black text-white shadow-sm {Class}".Trim();
+        $"@container relative w-full overflow-hidden rounded-(--klyroo-radius-md) bg-black text-white shadow-sm {Class}".Trim();
 
     /// <inheritdoc />
     protected override void OnParametersSet()

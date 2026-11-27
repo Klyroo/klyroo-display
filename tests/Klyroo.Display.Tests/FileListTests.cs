@@ -80,6 +80,32 @@ public sealed class FileListTests : BunitContext
     }
 
     [Fact]
+    public void An_icon_the_app_does_not_have_falls_back_to_the_extension_instead_of_an_empty_badge()
+    {
+        var cut = Render(
+            new FileListItem(new FilePreviewFile { Src = "/notes.md" }, Icon: "note", Tone: KlyColor.Info),
+            new FileListItem(new FilePreviewFile { Src = "/b.pdf" }, Icon: "image"));
+
+        var badges = cut.FindAll("[data-slot=file-badge]");
+        Assert.Equal("MD", badges[0].TextContent.Trim());
+        Assert.Empty(badges[0].QuerySelectorAll("svg"));
+        Assert.Equal("info", badges[0].GetAttribute("data-color"));
+        Assert.NotNull(badges[1].QuerySelector("svg"));
+        Assert.Empty(badges[1].QuerySelectorAll("[data-kly-missing-icon]"));
+    }
+
+    [Fact]
+    public void A_file_with_no_extension_and_no_type_gets_the_file_icon_instead_of_a_dash()
+    {
+        var cut = Render(new FileListItem(new FilePreviewFile { Src = "/download", Name = "README" }));
+
+        var badge = cut.Find("[data-slot=file-badge]");
+        Assert.DoesNotContain("—", badge.TextContent);
+        Assert.NotNull(badge.QuerySelector("svg"));
+        Assert.Empty(badge.QuerySelectorAll("[data-kly-missing-icon]"));
+    }
+
+    [Fact]
     public async Task A_click_opens_the_files_of_the_items_at_the_clicked_one()
     {
         SetRendererInfo(new RendererInfo("Server", true));

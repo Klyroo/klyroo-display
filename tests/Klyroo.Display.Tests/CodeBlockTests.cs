@@ -252,7 +252,7 @@ public sealed class CodeBlockTests : BunitContext
     }
 
     [Fact]
-    public void Emphasized_lines_take_a_neutral_fill_and_an_accent_gutter_marker()
+    public void Emphasized_lines_take_an_accent_tinted_fill_and_an_accent_gutter_marker()
     {
         var cut = RenderCode(Sample, p => p.Add(x => x.HighlightLines, [2, new CodeLineRange(4, 5)]));
 
@@ -262,13 +262,13 @@ public sealed class CodeBlockTests : BunitContext
         Assert.Equal(["2", "4", "5"], marked.Where(m => m.On).Select(m => m.Line));
         Assert.All(marked.Where(m => m.On), m =>
         {
-            Assert.Contains("bg-(--klyroo-bg-accented)", m.ClassName);
+            Assert.Contains("bg-(--klyroo-primary)/15", m.ClassName);
             Assert.Contains("border-(--klyroo-primary)", m.ClassName);
         });
         Assert.All(marked.Where(m => !m.On), m =>
         {
             Assert.Contains("border-transparent", m.ClassName);
-            Assert.DoesNotContain("bg-(--klyroo-bg-accented)", m.ClassName);
+            Assert.DoesNotContain("bg-(--klyroo-primary)/15", m.ClassName);
         });
     }
 

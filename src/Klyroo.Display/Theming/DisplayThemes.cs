@@ -26,7 +26,7 @@ internal static class DisplayThemes
             // A line bleeds over the padding of the block so its fill and its gutter marker reach the edges; the 2px border plus the start padding equal that padding.
             .Slot("line", "-mx-3 block w-max min-w-[calc(100%+1.5rem)] border-s-2 ps-2.5 pe-3")
             .Slot("lineIdle", "border-transparent")
-            .Slot("lineHighlighted", "border-(--klyroo-primary) bg-(--klyroo-bg-accented)")
+            .Slot("lineHighlighted", "border-(--klyroo-primary) bg-(--klyroo-primary)/15")
             .Slot("lineNumbered", "before:me-4 before:inline-block before:w-[3ch] before:select-none before:text-end before:text-(--klyroo-text-dimmed) before:content-[attr(data-line)]")
             .Slot("tokenKeyword", CodeRendering.TokenClass(CodeTokenKind.Keyword)!)
             .Slot("tokenString", CodeRendering.TokenClass(CodeTokenKind.String)!)
@@ -57,14 +57,14 @@ internal static class DisplayThemes
             .Slot("list", "m-0 flex list-none flex-col gap-2 p-0")
             .Slot("item", "flex items-center justify-between gap-3")
             .Slot("main", "flex min-w-0 items-center gap-2.5")
-            .Slot("badge", "inline-flex h-6 min-w-8 shrink-0 items-center justify-center rounded-(--klyroo-radius) px-1.5 text-[10px] font-bold uppercase")
-            .Slot("badgeIdle", "bg-(--klyroo-bg-muted) text-(--klyroo-text-highlighted)")
+            .Slot("badge", "inline-flex h-6 min-w-10 shrink-0 items-center justify-center rounded-(--klyroo-radius) px-1.5 text-[10px] font-bold uppercase")
+            .Slot("badgeIdle", "bg-(--klyroo-bg-muted) text-(--klyroo-text-highlighted) ring-1 ring-inset ring-(--klyroo-border)")
             .Slot("badgeTone", "bg-(--kly-color)/10 text-(--kly-color-text)")
             .Slot("badgeIcon", "size-3.5")
             .Slot("body", "flex min-w-0 flex-col")
             .Slot("name", "truncate font-medium text-(--klyroo-text-highlighted) hover:underline")
             .Slot("description", "text-xs text-(--klyroo-text-muted)")
             .Slot("meta", "shrink-0 text-xs text-(--klyroo-text-muted)")
-            .Slot("more", "inline-flex items-center gap-1.5 self-start rounded-(--klyroo-radius) px-2 py-1 text-xs font-medium text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--klyroo-primary)")
+            .Slot("more", "-ms-2 inline-flex items-center gap-1.5 self-start rounded-(--klyroo-radius) px-2 py-1 text-xs font-medium text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--klyroo-primary)")
             .Slot("moreIcon", "size-3.5");
 }

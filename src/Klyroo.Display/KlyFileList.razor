@@ -21,14 +21,20 @@
                 : (file.Size is { } only ? FilePreviewService.FormatFileSize(only, FormatCulture) : null);
             <li class="@_slots["item"]" data-slot="list-item">
                 <div class="@_slots["main"]">
+                    @{
+                        // An icon the app does not have would draw an empty badge: the extension stands in for it, and a file with no extension and no type gets the generic file icon.
+                        var icon = !string.IsNullOrEmpty(item.Icon) && HasIcon(item.Icon) ? item.Icon : null;
+                        var label = icon is null ? FilePreviewService.ExtensionLabel(name, file.Mime) : null;
+                        if (label == NoExtensionLabel) { icon = "file"; label = null; }
+                    }
                     <span class="@_slots["badge"] @(item.Tone is null ? _slots["badgeIdle"] : _slots["badgeTone"])" data-color="@item.Tone?.Value" data-slot="file-badge">
-                        @if (!string.IsNullOrEmpty(item.Icon))
+                        @if (icon is not null)
                         {
-                            @RenderIcon(item.Icon, _slots["badgeIcon"])
+                            @RenderIcon(icon, _slots["badgeIcon"])
                         }
                         else
                         {
-                            @FilePreviewService.ExtensionLabel(name, file.Mime)
+                            @label
                         }
                     </span>
                     <div class="@_slots["body"]">
@@ -56,6 +62,9 @@
 </div>
 
 @code {
+    // What FilePreviewService.ExtensionLabel returns for a name with no extension and no usable type.
+    private const string NoExtensionLabel = "—";
+
     private SlotSet _slots = default!;
     private int _revealedCount;
 
