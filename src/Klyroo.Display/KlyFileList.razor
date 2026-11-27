@@ -11,23 +11,37 @@
         <p class="@_slots["title"]" data-slot="file-list-title">@Title</p>
     }
     <ul class="@_slots["list"]">
-        @foreach (var file in visible)
+        @foreach (var item in visible)
         {
+            var file = item.File;
             var name = file.Name ?? FilePreviewService.FileNameFromUrl(file.Src);
+            var meta = item.Meta ?? (file.UpdatedAt is { } updated ? updated.ToString("d", FormatCulture) : null);
+            var detail = item.Description is { Length: > 0 } text
+                ? (file.Size is { } bytes ? $"{text} · {FilePreviewService.FormatFileSize(bytes, FormatCulture)}" : text)
+                : (file.Size is { } only ? FilePreviewService.FormatFileSize(only, FormatCulture) : null);
             <li class="@_slots["item"]" data-slot="list-item">
                 <div class="@_slots["main"]">
-                    <span class="@_slots["badge"]" data-slot="file-badge">@FilePreviewService.ExtensionLabel(name, file.Mime)</span>
-                    <div class="@_slots["body"]">
-                        <a href="@file.Src" class="@_slots["name"]" data-slot="file-name" @onclick="@(() => Open(file))" @onclick:preventDefault="@CanPreview()">@name</a>
-                        @if (file.Size is { } size)
+                    <span class="@_slots["badge"] @(item.Tone is null ? _slots["badgeIdle"] : _slots["badgeTone"])" data-color="@item.Tone?.Value" data-slot="file-badge">
+                        @if (!string.IsNullOrEmpty(item.Icon))
                         {
-                            <span class="@_slots["description"]" data-slot="file-size">@FilePreviewService.FormatFileSize(size, FormatCulture)</span>
+                            @RenderIcon(item.Icon, _slots["badgeIcon"])
+                        }
+                        else
+                        {
+                            @FilePreviewService.ExtensionLabel(name, file.Mime)
+                        }
+                    </span>
+                    <div class="@_slots["body"]">
+                        <a href="@file.Src" class="@_slots["name"]" data-slot="file-name" @onclick="@(() => Open(item))" @onclick:preventDefault="@CanPreview()">@name</a>
+                        @if (detail is not null)
+                        {
+                            <span class="@_slots["description"]" data-slot="file-description">@detail</span>
                         }
                     </div>
                 </div>
-                @if (file.UpdatedAt is { } updated)
+                @if (meta is not null)
                 {
-                    <span class="@_slots["meta"]" data-slot="file-date">@updated.ToString("d", FormatCulture)</span>
+                    <span class="@_slots["meta"]" data-slot="file-meta">@meta</span>
                 }
             </li>
         }
@@ -45,8 +59,8 @@
     private SlotSet _slots = default!;
     private int _revealedCount;
 
-    /// <summary>The files to list, in order. A file shows its extension, its name (or the last segment of its <c>Src</c>), its size and its date when it has them.</summary>
-    [Parameter] public IReadOnlyList<FilePreviewFile>? Files { get; set; }
+    /// <summary>The files to list, in order. A <see cref="FilePreviewFile"/> converts to an item by itself. A row shows the badge (the extension, or the item <c>Icon</c>), the name (or the last segment of <c>Src</c>), the description and the size, and the item <c>Meta</c> or the date of the file.</summary>
+    [Parameter] public IReadOnlyList<FileListItem>? Files { get; set; }
 
     /// <summary>A title above the list.</summary>
     [Parameter] public string? Title { get; set; }
@@ -69,7 +83,7 @@
         if (Max is { } max && _revealedCount < max) _revealedCount = max;
     }
 
-    private (IReadOnlyList<FilePreviewFile> Visible, int Remaining) ApplyReveal()
+    private (IReadOnlyList<FileListItem> Visible, int Remaining) ApplyReveal()
     {
         var source = Files;
         if (source is null || source.Count == 0) return ([], 0);
@@ -91,7 +105,7 @@
     private bool CanPreview() =>
         Services.GetService(typeof(FilePreviewService)) is FilePreviewService { IsMounted: true } && RendererInfo.IsInteractive;
 
-    private void Open(FilePreviewFile clicked)
+    private void Open(FileListItem clicked)
     {
         if (!CanPreview() || Files is null || Services.GetService(typeof(FilePreviewService)) is not FilePreviewService preview) return;
         var index = 0;
@@ -99,6 +113,6 @@
         {
             if (ReferenceEquals(Files[i], clicked)) { index = i; break; }
         }
-        preview.OpenGallery(Files, new FilePreviewOptions { Index = index });
+        preview.OpenGallery(Files.Select(f => f.File).ToList(), new FilePreviewOptions { Index = index });
     }
 }

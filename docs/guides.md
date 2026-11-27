@@ -92,18 +92,19 @@ Goal: a list of attachments that opens in the preview when clicked.
 <KlyFileList Title="Attachments" Files="_attachments" />
 
 @code {
-    private readonly IReadOnlyList<FilePreviewFile> _attachments =
+    private readonly IReadOnlyList<FileListItem> _attachments =
     [
-        new() { Src = "/files/spec.pdf", Name = "Specification.pdf", Size = 1_572_864 },
-        new() { Src = "/files/metrics.csv", Size = 18_400, UpdatedAt = new DateTimeOffset(2026, 11, 20, 9, 30, 0, TimeSpan.Zero) },
-        new() { Src = "/api/files/8f2c", Name = "Q3 summary", Mime = "application/pdf" },
+        new FileListItem(new FilePreviewFile { Src = "/files/spec.pdf", Name = "Specification.pdf", Size = 1_572_864 },
+            Description: "Version 3", Icon: "lock", Tone: KlyColor.Warning),
+        new FileListItem(new FilePreviewFile { Src = "/files/metrics.csv", Size = 18_400 }, Meta: "Updated today"),
+        new FilePreviewFile { Src = "/api/files/8f2c", Name = "Q3 summary", Mime = "application/pdf" },
     ];
 }
 ```
 
-Each file shows an extension badge, its name (the last segment of `Src` when `Name` is not set), its size and its last-modified date when it has them. A click opens the whole list as a gallery, starting at the clicked file, when a `KlyFilePreviewProvider` is mounted and the page is interactive, with the same `FilePreviewFile` values the service takes (`Content`, `Rendition`, `Details` and the rest). Without a provider, or before the page is interactive, the name is a plain link to `Src`.
+A `FileListItem` is a `FilePreviewFile` plus what the row shows besides it: `Description` (a line under the name, before the size), `Meta` (text at the end of the row, which falls back to the last-modified date of the file), `Icon` (an icon name shown in the badge instead of the extension) and `Tone` (a Klyroo.UI color for the badge, custom colors included). A plain `FilePreviewFile` converts to an item by itself, as the last entry does. Each row shows the badge (the extension of the name, or of `Mime` when the name has none, so the last file above says `PDF`), the name (the last segment of `Src` when `Name` is not set) and the size.
 
-The badge comes from the extension of the name, or from `Mime` when the name has none: the last file above has no extension, so `Mime` gives it `PDF`. Mount `<KlyFilePreviewProvider />` somewhere interactive, see [Getting started](getting-started.md#6-mount-the-file-preview-provider).
+A click opens the files of all the items as a gallery, starting at the clicked one, when a `KlyFilePreviewProvider` is mounted and the page is interactive, with the same `FilePreviewFile` values the service takes (`Content`, `Rendition`, `Details` and the rest). Without a provider, or before the page is interactive, the name is a plain link to `Src`. Mount `<KlyFilePreviewProvider />` somewhere interactive, see [Getting started](getting-started.md#6-mount-the-file-preview-provider).
 
 ## Reveal a long file list a few files at a time
 
@@ -111,6 +112,10 @@ Goal: show three files and let the user load three more per click.
 
 ```razor
 <KlyFileList Title="Documents" Files="_files" Max="3" Step="3" />
+
+@code {
+    private readonly IReadOnlyList<FileListItem> _files = [ /* FilePreviewFile values convert to items */ ];
+}
 ```
 
 `Max` sets how many files show first and `Step` how many each click on Show more adds. Without `Step`, one click shows everything. The gallery that a click opens always holds the whole list, hidden files included. Reveal state lives in the component, so it resets when the component is recreated.

@@ -17,6 +17,12 @@ public sealed record FileListUi : ISlotOverrides
     public string? Main { get; init; }
     /// <summary>Classes merged into the <c>badge</c> slot of <see cref="KlyFileList"/>, after the theme and the app configuration.</summary>
     public string? Badge { get; init; }
+    /// <summary>Classes merged into the <c>badgeIdle</c> slot of <see cref="KlyFileList"/>, after the theme and the app configuration.</summary>
+    public string? BadgeIdle { get; init; }
+    /// <summary>Classes merged into the <c>badgeTone</c> slot of <see cref="KlyFileList"/>, after the theme and the app configuration.</summary>
+    public string? BadgeTone { get; init; }
+    /// <summary>Classes merged into the <c>badgeIcon</c> slot of <see cref="KlyFileList"/>, after the theme and the app configuration.</summary>
+    public string? BadgeIcon { get; init; }
     /// <summary>Classes merged into the <c>body</c> slot of <see cref="KlyFileList"/>, after the theme and the app configuration.</summary>
     public string? Body { get; init; }
     /// <summary>Classes merged into the <c>name</c> slot of <see cref="KlyFileList"/>, after the theme and the app configuration.</summary>
@@ -38,6 +44,9 @@ public sealed record FileListUi : ISlotOverrides
         "item" => Item,
         "main" => Main,
         "badge" => Badge,
+        "badgeIdle" => BadgeIdle,
+        "badgeTone" => BadgeTone,
+        "badgeIcon" => BadgeIcon,
         "body" => Body,
         "name" => Name,
         "description" => Description,

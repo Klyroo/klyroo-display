@@ -35,7 +35,7 @@ Each block is its own component with only the parameters it reads, so the compil
 
 **`KlySecretBlock`** is the same frame with a masked value. While it is masked, the page holds the bullets and the last `VisibleChars` characters only, never the value. It is never highlighted, so a secret does not get colors that would hint at its shape, and its copy button copies the whole value.
 
-**`KlyFileList`** takes `FilePreviewFile` values, the same type the preview service takes. A click calls `OpenGallery` on the injected `FilePreviewService` with the whole list and the clicked index, when a provider is mounted and the page is interactive. Without a mounted provider the list does not read the render mode at all, so it also renders in a test that has not set one.
+**`KlyFileList`** takes `FileListItem` values: a `FilePreviewFile`, the same type the preview service takes, plus an optional description, meta text, icon and tone for the row. A `FilePreviewFile` converts to an item by itself. A click calls `OpenGallery` on the injected `FilePreviewService` with the files of the whole list and the clicked index, when a provider is mounted and the page is interactive. Without a mounted provider the list does not read the render mode at all, so it also renders in a test that has not set one.
 
 The blocks share the theming model of Klyroo.UI. Each theme is a set of named slots with default classes (`KlyrooDisplayOptions.CodeBlock`, `SecretBlock`, `FileList`), the app adds classes in `AddKlyrooDisplay`, an instance adds classes through its `Ui` parameter, and `Class` goes to the root slot last. The component keeps small pieces of UI state itself: whether a secret is revealed and how many files are revealed. These reset when the component is recreated.
 

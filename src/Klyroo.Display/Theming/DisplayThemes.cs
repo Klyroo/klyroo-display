@@ -51,13 +51,16 @@ internal static class DisplayThemes
             .Slot("pre", Pre);
 
     public static ComponentTheme FileList() =>
-        new ComponentTheme("fileList", "root", "title", "list", "item", "main", "badge", "body", "name", "description", "meta", "more", "moreIcon")
+        new ComponentTheme("fileList", "root", "title", "list", "item", "main", "badge", "badgeIdle", "badgeTone", "badgeIcon", "body", "name", "description", "meta", "more", "moreIcon")
             .Slot("root", "flex w-full min-w-0 flex-col gap-2 text-sm text-(--klyroo-text)")
             .Slot("title", "m-0 font-semibold text-(--klyroo-text-highlighted)")
             .Slot("list", "m-0 flex list-none flex-col gap-2 p-0")
             .Slot("item", "flex items-center justify-between gap-3")
             .Slot("main", "flex min-w-0 items-center gap-2.5")
-            .Slot("badge", "inline-flex h-6 min-w-8 shrink-0 items-center justify-center rounded-(--klyroo-radius) bg-(--klyroo-bg-muted) px-1.5 text-[10px] font-bold uppercase text-(--klyroo-text-highlighted)")
+            .Slot("badge", "inline-flex h-6 min-w-8 shrink-0 items-center justify-center rounded-(--klyroo-radius) px-1.5 text-[10px] font-bold uppercase")
+            .Slot("badgeIdle", "bg-(--klyroo-bg-muted) text-(--klyroo-text-highlighted)")
+            .Slot("badgeTone", "bg-(--kly-color)/10 text-(--kly-color-text)")
+            .Slot("badgeIcon", "size-3.5")
             .Slot("body", "flex min-w-0 flex-col")
             .Slot("name", "truncate font-medium text-(--klyroo-text-highlighted) hover:underline")
             .Slot("description", "text-xs text-(--klyroo-text-muted)")

@@ -358,7 +358,7 @@ The `kind` of a `VideoPlayerTrack`.
 
 ## Klyroo.Display
 
-Components (6) · Static classes and extensions (2) · Classes (1) · Records (4)
+Components (6) · Static classes and extensions (2) · Classes (1) · Records (5)
 
 ### Components
 
@@ -449,7 +449,7 @@ A list of files, each with an extension badge, its name, its size and its date. 
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
-| `Files` | `IReadOnlyList<FilePreviewFile>?` | The files to list, in order. A file shows its extension, its name (or the last segment of its `Src`), its size and its date when it has them. |
+| `Files` | `IReadOnlyList<FileListItem>?` | The files to list, in order. A `FilePreviewFile` converts to an item by itself. A row shows the badge (the extension, or the item `Icon`), the name (or the last segment of `Src`), the description and the size, and the item `Meta` or the date of the file. |
 | `Max` | `int?` | The number of files shown before a Show more button (all files when `null`). |
 | `Step` | `int?` | The number of files each click on Show more reveals (all remaining files when `null`). |
 | `Title` | `string?` | A title above the list. |
@@ -702,6 +702,28 @@ The built-in texts of `KlyCodeBlock`, `KlySecretBlock`, `KlyFileList`, `KlyAudio
 | `ZoomIn` (init) | `string` | The zoom in button of an image (`"Zoom in"`). |
 | `ZoomOut` (init) | `string` | The zoom out button of an image (`"Zoom out"`). |
 
+#### `FileListItem`
+
+`Klyroo.Display` · record
+
+A file of a `KlyFileList`: the file the preview opens, and what the row shows besides it.
+
+| Constructor | Description |
+| :--- | :--- |
+| `FileListItem(FilePreviewFile File, string? Description = null, string? Meta = null, string? Icon = null, KlyColor? Tone = null)` | A file of a `KlyFileList`: the file the preview opens, and what the row shows besides it. |
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `Description` (init) | `string?` | A line under the name, before the size. |
+| `File` (init) | `FilePreviewFile` | The file. Its name, size, MIME type and date feed the row, and the whole item list opens as a gallery in the file preview. |
+| `Icon` (init) | `string?` | An icon name shown in the badge instead of the extension. |
+| `Meta` (init) | `string?` | Text at the end of the row. Without it, the last-modified date of the file, when it has one. |
+| `Tone` (init) | `KlyColor?` | A theme color for the badge, custom colors included. |
+
+| Method | Returns | Description |
+| :--- | :--- | :--- |
+| `static FromFile(FilePreviewFile file)` | `FileListItem` | Lists a file with nothing but its own data. |
+
 #### `FileListUi`
 
 `Klyroo.Display` · record
@@ -711,6 +733,9 @@ Per-instance class overrides of `KlyFileList` slots.
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `Badge` (init) | `string?` | Classes merged into the `badge` slot of `KlyFileList`, after the theme and the app configuration. |
+| `BadgeIcon` (init) | `string?` | Classes merged into the `badgeIcon` slot of `KlyFileList`, after the theme and the app configuration. |
+| `BadgeIdle` (init) | `string?` | Classes merged into the `badgeIdle` slot of `KlyFileList`, after the theme and the app configuration. |
+| `BadgeTone` (init) | `string?` | Classes merged into the `badgeTone` slot of `KlyFileList`, after the theme and the app configuration. |
 | `Body` (init) | `string?` | Classes merged into the `body` slot of `KlyFileList`, after the theme and the app configuration. |
 | `Description` (init) | `string?` | Classes merged into the `description` slot of `KlyFileList`, after the theme and the app configuration. |
 | `Item` (init) | `string?` | Classes merged into the `item` slot of `KlyFileList`, after the theme and the app configuration. |

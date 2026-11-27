@@ -122,10 +122,10 @@ Create `Components/Pages/Order.razor`, a page that shows a highlighted query wit
     private const string Query =
         "SELECT id, total\nFROM orders\nWHERE id = 1042\n  AND status = 'paid'\n  AND total > 100;\n";
 
-    private readonly IReadOnlyList<FilePreviewFile> _attachments =
+    private readonly IReadOnlyList<FileListItem> _attachments =
     [
-        new() { Src = "/files/invoice-1042.pdf", Size = 183_204 },
-        new() { Src = "/files/packing-list.csv", Size = 2_048 },
+        new FilePreviewFile { Src = "/files/invoice-1042.pdf", Size = 183_204 },
+        new FileListItem(new FilePreviewFile { Src = "/files/packing-list.csv", Size = 2_048 }, Description: "Items to pack"),
     ];
 
     private void OpenInvoice() =>

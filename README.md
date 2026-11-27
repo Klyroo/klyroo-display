@@ -12,7 +12,7 @@ Some content needs more than markup: code that has to be colored, copied and ann
 
 - **Syntax highlighting**: `KlyCodeBlock` colors C#, JavaScript, TypeScript, JSON, HTML, XML, CSS, SCSS, Less, SQL, Python, Bash and YAML from a typed `CodeLanguage`, with a label, a copy button, optional line numbers and emphasized lines (`HighlightLines`), and the file preview does the same from the file extension. The scanner is `CodeHighlighter` in `Klyroo.Display.Core`: dependency-free, trim and AOT safe, it never throws, and `CodeHighlighter.Highlight(code, language)` returns escaped markup for pages that Blazor does not render.
 - **Secret values**: `KlySecretBlock` masks all but the last characters of a value, with a Reveal toggle and a copy button, and never highlights it.
-- **File list and preview overlay**: `KlyFileList` lists files with an extension badge, a size and a date, and a click opens them as a gallery in the overlay. `KlyFilePreviewProvider` shows PDF, images, video, audio, CSV, Markdown and text in a modal, drawer or fullscreen panel, with keyboard navigation, image zoom and rotation, a details panel and downloads.
+- **File list and preview overlay**: `KlyFileList` lists files (`FileListItem`: a `FilePreviewFile` with an optional description, meta text, icon and tone) with an extension badge, a size and a date, and a click opens them as a gallery in the overlay. `KlyFilePreviewProvider` shows PDF, images, video, audio, CSV, Markdown and text in a modal, drawer or fullscreen panel, with keyboard navigation, image zoom and rotation, a details panel and downloads.
 - **Headless file helpers**: `Klyroo.Display.Core` detects a file kind from its MIME type or extension, parses CSV and TSV (RFC 4180 quoting, delimiter detection) and formats sizes, and it is NativeAOT compatible.
 - **Audio and video players with clip and play-limit rules**: `KlyAudioPlayer` and `KlyVideoPlayer` play a clip window of a file, enforce a play quota and a non-seekable timeline, and report progress and the end of each play through callbacks. Their control bar has volume, speed, captions, picture-in-picture and fullscreen controls, and a compact size.
 - **Themeable like Klyroo.UI**: each block has slots with default classes (`KlyrooDisplayOptions.CodeBlock`, `SecretBlock` and `FileList`) that you extend in `AddKlyrooDisplay`, and a typed `Ui` parameter (`CodeBlockUi`, `SecretBlockUi`, `FileListUi`) for one instance.
@@ -105,10 +105,10 @@ In a Blazor page:
 @code {
     private const string Snippet = "SELECT id, total\nFROM orders\nWHERE status = 'paid'\n  AND total > 100\nORDER BY total DESC;\n";
 
-    private readonly IReadOnlyList<FilePreviewFile> _files =
+    private readonly IReadOnlyList<FileListItem> _files =
     [
-        new() { Src = "/files/spec.pdf", Size = 1_572_864 },
-        new() { Src = "/files/metrics.csv", Size = 18_400 },
+        new FilePreviewFile { Src = "/files/spec.pdf", Size = 1_572_864 },
+        new FileListItem(new FilePreviewFile { Src = "/files/metrics.csv", Size = 18_400 }, Description: "March export"),
     ];
 }
 ```
