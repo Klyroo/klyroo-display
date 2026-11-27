@@ -2,11 +2,11 @@
 
 ## Tutorial
 
-- [Getting started](getting-started.md): install, register, add the stylesheets and build an order page with display blocks and a file preview.
+- [Getting started](getting-started.md): install, register, add the stylesheets and build an order page with a code block, a masked key, a file list and a file preview.
 
 ## How-to guides
 
-- [Guides](guides.md): metrics and meters, secrets, timelines, progressive reveal, file galleries, CSV and Markdown preview, attachment lists, play limits, headless helpers and testing.
+- [Guides](guides.md): code samples, line numbers and emphasized lines, headless highlighting, secrets, attachment lists, file galleries, CSV and Markdown preview, play limits, restyling, headless helpers and testing.
 
 ## Reference
 
@@ -17,4 +17,4 @@
 
 ## Explanation
 
-- [Concepts](concepts.md): the two packages, how `KlyDisplay`, `FilePreviewService` and the media players work, and the design decisions behind them.
+- [Concepts](concepts.md): the two packages, how the code, secret and file list blocks, `FilePreviewService` and the media players work, and the design decisions behind them.

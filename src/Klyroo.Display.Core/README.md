@@ -1,6 +1,6 @@
 # Klyroo.Display.Core
 
-The UI-free half of [Klyroo.Display](https://github.com/klyroo/klyroo-display): file kind detection, a CSV and TSV parser, file size formatting, and the state and models behind the file preview. It has no dependencies, targets .NET 10, and is marked `IsAotCompatible` and `IsTrimmable`, so it runs in APIs, workers, console tools and NativeAOT apps. For the Blazor components, install `Klyroo.Display`, which includes this package.
+The UI-free half of [Klyroo.Display](https://github.com/klyroo/klyroo-display): a syntax highlighter, file kind detection, a CSV and TSV parser, file size formatting, and the state and models behind the file preview. It has no dependencies, targets .NET 10, and is marked `IsAotCompatible` and `IsTrimmable`, so it runs in APIs, workers, console tools and NativeAOT apps. For the Blazor components, install `Klyroo.Display`, which includes this package.
 
 ## Install
 
@@ -18,6 +18,9 @@ Console.WriteLine($"{csv.Rows.Count} rows, delimiter '{csv.Delimiter}', price co
 
 Console.WriteLine(FilePreviewService.DetectKind("report.pdf"));      // Pdf
 Console.WriteLine(FilePreviewService.FormatFileSize(1_572_864));     // 1.5 MB
+
+// Escaped markup with <span data-token="keyword"> and no style, for pages Blazor does not render.
+Console.WriteLine(CodeHighlighter.Highlight("SELECT 1", CodeLanguage.Sql));
 ```
 
 ## Documentation

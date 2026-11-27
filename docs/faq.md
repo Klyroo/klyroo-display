@@ -4,14 +4,14 @@ Troubleshooting, known limitations and common questions. Each problem is explain
 
 ## Troubleshooting
 
-### The block renders but has no styling
+### A component renders but has no styling
 
-**Cause:** `klyroo-display.css` is not loaded. The blocks use Tailwind utility classes, and `klyroo-display.css` holds the compiled set for them.
+**Cause:** `klyroo-display.css` is not loaded. The components use Tailwind utility classes, and `klyroo-display.css` holds the compiled set for them.
 **Fix:** add `<link rel="stylesheet" href="@Assets["_content/Klyroo.Display/klyroo-display.css"]" />` after the two Klyroo.UI stylesheets, see [Getting started](getting-started.md#4-add-imports-and-stylesheets).
 
-### Copy, Show more, Reveal, accordion or action buttons do nothing
+### Copy, Show more or Reveal do nothing
 
-**Cause:** the page is rendered statically. These controls are event handlers, so they only work once the component is interactive. The copy buttons also return silently when the page is not interactive, and swallow a JavaScript error from the Clipboard API, which browsers expose only in secure contexts.
+**Cause:** the page is rendered statically. These controls are event handlers, so they only work once the component is interactive. The copy buttons also return silently when the page is not interactive, and swallow a JavaScript error from the Clipboard API, which browsers expose only in secure contexts. In a file list, a click only follows the link until the page is interactive and a provider is mounted.
 **Fix:** set an interactive render mode on the page or on `<Routes />`, and serve the site over HTTPS (localhost counts as secure).
 
 ### `FilePreviewService.Open` does nothing
@@ -49,25 +49,21 @@ Troubleshooting, known limitations and common questions. Each problem is explain
 **Cause:** the page is not interactive, or the browser refused to play. The players drive their element from `klyroo-display-media.js` once the page is interactive, so under static server rendering the button does nothing. When the browser refuses a play (an autoplay policy, an unsupported format, a missing file), the button goes back to Play, and with `MaxPlays` that play still counts.
 **Fix:** render the page or the player in an interactive render mode, and check the browser console and network tab for the media request.
 
-### A parameter has no effect
+### A code line is not emphasized, or the numbers are missing
 
-**Cause:** `KlyDisplay` has one parameter list for 19 kinds, and a parameter is read only by the kinds its summary names. A misspelled name does not fail the build, because unmatched attributes are forwarded to the root element.
-**Fix:** check the parameter's summary in the [API reference](api-reference.md#klydisplay), and the kind in `Kind`.
+**Cause:** `HighlightLines` counts lines from 1 and an `int` is one line, so `[0]` matches nothing, and a line past the end of the code is ignored. Line numbers need `LineNumbers`, and both options only apply to the text that is rendered, so check that `Code` has the line breaks you expect (a `\n` in the C# string, not a literal backslash).
+**Fix:** count from 1 and use `new CodeLineRange(first, last)` for a run.
 
-### A Meter bar stays in the primary color
+### A new class I added to a slot has no effect
 
-**Cause:** the thresholds apply to the single bar. When `MeterParts` is set, the bar is replaced by segments and the thresholds are ignored. Also `WarningThreshold` and `ErrorThreshold` are percentages of `MeterMax`, not raw values.
-**Fix:** drop `MeterParts`, and express the thresholds as percentages.
-
-### The countdown or timeline output changes between renders
-
-**Cause:** the `countdown` variant of the Date block compares against the current UTC time unless you pass `Now`.
-**Fix:** pass `Now` when the output must be stable, such as in a test or in cached markup.
+**Cause:** `klyroo-display.css` is a compiled set that only contains the classes the library itself uses. A utility you add through `AddKlyrooDisplay` or a `Ui` parameter is in the markup but not in that file.
+**Fix:** use a class the app already compiles, compile your own Tailwind (see the Klyroo.UI documentation), or write a CSS rule for it.
 
 ## Known limitations
 
-- The audio and video players need an interactive render mode, and picture-in-picture and fullscreen depend on the browser. [Platforms](platforms.md#known-limitations) has the full list, which also covers the layouts that are not implemented.
+- The audio and video players need an interactive render mode, and picture-in-picture and fullscreen depend on the browser. [Platforms](platforms.md#known-limitations) has the full list.
 - The built-in texts follow the locale of Klyroo.UI, but only the English and French sets are reviewed by a native speaker; the others are drafts you can correct with `KlyrooDisplayOptions.Texts`.
+- The highlighter is lexical and covers thirteen languages, see [Platforms](platforms.md#known-limitations).
 - The file preview has no renderer for Office files, archives or unknown types, and relies on the browser for PDF.
 - `Klyroo.Display` is not declared NativeAOT compatible. `Klyroo.Display.Core` is.
 
@@ -75,25 +71,21 @@ Troubleshooting, known limitations and common questions. Each problem is explain
 
 ### Can I use Klyroo.Display without Klyroo.UI?
 
-Not the Blazor package: `Klyroo.Display` depends on Klyroo.UI for its theme tokens, `KlyColor`, `KlyButton` and `KlyBadge`. `Klyroo.Display.Core` has no such dependency.
+Not the Blazor package: `Klyroo.Display` depends on Klyroo.UI for its theme tokens, the slot model, `KlyButton` and the icons. `Klyroo.Display.Core` has no such dependency.
 
 ### Does it need Tailwind in my app?
 
 No. `klyroo-display.css` is a compiled stylesheet. If your app compiles Tailwind, follow the Klyroo.UI documentation for its theme import, see [Klyroo.UI](https://github.com/klyroo/klyroo-ui).
 
-### Is `KlyDisplay` a replacement for a data grid or a chart library?
+### Where did KlyDisplay and its blocks go?
 
-No. The table is a plain table of text cells, and the chart kind draws one series of bars or a line (Klyroo.UI's `KlyChart`, with axes, tooltip, keyboard exploration and a data table) and a funnel. It has no multiple series, stacking or zoom. Use it for summaries, and `KlyChart` itself for richer charts.
+`KlyDisplay` was removed: the plain read-only blocks are distinct typed components of Klyroo.UI now. The [changelog](../CHANGELOG.md) maps each former kind to its component, and `KlyCodeBlock` (the Code kind), `KlySecretBlock` (the secret variant of Code) and `KlyFileList` (the files variant of List) stay in this package.
 
 ### Why is my code not colored?
 
-The block colors a code only when `Language` names a supported language (`csharp`, `javascript`, `typescript`, `json`, `html`, `xml`, `css`, `scss`, `less`, `sql`, `python`, `bash`, `yaml`, or an alias such as `cs`, `ts` or `yml`), `Highlight` is not `false`, the variant is not `secret`, and the code is within 100,000 characters and 5,000 lines. Otherwise it renders as plain text. The file preview colors a text file from its extension, so a `Name` or `Src` without a supported extension (`Dockerfile`, `.txt`) stays plain. If colors are missing for a supported language, check that `klyroo-display.css` is loaded, see [The block renders but has no styling](#the-block-renders-but-has-no-styling).
+`KlyCodeBlock` colors a code only when `Language` is set to a `CodeLanguage`, `Highlight` is not `false`, and the code is within 100,000 characters and 5,000 lines. Otherwise it renders as plain text. A language that comes from a string (`"cs"`, `"language-ts"`, a file name) goes through `CodeHighlighter.ResolveLanguage` or `ResolveFileName` first, and gives `null`, which is plain text, when it is not supported. The file preview colors a text file from its extension, so a `Name` or `Src` without a supported extension (`Dockerfile`, `.txt`) stays plain. If colors are missing for a supported language, check that `klyroo-display.css` is loaded, see [A component renders but has no styling](#a-component-renders-but-has-no-styling).
 
-### A schedule event is not on the day I expect
-
-The `schedule` variant places an event on the calendar day of its `Date` in the offset the `DateTimeOffset` carries, not in the offset of the server or the browser. A `DateTimeOffset` built from a UTC value (offset `+00:00`) therefore stays on its UTC day. Convert it with `ToOffset` to the offset you want to show before you pass it. An event without a `Date` goes last under "Unscheduled", and an end that is not after the start is ignored.
-
-### Does the secret variant protect a secret?
+### Does KlySecretBlock protect a secret?
 
 No. It masks the value on screen. The real value is held by the component, and the copy button copies it, so only render secrets that the user is allowed to see.
 
@@ -103,7 +95,7 @@ No. `MarkdownRenderer` returns HTML that the provider inserts as markup. Use a r
 
 ### How do I localize the texts or the dates?
 
-Dates in the `Date` block and timeline dates follow the culture Klyroo.UI resolves, and file sizes accept a `CultureInfo` in `FormatFileSize`. The component labels come from `DisplayTexts`, with one built-in set per locale of Klyroo.UI (`DisplayLocales`): a component shows the set of the locale its Klyroo.UI texts come from, so a user who switches language with `KlyLocaleSelect` gets the labels in that language too. English and French are reviewed; the other sets are drafts. Change the texts of one locale at startup:
+The date of a file in a file list follows the culture Klyroo.UI resolves, and file sizes accept a `CultureInfo` in `FormatFileSize`. The component labels come from `DisplayTexts`, with one built-in set per locale of Klyroo.UI (`DisplayLocales`): a component shows the set of the locale its Klyroo.UI texts come from, so a user who switches language with `KlyLocaleSelect` gets the labels in that language too. English and French are reviewed; the other sets are drafts. Change the texts of one locale at startup:
 
 ```csharp
 builder.Services.AddKlyrooDisplay(d => d.Texts("fr", t => t with

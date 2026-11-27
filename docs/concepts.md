@@ -8,35 +8,36 @@ This page explains how the pieces of Klyroo.Display fit together and why they ar
 Klyroo.Display.Core                          Klyroo.Display
 (no UI dependency, NativeAOT compatible)     (Blazor, builds on Klyroo.UI)
 
+CodeHighlighter, CodeLanguage,               KlyCodeBlock             code, label, copy, line numbers
+CodeToken, CodeLineRange   ─── tokens ─────►   │                      and emphasized lines
+                                             KlySecretBlock           masked value, Reveal, copy
 FilePreviewService   ─── Changed ──────────► KlyFilePreviewProvider   overlay for CurrentFile
   state: Files, CurrentIndex, Options          ▲
   Open / OpenGallery / Next / Previous /       │ injects the same instance
   GoTo / Close                                 │
-  static: DetectKind, ParseCsv,              KlyDisplay               19 block kinds, one component
-          FormatFileSize, ...                  │ Variant="DisplayVariant.Files" opens items in the service
-FilePreviewFile, FilePreviewOptions,         KlyAudioPlayer, KlyVideoPlayer
-ParsedCsvPreview, VideoPlayerTrack, ...        clip, play-limit and seek rules
+  static: DetectKind, ParseCsv,              KlyFileList              opens its files in the service
+          FormatFileSize, ...                KlyAudioPlayer, KlyVideoPlayer
+FilePreviewFile, FilePreviewOptions,           clip, play-limit and seek rules
+ParsedCsvPreview, VideoPlayerTrack, ...
 ```
 
-`Klyroo.Display.Core` holds everything that can be expressed without a renderer: the file and media models, the preview state, kind detection, the CSV parser and size formatting. Because nothing in it touches Blazor, you can unit test it with plain xUnit, call it from an API, and compile it with NativeAOT. `Klyroo.Display` adds the components and the service registration, and references Klyroo.UI for the theme tokens, `KlyColor`, `KlyButton` and `KlyBadge`.
+`Klyroo.Display.Core` holds everything that can be expressed without a renderer: the syntax highlighter, the file and media models, the preview state, kind detection, the CSV parser and size formatting. Because nothing in it touches Blazor, you can unit test it with plain xUnit, call it from an API, and compile it with NativeAOT. `Klyroo.Display` adds the components and the service registration, and references Klyroo.UI for the theme tokens, the slot model, `KlyButton` and the icons.
 
-## KlyDisplay: one component, many kinds
+The plain read-only blocks (alerts, statistics, tables, timelines and the like) are not here: they are components of Klyroo.UI. This package keeps what needs logic of its own, which is highlighting, masking, file preview and media rules.
 
-`KlyDisplay` is a single component whose `Kind` parameter selects one of 19 renderers. All kinds share one parameter list, so a parameter only has an effect on the kinds its documentation names: `Facts` is read by `DisplayKind.Facts`, `MeterValue` by `DisplayKind.Meter`, and so on. The [API reference](api-reference.md#klydisplay) says which kind reads each parameter.
+## The code, secret and file list blocks
 
-A kind can have variants, chosen with the `DisplayVariant` enum: `DisplayVariant.Row` for a statistic, `Pipeline`, `Log` or `Schedule` for a timeline, `Secret` for a code value. A variant that belongs to another kind (`Gallery` on a heading) renders the kind's default layout without an error, and logs a warning in Development. A code value is also highlighted from its `Language` (see below). The item types (`DisplayFact`, `DisplayTimelineItem` and the others) are plain data: records or classes with init-only properties, so you build them in code and pass lists.
+Each block is its own component with only the parameters it reads, so the compiler tells you when a parameter does not belong, and a misspelled name is caught by Razor instead of being forwarded to the root element as an unknown attribute.
 
-The `schedule` variant of a Timeline is an agenda: events are sorted by `DisplayTimelineItem.Date`, grouped by calendar day under a heading (the long date of the resolved culture, prefixed by "Today" or "Tomorrow" relative to `Now`), and each row has a time column (`09:00 – 10:30`, or the "All day" text), a length ("1 h 30 min"), the title, description, actor and icon, and a left rule in the tone color. A day is the calendar day of the event in its own offset. An event that spans several days is listed once, on the day it starts, with the end date in its time range, and an event that lasts whole days says "All day" and its number of days. Events without a `Date` come last under an "Unscheduled" heading, which only appears when there are dated events too. Each day is an `ol` under an `h4` that holds a `time` element, and the times and lengths are `time` elements with `datetime` attributes. `Max` and `Step` cut the sorted list.
+**`KlyCodeBlock`** colors its `Code` according to a `CodeLanguage`. The scanning is done by `CodeHighlighter` in `Klyroo.Display.Core`, a hand-written, dependency-free scanner that splits the code into tokens (keyword, string, number, comment, type, function, property, tag, punctuation) whose texts concatenate to exactly the input, so selecting and copying behave as for plain text. `CodeLanguage` is an enum because the set of languages is closed. A name, an alias or a file extension that comes from outside the program goes through `CodeHighlighter.ResolveLanguage` or `ResolveFileName` once, and gives a `CodeLanguage?` where `null` means plain text. Each colored token is a `span` with a `data-token` attribute and a class from a `token*` slot of the theme, which defaults to a Klyroo.UI semantic text color (`text-(--klyroo-success-text)` for strings and so on), so light and dark mode and custom palettes apply without extra CSS. A missing language, `Highlight="false"` and a code longer than 100,000 characters or 5,000 lines all render plain text.
 
-A Code block colors its text according to `Language`: a name, an alias or a file extension (`csharp`, `cs`, `ts`, `json`, `html`, `sql`, `bash`, `yml`...). The scanning is done by `CodeHighlighter` in `Klyroo.Display.Core`, a hand-written, dependency-free scanner that splits the code into tokens (keyword, string, number, comment, type, function, property, tag, punctuation) whose texts concatenate to exactly the input, so selecting and copying behave as for plain text. Each colored token is a `span` with a `data-token` attribute and a class that uses a Klyroo.UI semantic text color (`text-(--klyroo-success-text)` for strings and so on), so light and dark mode and custom palettes apply without extra CSS. A language that is not supported, `Highlight="false"`, the `secret` variant and a code longer than 100,000 characters or 5,000 lines all render plain text.
+`LineNumbers` and `HighlightLines` (a list of `CodeLineRange`, counted from 1 and inclusive) make the block write one element per line instead of a flat run of tokens. A line keeps its line break inside its element, so the text content, the selection and the copy button still give the code exactly. The numbers are drawn by CSS from `data-line`, and an emphasized line has a neutral fill and an accent border on its start side. A token that spans several lines, such as a block comment, is cut at each line break and keeps its color on every line.
 
-Three features are common to all kinds:
+**`KlySecretBlock`** is the same frame with a masked value. While it is masked, the page holds the bullets and the last `VisibleChars` characters only, never the value. It is never highlighted, so a secret does not get colors that would hint at its shape, and its copy button copies the whole value.
 
-- **Surface**: `Surface` sets a border, background and padding. When it is not set, each kind has a default, for example bordered for facts and tables and plain for text.
-- **Loading**: `Loading="true"` replaces the content with a skeleton, which you can use while the data loads.
-- **Progressive reveal**: `Max` and `Step` hide items behind a Show more button for the list-like kinds.
+**`KlyFileList`** takes `FilePreviewFile` values, the same type the preview service takes. A click calls `OpenGallery` on the injected `FilePreviewService` with the whole list and the clicked index, when a provider is mounted and the page is interactive. Without a mounted provider the list does not read the render mode at all, so it also renders in a test that has not set one.
 
-The component keeps small pieces of UI state itself: whether Alert details are open, which accordion sections are open, whether a secret is revealed, how many items are revealed, whether a Text is expanded. These reset when the component is recreated, and parameters such as `DefaultOpen` are read once, the first time the component receives its parameters.
+The blocks share the theming model of Klyroo.UI. Each theme is a set of named slots with default classes (`KlyrooDisplayOptions.CodeBlock`, `SecretBlock`, `FileList`), the app adds classes in `AddKlyrooDisplay`, an instance adds classes through its `Ui` parameter, and `Class` goes to the root slot last. The component keeps small pieces of UI state itself: whether a secret is revealed and how many files are revealed. These reset when the component is recreated.
 
 ## The file preview flow
 
@@ -70,17 +71,18 @@ The players hold this state and drive their `audio` or `video` element through a
 
 ## Render modes, threading and errors
 
-**Render modes.** The blocks are server-renderable markup, so they appear in static server rendering. Everything that reacts to a click or a key (copy buttons, Show more, Alert details, accordion, secret reveal, action callbacks, the player controls and the preview overlay) needs an interactive render mode. The copy buttons additionally need the browser Clipboard API, reached through JS interop. Details per mode are in [Platforms](platforms.md).
+**Render modes.** The blocks are server-renderable markup, so they appear in static server rendering. Everything that reacts to a click or a key (copy buttons, Show more, the secret Reveal toggle, the player controls and the preview overlay) needs an interactive render mode, and a file in a file list is a plain link until then. The copy buttons additionally need the browser Clipboard API, reached through JS interop. Details per mode are in [Platforms](platforms.md).
 
 **Threading.** `FilePreviewService` is not synchronized. Call its methods from the thread that owns the UI, in Blazor from an event handler or inside `InvokeAsync`. The provider marshals its own re-render with `InvokeAsync`, so a `Changed` raised on another thread does not corrupt the render, but the service state itself is only safe for one caller at a time.
 
-**Errors.** The library prefers to degrade over throwing. `Open` and `OpenGallery` throw `ArgumentNullException` for null arguments and do nothing for an empty gallery. `ParseCsv` accepts null and malformed text and returns what it could read. An unknown `Variant` renders the default layout, and in Development it also logs a warning (`ILogger<KlyDisplay>`, once per component) that names the kind and the variants it knows, because it is usually a typo. The warning is on when `ASPNETCORE_ENVIRONMENT` is `Development`; set `KlyrooDisplayOptions.WarnOnUnknownVariant` to turn it on or off explicitly, which a WebAssembly or MAUI app needs (`d.WarnOnUnknownVariant = builder.HostEnvironment.IsDevelopment()`). A JavaScript error from the clipboard call is swallowed, so a blocked clipboard does not break the page. The models validate nothing: a number such as a negative `Start` is clamped, not rejected.
+**Errors.** The library prefers to degrade over throwing. `Open` and `OpenGallery` throw `ArgumentNullException` for null arguments and do nothing for an empty gallery. `ParseCsv` accepts null and malformed text and returns what it could read, and `CodeHighlighter.Tokenize` never throws whatever the input. A JavaScript error from the clipboard call is swallowed, so a blocked clipboard does not break the page. The models validate nothing: a number such as a negative `Start` is clamped, not rejected.
 
 ## Design decisions and trade-offs
 
-- **One component with a large parameter list** keeps the surface small and uniform, since adding a kind adds no new component to learn, but it means a parameter can be set on a kind that ignores it, and a misspelled parameter name does not fail the build: unmatched attributes are forwarded to the root element. Read the summary in the API reference when a parameter seems to do nothing.
-- **String variants** avoid one enum per kind and let a variant be added without a breaking change, at the cost of no compile-time check. A typo falls back to the default layout.
-- **Display data as strings** (`Value`, `Delta`, `DisplayFact.Value`) leaves formatting, currency and culture to your code, so the library never guesses a format. Dates in the `Date` kind use the culture resolved by Klyroo.UI.
+- **One component per block, with typed parameters** costs a few more components to learn than a single configurable one, but each has a short parameter list, an enum or a typed value where the set is closed (`CodeLanguage`, `MediaPreload`, `VideoTrackKind`), and no parameter that only another block reads.
+- **The scanner is lexical, not a parser**, so it needs no grammar files, no regular expressions and no reflection, which keeps it small, safe to trim and compile ahead of time, and fast. The price is that a contextual keyword used as a name can be colored as a keyword.
+- **Line elements only when asked for.** A flat run of tokens is the lightest markup and the simplest to select, so the block only splits into lines when numbers or emphasis need an element per line.
+- **Display data as strings** (`Label`, the code itself) leaves formatting to your code, so the library never guesses a format. Dates in a file list use the culture resolved by Klyroo.UI.
 - **The preview takes content instead of fetching it**, as described above. The trade-off is that you load CSV and text yourself.
-- **A service plus a provider instead of a component per file** lets any code, including a list item deep in the tree, open a preview without owning the overlay. The cost is the shared-scope requirement.
-- **Precompiled stylesheet**: `klyroo-display.css` is a compiled Tailwind build of the classes the blocks use, so apps without Tailwind need no build step. It is a second stylesheet to load next to the Klyroo.UI ones.
+- **A service plus a provider instead of a component per file** lets any code, including a file list deep in the tree, open a preview without owning the overlay. The cost is the shared-scope requirement.
+- **Precompiled stylesheet**: `klyroo-display.css` is a compiled Tailwind build of the classes the components use, so apps without Tailwind need no build step. It is a second stylesheet to load next to the Klyroo.UI ones, and a class you add through a theme or `Ui` needs your own Tailwind build or CSS.

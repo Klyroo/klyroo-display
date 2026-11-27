@@ -2,160 +2,118 @@
 
 Task-oriented recipes. Each one is complete and compiled against the current code. They assume the setup from [Getting started](getting-started.md): `AddKlyrooDisplay()` is registered, the namespaces are imported and the stylesheets are loaded.
 
-- [Show a metric with a trend and a threshold meter](#show-a-metric-with-a-trend-and-a-threshold-meter)
+- [Highlight a code sample](#highlight-a-code-sample)
+- [Number the lines and emphasize some of them](#number-the-lines-and-emphasize-some-of-them)
+- [Highlight code outside Blazor](#highlight-code-outside-blazor)
 - [Mask a secret and let the user reveal it](#mask-a-secret-and-let-the-user-reveal-it)
-- [Show progress and a deadline](#show-progress-and-a-deadline)
-- [Compare two periods in a breakdown](#compare-two-periods-in-a-breakdown)
-- [Reveal a long list a few items at a time](#reveal-a-long-list-a-few-items-at-a-time)
+- [Open files from an attachment list](#open-files-from-an-attachment-list)
+- [Reveal a long file list a few files at a time](#reveal-a-long-file-list-a-few-files-at-a-time)
 - [Preview a gallery with a converted Office document](#preview-a-gallery-with-a-converted-office-document)
 - [Preview CSV, Markdown and text that you already hold](#preview-csv-markdown-and-text-that-you-already-hold)
-- [Open files from an attachment list](#open-files-from-an-attachment-list)
 - [Limit how many times a clip can be started](#limit-how-many-times-a-clip-can-be-started)
 - [Detect file kinds and parse CSV on the server](#detect-file-kinds-and-parse-csv-on-the-server)
+- [Restyle a block](#restyle-a-block)
 - [Translate the built-in texts](#translate-the-built-in-texts)
 - [Test your usage](#test-your-usage)
 
-## Show a metric with a trend and a threshold meter
-
-Goal: a revenue figure with a change badge and a sparkline, and a storage meter that changes color as it fills.
-
-```razor
-<KlyDisplay Kind="DisplayKind.Stat" Title="Monthly revenue" Value="148,900" Unit="EUR"
-            Delta="+14.2%" DeltaDirection="DisplayDeltaDirection.Up" Trend="_trend" Description="Compared to October" />
-
-<KlyDisplay Kind="DisplayKind.Meter" Title="Storage" MeterValue="46" MeterMax="50"
-            WarningThreshold="75" ErrorThreshold="90" Description="46 of 50 GB used" />
-
-@code {
-    private readonly double[] _trend = [102, 118, 134, 149];
-}
-```
-
-`Delta` is shown as given, so format the number yourself. `DeltaDirection` only chooses the color (`Up` is green, `Down` is red, `Flat` is neutral) and does not compare anything. The meter thresholds are percentages of `MeterMax`: here 46 of 50 is 92 percent, past the 90 percent error threshold, so the bar is red. The error threshold wins when both are crossed.
-
-## Mask a secret and let the user reveal it
-
-Goal: show an API key as `••••••••3210`, with a Reveal button and a copy button.
-
-```razor
-<KlyDisplay Kind="DisplayKind.Code" Variant="DisplayVariant.Secret" Title="API key" Value="@ApiKey" VisibleChars="4" />
-
-@code {
-    [Parameter, EditorRequired] public string ApiKey { get; set; } = "";
-}
-```
-
-The block shows eight bullets followed by the last `VisibleChars` characters (4 by default). A value that is not longer than `VisibleChars` is fully masked. Reveal and copy need an interactive render mode.
-
-The mask is a display feature and does not protect the value. In Interactive Server the value stays in server memory, but in WebAssembly it is in the browser's memory, and the copy button copies the real value. Do not send a secret to a client that must not hold it.
-
 ## Highlight a code sample
 
-Goal: show a snippet with syntax colors and a copy button.
+Goal: show a snippet with syntax colors, a label and a copy button.
 
 ```razor
-<KlyDisplay Kind="DisplayKind.Code" Language="csharp" Value="@Snippet" />
+<KlyCodeBlock Code="@Snippet" Language="CodeLanguage.CSharp" Label="Order.cs" />
 
 @code {
     private const string Snippet = "public record Order(int Id) { public string Label => $\"Order {Id}\"; }";
 }
 ```
 
-`Language` takes a name, an alias or a file extension: `csharp`, `javascript`, `typescript`, `json`, `html`, `xml`, `css`, `scss`, `less`, `sql`, `python`, `bash` and `yaml` (`cs`, `ts`, `yml`, `sh`... also work), and `CodeHighlighter.Languages` lists the canonical names. The text of the block stays plain text: selecting it and the copy button give the code as it is. An unsupported language, `Highlight="false"`, the `secret` variant, and a code over 100,000 characters or 5,000 lines render without colors. The file preview does the same for text files, from the extension of the file name.
+`Language` is a `CodeLanguage`: `Bash`, `CSharp`, `Css`, `Html`, `JavaScript`, `Json`, `Less`, `Python`, `Scss`, `Sql`, `TypeScript`, `Xml` or `Yaml` (`CodeHighlighter.Languages` lists them). Without a `Language` the code is plain text, and `Label` defaults to the name of the language, or "Code". The text of the block stays plain text: selecting it and the copy button give the code as it is, and markup in the code is escaped. `Highlight="false"` and a code over 100,000 characters or 5,000 lines render without colors. The file preview highlights text files the same way, from the extension of the file name.
 
-You can call the scanner yourself, without any UI, with `CodeHighlighter.Tokenize(code, "sql")`: it returns tokens with a `Kind` and a `Text`, and the texts concatenate to exactly the code.
-
-## Show an agenda
-
-Goal: list the events of a few days, with their time range, length and the current one marked.
+When the language comes from outside the program, such as a Markdown fence (`language-js`), a configuration value or a file name, resolve it first. A name that is not supported gives `null`, which is plain text:
 
 ```razor
-<KlyDisplay Kind="DisplayKind.Timeline" Variant="DisplayVariant.Schedule" TimelineItems="_events" Now="_now" />
+<KlyCodeBlock Code="@file.Content" Language="CodeHighlighter.ResolveFileName(file.Name)" Label="@file.Name" />
+```
+
+`ResolveLanguage` takes a name, an alias or a file extension (`csharp`, `cs`, `ts`, `yml`, `.sh`, `language-py`, ignoring case) and `ResolveFileName` takes a file name or a URL.
+
+## Number the lines and emphasize some of them
+
+Goal: show a query with line numbers, and draw the eye to two of its lines in a tutorial.
+
+```razor
+<KlyCodeBlock Code="@Query" Language="CodeLanguage.Sql" LineNumbers
+              HighlightLines="@([2, new CodeLineRange(4, 5)])" />
 
 @code {
-    private static readonly TimeSpan Paris = TimeSpan.FromHours(1);
-    private readonly DateTimeOffset _now = new(2026, 3, 12, 9, 30, 0, Paris);
+    private const string Query = "SELECT id, total\nFROM orders\nWHERE status = 'paid'\n  AND total > 100\n  AND shipped_at IS NULL;\n";
+}
+```
 
-    private readonly IReadOnlyList<DisplayTimelineItem> _events =
+`HighlightLines` is a list of `CodeLineRange`, counted from 1 and inclusive at both ends: `2` is line 2 (an `int` converts to a one-line range) and `new CodeLineRange(4, 5)` is lines 4 and 5. An emphasized line gets a neutral fill and an accent marker in the gutter, and carries `data-highlighted="true"`. Lines past the end of the code are ignored. `LineNumbers` draws the numbers with CSS (`content: attr(data-line)`), so selecting and copying the code never picks them up. Either option makes the block write one element per line (`data-slot="code-line"`, with its number in `data-line`); without them the code is a flat run of tokens. Each line keeps its line break, so the text content is still exactly the code.
+
+## Highlight code outside Blazor
+
+Goal: color a snippet in an e-mail, a static page or a PDF, with no component.
+
+```csharp
+using Klyroo.Display;
+
+var html = CodeHighlighter.Highlight("SELECT 1 -- one", CodeLanguage.Sql);
+// <span data-token="keyword">SELECT</span> <span data-token="number">1</span> <span data-token="comment">-- one</span>
+```
+
+`Highlight` returns markup that is safe to place inside an element: every character of the code is escaped, so a `<script>` in the code stays text. Text with a category is wrapped in `<span data-token="keyword">` (`keyword`, `string`, `number`, `comment`, `type`, `function`, `property`, `tag` or `punctuation`), and the rest is bare. The spans carry no style, so you color them with your own CSS on `[data-token]`.
+
+For your own rendering, `CodeHighlighter.Tokenize(code, language)` returns `CodeToken` values with a `CodeTokenKind` and a `Text`. The texts concatenate to exactly the code. Both methods live in `Klyroo.Display.Core`, they never throw, and they work in a NativeAOT app.
+
+## Mask a secret and let the user reveal it
+
+Goal: show an API key as `••••••••3210`, with a Reveal button and a copy button.
+
+```razor
+<KlySecretBlock Label="API key" Value="@ApiKey" VisibleChars="4" />
+
+@code {
+    [Parameter, EditorRequired] public string ApiKey { get; set; } = "";
+}
+```
+
+The block shows eight bullets followed by the last `VisibleChars` characters (4 by default). A value that is not longer than `VisibleChars` is fully masked. While it is masked, only the bullets and those characters are in the page. Reveal and copy need an interactive render mode, so in static rendering the secret stays masked. The copy button copies the whole value, even while it is masked, and a secret is never highlighted.
+
+The mask is a display feature and does not protect the value. In Interactive Server the value stays in server memory, but in WebAssembly it is in the browser's memory, and the copy button copies the real value. Do not send a secret to a client that must not hold it.
+
+## Open files from an attachment list
+
+Goal: a list of attachments that opens in the preview when clicked.
+
+```razor
+<KlyFileList Title="Attachments" Files="_attachments" />
+
+@code {
+    private readonly IReadOnlyList<FilePreviewFile> _attachments =
     [
-        new("Standup", Date: new(2026, 3, 12, 9, 0, 0, Paris), EndDate: new(2026, 3, 12, 9, 30, 0, Paris), State: DisplayTimelineState.Current),
-        new("Design review", "Bring the mockups", Date: new(2026, 3, 12, 14, 0, 0, Paris), EndDate: new(2026, 3, 12, 15, 30, 0, Paris), ActorName: "Alice"),
-        new("Conference", Date: new(2026, 3, 14, 0, 0, 0, Paris), EndDate: new(2026, 3, 16, 0, 0, 0, Paris)),
-        new("Book the venue"),
+        new() { Src = "/files/spec.pdf", Name = "Specification.pdf", Size = 1_572_864 },
+        new() { Src = "/files/metrics.csv", Size = 18_400, UpdatedAt = new DateTimeOffset(2026, 11, 20, 9, 30, 0, TimeSpan.Zero) },
+        new() { Src = "/api/files/8f2c", Name = "Q3 summary", Mime = "application/pdf" },
     ];
 }
 ```
 
-The events are sorted by `Date` and grouped by day; the first day reads "Today" because `Now` is that day (pass `Now` for a stable output, it defaults to the current UTC time). The standup shows `9:00 AM – 9:30 AM` and `30 min` in the format of the current locale, the review `1 h 30 min`, and the conference, which starts at midnight and ends at midnight three days later, says "All day" and "2 days": an end at midnight is excluded, as in calendar files (iCal), so the 14th to the 16th at midnight is two days, the 14th and the 15th. An end at 23:59 includes its day. The last event has no date, so it goes under "Unscheduled".
+Each file shows an extension badge, its name (the last segment of `Src` when `Name` is not set), its size and its last-modified date when it has them. A click opens the whole list as a gallery, starting at the clicked file, when a `KlyFilePreviewProvider` is mounted and the page is interactive, with the same `FilePreviewFile` values the service takes (`Content`, `Rendition`, `Details` and the rest). Without a provider, or before the page is interactive, the name is a plain link to `Src`.
 
-`EndDate` is optional: without it only the start time shows. An end that is not after the start is ignored. An event that ends on another day stays under its start day and shows the end date in its range. Each date is shown in its own offset, so an event that crosses a change to or from daylight saving time keeps the local times it was given. `Time` replaces the computed range with your own text. In this variant an event without a `State` is a normal event, and only `Done` is muted and `Current` is emphasized and gets `aria-current`. `Max` and `Step` apply to the sorted list.
+The badge comes from the extension of the name, or from `Mime` when the name has none: the last file above has no extension, so `Mime` gives it `PDF`. Mount `<KlyFilePreviewProvider />` somewhere interactive, see [Getting started](getting-started.md#6-mount-the-file-preview-provider).
 
-## Show progress and a deadline
+## Reveal a long file list a few files at a time
 
-Goal: a row of order stages with the current one marked, and a countdown to a due date.
-
-```razor
-<KlyDisplay Kind="DisplayKind.Timeline" Variant="DisplayVariant.Pipeline" TimelineItems="_steps" />
-<KlyDisplay Kind="DisplayKind.Date" Variant="DisplayVariant.Countdown" Title="Invoice due" DateValue="_due" Now="_now" />
-
-@code {
-    private readonly DateTimeOffset _now = new(2026, 11, 25, 12, 0, 0, TimeSpan.Zero);
-    private readonly DateTimeOffset _due = new(2026, 11, 28, 0, 0, 0, TimeSpan.Zero);
-
-    private readonly IReadOnlyList<DisplayTimelineItem> _steps =
-    [
-        new("Ordered", Time: "24 Nov"),
-        new("Packed", Time: "25 Nov", State: DisplayTimelineState.Current),
-        new("Delivered", State: DisplayTimelineState.Upcoming),
-    ];
-}
-```
-
-A timeline item without a `State` counts as `Done`, so set the current and upcoming ones explicitly. `Time` is displayed as given. The countdown compares calendar days between `DateValue` and `Now`, says "In 3 days" here, and shows the title "Invoice due" as a caption under it. `Now` defaults to the current UTC time, so pass it when the output must be stable, for example in a test or when a server renders a page that is cached.
-
-## Compare two periods in a breakdown
-
-Goal: this year's costs next to last year's, with a note on one line and a discount in green.
+Goal: show three files and let the user load three more per click.
 
 ```razor
-<KlyDisplay Kind="DisplayKind.Breakdown" Title="Costs" CompareColumns="@(("2026", "2025"))"
-            BreakdownLines="_lines" BreakdownTotal="_total" />
-
-@code {
-    private readonly IReadOnlyList<DisplayBreakdownLine> _lines =
-    [
-        new("Licenses", "€9,600", CompareValue: "€8,400", Detail: "40 seats"),
-        new("Support", "€1,200", CompareValue: "€1,200"),
-        new("Loyalty discount", "-€500", Tone: KlyColor.Success, Chip: new DisplayChip("New")),
-    ];
-
-    private readonly DisplayBreakdownLine _total = new("Total", "€10,300", CompareValue: "€9,600");
-}
+<KlyFileList Title="Documents" Files="_files" Max="3" Step="3" />
 ```
 
-`CompareColumns` names the two amount columns: `Value` goes under the first and `CompareValue` under the second, for the lines and the total. The discount has no previous amount, so its second column shows a dash. A `CompareValue` on any line also switches the block to two columns, just without the header row. `Detail` is a smaller line under the label, `Chip` a badge after it, and `Tone` colors the amount with a theme color.
-
-## Reveal a long list a few items at a time
-
-Goal: show three orders and let the user load three more per click.
-
-```razor
-<KlyDisplay Kind="DisplayKind.Record" Title="Recent orders" Count="@_orders.Count.ToString()"
-            Records="_orders" Max="3" Step="3" />
-
-@code {
-    private readonly IReadOnlyList<DisplayRecordItem> _orders =
-    [
-        new() { Reference = "ORD-1042", Title = "Acme Corp", Trailing = "EUR 1,240.00", Chip = new DisplayChip("Paid", KlyColor.Success) },
-        new() { Reference = "ORD-1041", Title = "Globex", Trailing = "EUR 310.50", Chip = new DisplayChip("Pending", KlyColor.Warning) },
-        new() { Reference = "ORD-1040", Title = "Initech", Trailing = "EUR 87.00" },
-        new() { Reference = "ORD-1039", Title = "Umbrella", Trailing = "EUR 2,450.00" },
-        new() { Reference = "ORD-1038", Title = "Hooli", Trailing = "EUR 640.00" },
-    ];
-}
-```
-
-`Max` sets how many items show first and `Step` how many each click adds. Without `Step`, one click shows everything. `Max` applies to a flat facts list, tables, records, lists and timelines. Reveal state lives in the component, so it resets when the component is recreated.
+`Max` sets how many files show first and `Step` how many each click on Show more adds. Without `Step`, one click shows everything. The gallery that a click opens always holds the whole list, hidden files included. Reveal state lives in the component, so it resets when the component is recreated.
 
 ## Preview a gallery with a converted Office document
 
@@ -226,26 +184,6 @@ Markdown is shown as source unless you give the provider a `MarkdownRenderer`, a
 
 The CSV table shows the first 1,000 rows, then says so in its footer.
 
-## Open files from an attachment list
-
-Goal: a list of attachments that opens in the preview when clicked.
-
-```razor
-<KlyDisplay Kind="DisplayKind.List" Variant="DisplayVariant.Files" Title="Attachments" ListItems="_attachments" />
-
-@code {
-    private readonly IReadOnlyList<DisplayListItem> _attachments =
-    [
-        new() { Text = "Specification", Href = "/files/spec.pdf", FileName = "spec.pdf", FileSize = 1_572_864 },
-        new() { Text = "Metrics", Href = "/files/metrics.csv", FileName = "metrics.csv", FileSize = 18_400, MimeType = "text/csv" },
-    ];
-}
-```
-
-In the `files` variant each item gets an extension badge and its size, and a click opens all the items that have an `Href` as a gallery, starting at the clicked one, when a provider is mounted and the page is interactive. Without a provider, or before the page is interactive, the link navigates to the `Href` as usual. Give every item an `Href`: items without one are left out of the gallery, which would shift the index of the ones after them.
-
-`MimeType` helps when the name has no extension. `FileName` is the name used for the badge and for the preview, and it defaults to `Text`.
-
 ## Limit how many times a clip can be started
 
 Goal: a listening exercise that lets the learner start a 30-second extract twice, without seeking.
@@ -314,6 +252,25 @@ app.MapPost("/preview/csv", async (HttpRequest request) =>
 
 `ParseCsv` never throws on malformed input: an unterminated quote reads to the end of the text. It keeps at most `maxRows` data rows (1,000 by default) and sets `Truncated` when there were more. Rows are not padded, so a row can be shorter or longer than the header.
 
+## Restyle a block
+
+Goal: change the look of the code block for the whole app, and of one instance.
+
+```csharp
+builder.Services.AddKlyrooDisplay(d =>
+{
+    d.CodeBlock.Slot("label", "tracking-wide");
+    d.CodeBlock.Slot("tokenKeyword", "font-semibold text-(--klyroo-primary-text)");
+});
+```
+
+```razor
+<KlyCodeBlock Code="@Snippet" Language="CodeLanguage.CSharp"
+              Class="mt-8" Ui="@(new CodeBlockUi { Pre = "rounded-none", TokenString = "text-(--klyroo-warning-text)" })" />
+```
+
+The blocks follow the slot model of Klyroo.UI. `KlyrooDisplayOptions.CodeBlock`, `SecretBlock` and `FileList` are themes with named slots (for the code block: `root`, `header`, `label`, `copy`, `pre`, `line`, `lineHighlighted`, `lineNumbered` and a `token*` slot per token category), and the classes you add are merged after the defaults, the last class winning. `CodeBlockUi`, `SecretBlockUi` and `FileListUi` carry the same slots for one instance, and `Class` goes to the root slot last. The themes become read-only when the first component renders, so change them in `AddKlyrooDisplay`. Write every class in full: `klyroo-display.css` only contains the classes the library itself uses, so a new utility needs your own Tailwind build (see the Klyroo.UI documentation) or a CSS rule.
+
 ## Translate the built-in texts
 
 Goal: change the labels, counters and accessible names that the components write themselves, in one language.
@@ -373,7 +330,7 @@ public sealed class CsvPreviewTests
 }
 ```
 
-For components, use [bUnit](https://bunit.dev). Register `AddKlyrooDisplay()` on `Services` before rendering. A test that renders a player also needs `JSInterop.SetupModule("./_content/Klyroo.Display/klyroo-display-media.js").Mode = JSRuntimeMode.Loose;`, because the players import that module once interactive. Select elements by their `data-slot` attributes, which the blocks and controls expose:
+For components, use [bUnit](https://bunit.dev). Register `AddKlyrooDisplay()` on `Services` before rendering. A test that renders a player also needs `JSInterop.SetupModule("./_content/Klyroo.Display/klyroo-display-media.js").Mode = JSRuntimeMode.Loose;`, because the players import that module once interactive. Select elements by their `data-slot` attributes, which the components expose:
 
 ```csharp
 using Bunit;
@@ -391,16 +348,16 @@ public sealed class DisplayComponentTests : BunitContext
     }
 
     [Fact]
-    public void Meter_turns_to_the_error_tone_past_its_threshold()
+    public void Emphasized_lines_are_marked_and_the_text_stays_the_code()
     {
-        var cut = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Meter)
-            .Add(x => x.MeterValue, 46)
-            .Add(x => x.MeterMax, 50)
-            .Add(x => x.WarningThreshold, 75)
-            .Add(x => x.ErrorThreshold, 90));
+        const string code = "SELECT 1\nFROM t\n";
+        var cut = Render<KlyCodeBlock>(p => p
+            .Add(x => x.Code, code)
+            .Add(x => x.Language, CodeLanguage.Sql)
+            .Add(x => x.HighlightLines, [2]));
 
-        Assert.Equal("error", cut.Find("[data-slot=display-meter]").GetAttribute("data-tone"));
+        Assert.Equal("true", cut.FindAll("[data-slot=code-line]")[1].GetAttribute("data-highlighted"));
+        Assert.Equal(code, cut.Find("[data-slot=code-value]").TextContent);
     }
 
     [Fact]

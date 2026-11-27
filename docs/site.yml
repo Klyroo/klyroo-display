@@ -6,7 +6,7 @@
 title: Klyroo.Display
 
 # The line under the title on the home page. Without it: the first paragraph of README.md.
-tagline: Read-only display blocks, audio and video control bars, and a file preview overlay for Blazor
+tagline: Code highlighting, file preview and media players for Blazor
 
 # The command next to the title on the home page.
 install: dotnet add package Klyroo.Display --prerelease
@@ -18,10 +18,10 @@ packages:
 
 # The home page. headline is two lines, the second in the accent color; lead is the paragraph under it. Without them: the title and the tagline.
 headline: |
-  Read-only blocks
-  from typed models.
+  Code, files
+  and media.
 lead: >-
-  KlyDisplay renders statistics, tables, timelines, code values and more from typed models through one component, and a file preview overlay opens PDFs, images, video, audio, CSV, Markdown and text.
+  Highlight code in thirteen languages with line numbers and emphasized lines, mask a secret until it is revealed, and open PDFs, images, video, audio, CSV, Markdown and text in a file preview overlay, next to audio and video players with clip and play-limit rules.
 
 # The accent of the site (#rrggbb): buttons, links, marks and the second line of the headline. The text variants that pass the contrast rules in light and
 # dark mode are computed from it. Without it: the color of the library in klyroo-stack/docs-site/Klyroo.Docs.Site/libraries.yml.

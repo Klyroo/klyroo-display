@@ -4,7 +4,7 @@
 
 ## Klyroo.Display.Core
 
-Static classes and extensions (1) · Classes (4) · Records (4) · Structs (1) · Enums (6)
+Static classes and extensions (1) · Classes (4) · Records (4) · Structs (2) · Enums (7)
 
 ### Static classes and extensions
 
@@ -21,14 +21,17 @@ A dependency-free syntax highlighter: it splits source code into `CodeToken` sli
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `static Languages` | `IReadOnlyList<string>` | The canonical names of the supported languages, in alphabetical order. |
+| `static Languages` | `IReadOnlyList<CodeLanguage>` | Every supported language, in alphabetical order of `CodeHighlighter.Name`. |
 
 | Method | Returns | Description |
 | :--- | :--- | :--- |
-| `static CanHighlight(string? code, string? language)` | `bool` | Whether `CodeHighlighter.Tokenize` would highlight this code: the language is supported and the code is within the size caps. |
-| `static ResolveFileName(string? fileNameOrUrl)` | `string?` | Maps a file name or URL to the canonical name of a supported language, from its extension. |
-| `static ResolveLanguage(string? languageOrExtension)` | `string?` | Maps a language name, an alias or a file extension to the canonical name of a supported language. |
-| `static Tokenize(string? code, string? language)` | `IReadOnlyList<CodeToken>` | Splits source code into tokens. |
+| `static CanHighlight(string? code, CodeLanguage? language)` | `bool` | Whether `CodeHighlighter.Tokenize` would highlight this code: the language is set and the code is within the size caps. |
+| `static Highlight(string code, CodeLanguage language)` | `string` | Highlights a code as HTML-safe markup, for a page that is not rendered by Blazor (an e-mail, a static site, a PDF). Text that has a category is wrapped in `<span data-token="keyword">` (`keyword`, `string`, `number`, `comment`, `type`, `function`, `property`, `tag` or `punctuation`), and plain text is bare. Every character of the code is escaped, so the result can be placed inside an element as it is. The spans carry no style: color them with your own CSS on `[data-token]`. |
+| `static Name(CodeLanguage language)` | `string` | The canonical lowercase name of a language (`csharp`, `typescript`), as it is written in a `language-` class and a code block label. |
+| `static ResolveFileName(string? fileNameOrUrl)` | `CodeLanguage?` | Maps a file name or URL to a `CodeLanguage`, from its extension. |
+| `static ResolveLanguage(string? languageOrExtension)` | `CodeLanguage?` | Maps a language name, an alias or a file extension, which come from outside the program (a Markdown fence, a file name), to a `CodeLanguage`. |
+| `static Tokenize(string? code, CodeLanguage? language)` | `IReadOnlyList<CodeToken>` | Splits source code into tokens. |
+| `static TokenName(CodeTokenKind kind)` | `string` | The value of the `data-token` attribute of a token category (`keyword`, `string`...); `plain` for `CodeTokenKind.Plain`. |
 
 ### Classes
 
@@ -201,6 +204,27 @@ A subtitle or caption track of a video, rendered as a `track` element.
 
 ### Structs
 
+#### `CodeLineRange`
+
+`Klyroo.Display` · struct
+
+A run of lines of a code, counted from 1 and inclusive at both ends, such as the lines a code block emphasizes. A single line converts implicitly from an `Int32`, so `[3, new CodeLineRange(6, 9)]` is lines 3 and 6 to 9.
+
+| Constructor | Description |
+| :--- | :--- |
+| `CodeLineRange(int Start, int End)` | A run of lines of a code, counted from 1 and inclusive at both ends, such as the lines a code block emphasizes. A single line converts implicitly from an `Int32`, so `[3, new CodeLineRange(6, 9)]` is lines 3 and 6 to 9. |
+| `CodeLineRange(int line)` | Creates the range of one line. |
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `End` (init) | `int` | The last line, not before `Start`. |
+| `Start` (init) | `int` | The first line, at least 1. |
+
+| Method | Returns | Description |
+| :--- | :--- | :--- |
+| `Contains(int line)` | `bool` | Whether a line (counted from 1) is in the range. A range whose end is before its start contains no line. |
+| `static Of(int start, int end)` | `CodeLineRange` | Creates a range from its two ends. |
+
 #### `CodeToken`
 
 `Klyroo.Display` · struct
@@ -217,6 +241,28 @@ A slice of source code and its category. The texts of the tokens of a code, in o
 | `Text` (init) | `string` | The slice. It is never empty. |
 
 ### Enums
+
+#### `CodeLanguage`
+
+`Klyroo.Display` · enum
+
+A language `CodeHighlighter` can highlight. A code in no language (`null` where a `CodeLanguage`? is taken) is plain text.
+
+| Value | Description |
+| :--- | :--- |
+| `Bash` | Bash and other POSIX shells (`sh`, `zsh`, `shell`). |
+| `CSharp` | C# (`cs`, `csx`). |
+| `Css` | CSS. |
+| `Html` | HTML and Razor (`htm`, `razor`, `cshtml`, `svg`): `script` and `style` contents are highlighted as JavaScript and CSS. |
+| `JavaScript` | JavaScript (`js`, `jsx`, `mjs`, `cjs`). |
+| `Json` | JSON, with comments (`jsonc`). |
+| `Less` | Less. |
+| `Python` | Python (`py`). |
+| `Scss` | SCSS. |
+| `Sql` | SQL. |
+| `TypeScript` | TypeScript (`ts`, `tsx`, `mts`, `cts`). |
+| `Xml` | XML and its dialects (`xaml`, `csproj`, `props`, `xsd`). |
+| `Yaml` | YAML (`yml`). |
 
 #### `CodeTokenKind`
 
@@ -312,7 +358,7 @@ The `kind` of a `VideoPlayerTrack`.
 
 ## Klyroo.Display
 
-Components (4) · Static classes and extensions (2) · Classes (5) · Records (13) · Enums (6)
+Components (6) · Static classes and extensions (2) · Classes (1) · Records (4)
 
 ### Components
 
@@ -376,76 +422,38 @@ Also accepts the parameters of `KlyComponentBase`.
 | `ToggleMuteAsync()` | `Task` | Toggles `KlyAudioPlayer.Muted` and raises `KlyAudioPlayer.MutedChanged`. It does nothing when `KlyAudioPlayer.Disabled`. |
 | `TogglePlayAsync()` | `Task` | Starts, resumes or pauses the player, as the play button does. Starting a new play consumes one of `KlyAudioPlayer.MaxPlays`. It does nothing when `KlyAudioPlayer.Disabled`, and only raises `KlyAudioPlayer.OnLimitReached` when `KlyAudioPlayer.IsLocked`. |
 
-#### `KlyDisplay`
+#### `KlyCodeBlock`
 
 `Klyroo.Display` · component · inherits `KlyComponentBase`
 
-Renders a read-only block of information: a heading, a text, an alert, a list of facts, a statistic, a breakdown, a meter, a chart, a table, a diff, records, people, a list, a timeline, a date, an image, a code value, an empty state or an accordion. Set `KlyDisplay.Kind` to choose the block, and fill the parameters that kind reads.
+A block of source code with a label, syntax highlighting from `CodeHighlighter`, a copy button, optional line numbers and emphasized lines. Show a value that must stay hidden with `KlySecretBlock` instead.
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
-| `AccordionItems` | `IReadOnlyList<DisplayAccordionItem>?` | The sections of an Accordion block. |
-| `Action` | `DisplayAction?` | The button of a Heading block, shown at the end of the row. |
-| `Actions` | `IReadOnlyList<DisplayAction>?` | The buttons of an Alert or Empty block. |
-| `Author` | `string?` | The author shown in the footer of a Text block, before `KlyDisplay.Meta`. |
-| `BreakdownLines` | `IReadOnlyList<DisplayBreakdownLine>?` | The lines of a Breakdown block. |
-| `BreakdownTotal` | `DisplayBreakdownLine?` | The total row of a Breakdown block, shown below the lines. |
-| `ChartData` | `IReadOnlyList<DisplayChartPoint>?` | The bars of a Chart block, the points of a `line` Chart, or the steps of a `funnel` Chart. |
-| `ChartFormat` | `Func<double, string>?` | Formats the values of a Chart block (funnel steps, axis ticks, tooltips and the data table). Defaults to the format culture of the locale in effect, with up to two decimals and thousands separators. |
-| `Chip` | `DisplayChip?` | The badge of the single person shown by a Person block when `KlyDisplay.People` is empty. |
-| `CompareColumns` | `(string, string)?` | The headers of the two amount columns of a Breakdown, for example `("2026", "2025")`: `DisplayBreakdownLine.Value` goes under `First` and `DisplayBreakdownLine.CompareValue` under `Second`, for the lines and the total. A line without a second amount shows a dash. |
-| `Contacts` | `IReadOnlyList<DisplayContactItem>?` | The contact lines of a Person block. They are shown under the person and are ignored by the `group` variant. |
-| `Copy` | `bool` | Whether a Code block shows a copy button (`true` by default). |
-| `Count` | `string?` | Count text shown beside the title of a Heading or Record block. |
-| `CurrentLevel` | `int?` | The zero-based index of the current level of a `scale` Meter. The levels up to it are highlighted. |
-| `DateValue` | `DateTimeOffset?` | The date of a Date block, or the start of a `range`. When `null`, the current date is used. |
-| `DefaultOpen` | `bool` | Whether the Alert details, or the lines of a `collapsible` Breakdown, start open. It is read once, when the component first receives its parameters. |
-| `Delta` | `string?` | The change shown as a badge beside a Stat value, for example `"+12.4%"`. It is displayed as given. |
-| `DeltaDirection` | `DisplayDeltaDirection` | The direction of `KlyDisplay.Delta`: `DisplayDeltaDirection.Up` (green, the default), `DisplayDeltaDirection.Down` (red) or `DisplayDeltaDirection.Flat` (neutral). |
-| `Description` | `string?` | A secondary line: under the title of a Heading, Stat, Meter, Date, Media (caption) or Empty block, under the name of a single Person when `KlyDisplay.People` is empty, or the Alert message when `KlyDisplay.Value` is empty. |
-| `Details` | `string?` | The collapsible details of an Alert (opened with Show details), or the footnote of a Breakdown. |
-| `DiffItems` | `IReadOnlyList<DisplayDiffItem>?` | The fields of a Diff block. |
-| `EndDateValue` | `DateTimeOffset?` | The end of a `range` Date block, inclusive in the day count. |
-| `ErrorThreshold` | `double?` | The percentage of `KlyDisplay.MeterMax` from which the Meter bar turns to the error color. It wins over `KlyDisplay.WarningThreshold`. |
-| `FactGroups` | `IReadOnlyList<DisplayFactGroup>?` | The titled groups of a Facts block. When set, they replace `KlyDisplay.Facts`, and `KlyDisplay.Max` does not apply. |
-| `Facts` | `IReadOnlyList<DisplayFact>?` | The rows of a Facts block. They are ignored when `KlyDisplay.FactGroups` is set. |
-| `HeadingLevel` | `int` | The level of the heading element of a Heading block, from `1` (`h1`) to `6` (`h6`); `3` by default, and values outside are clamped. Choose it from the page outline: the look does not change with the level. The `eyebrow` variant renders no heading element. |
-| `Highlight` | `bool` | Whether a Code block is highlighted according to `KlyDisplay.Language` (`true` by default). Set it to `false` to render plain text. A code longer than `CodeHighlighter.MaxLength` characters or `CodeHighlighter.MaxLines` lines is never highlighted. |
-| `Icon` | `string?` | The name of the leading icon of a Heading, Alert or Empty block. For an Alert, an empty string hides the icon. |
-| `Images` | `IReadOnlyList<string>?` | The image URLs of a Media block with `DisplayVariant.Gallery`. |
-| `Kind` | `DisplayKind` | The kind of block to render (`DisplayKind.Facts` by default). |
-| `Language` | `string?` | The language of a Code block: it selects the syntax highlighting, and it is the label of the block when `KlyDisplay.Title` is not set. It accepts a name, an alias or a file extension (`csharp`, `cs`, `ts`, `json`, `html`, `xml`, `css`, `scss`, `less`, `sql`, `python`, `bash`, `yaml` and the others `CodeHighlighter.Languages` lists). A language that is not supported, or none, renders plain text. A `secret` block is never highlighted. |
-| `ListItems` | `IReadOnlyList<DisplayListItem>?` | The items of a List block. |
-| `Loading` | `bool` | Shows a skeleton placeholder instead of the block. |
-| `Max` | `int?` | The number of items shown before a Show more button, for the flat Facts, Table, Record, List and Timeline kinds (all items when `null`). In a `group` Person block it is the number of avatars (4 by default), and in a `gallery` Media block the number of tiles (3 by default). |
-| `MaxLines` | `int?` | When greater than zero, clamps `KlyDisplay.Value` of a Text block to this number of lines and adds a Read more toggle. The toggle shows even when the text is shorter, and `KlyDisplay.Paragraphs` are not clamped. |
-| `Meta` | `string?` | Extra text shown in the footer of a Text block, after `KlyDisplay.Author`. |
-| `MeterLevels` | `IReadOnlyList<string>?` | The level labels of a Meter block with `DisplayVariant.Scale`. |
-| `MeterMax` | `double` | The maximum of a Meter block (`100` by default). When it is zero or less, the sum of `KlyDisplay.MeterParts` is used. |
-| `MeterParts` | `IReadOnlyList<DisplayMeterPart>?` | The segments of a Meter block, stacked in the bar or around the ring. When set, they replace the single value and the thresholds do not apply. A legend lists them when one of them has a `DisplayMeterPart.ValueLabel`, an `DisplayMeterPart.Icon` or a `DisplayMeterPart.Max`. |
-| `MeterValue` | `double` | The current value of a Meter block, clamped between 0 and `KlyDisplay.MeterMax`. |
-| `Multiple` | `bool` | Allows several Accordion sections to be open at once (`false` by default). |
-| `Now` | `DateTimeOffset?` | The reference time of a `countdown` Date block. When `null`, `DateTimeOffset.UtcNow` is used. Pass it for tests and for stable server rendering. |
-| `Paragraphs` | `IReadOnlyList<string>?` | The paragraphs of a Text block. When set, they replace `KlyDisplay.Value`. |
-| `People` | `IReadOnlyList<DisplayPersonItem>?` | The people of a Person block. Without the `group` variant, only the first person is shown. When empty, the person comes from `KlyDisplay.Title`, `KlyDisplay.Description` and `KlyDisplay.Chip`, and the avatar shows a person icon when there is no name. |
-| `Records` | `IReadOnlyList<DisplayRecordItem>?` | The rows of a Record block. |
-| `ShowUnchanged` | `bool` | Shows the fields whose `DisplayDiffItem.Changed` is `false` (`false` by default). |
-| `Src` | `string?` | The image URL of a Media block. |
-| `StatItems` | `IReadOnlyList<DisplayStatItem>?` | The metrics of a Stat block with `DisplayVariant.Row`. That variant shows `KlyDisplay.Title` above them and ignores `KlyDisplay.Value`, `KlyDisplay.Unit`, `KlyDisplay.Delta`, `KlyDisplay.Trend` and `KlyDisplay.Description`. |
-| `Step` | `int?` | The number of items each click on Show more reveals (all remaining items when `null`). |
-| `Surface` | `DisplaySurface?` | The surface treatment (`DisplaySurface.Plain`, `DisplaySurface.Muted`, `DisplaySurface.Bordered` or `DisplaySurface.Elevated`). When `null`, a default is chosen from `KlyDisplay.Kind`: bordered for Facts, Breakdown, Table, Record and Code, muted for Alert and Stat (Stat is bordered for its `row` variant, and muted for any other variant), and plain for the others. |
-| `TableColumns` | `IReadOnlyList<DisplayTableColumn>?` | The columns of a Table block. |
-| `TableFooter` | `IReadOnlyDictionary<string, string?>?` | The footer row of a Table block, as a map from column key to text. |
-| `TableRows` | `IReadOnlyList<IReadOnlyDictionary<string, string?>>?` | The rows of a Table block. Each row maps a column key to its text, and a missing key renders a dash. |
-| `TimelineItems` | `IReadOnlyList<DisplayTimelineItem>?` | The events of a Timeline block. |
-| `Title` | `string?` | The title of the block: the heading text, the bold first line of a Text, the Alert title, the label of a Stat, Meter or Code block, the line above a `row` Stat, and the title of the other kinds that show one. For a Person block it is the name of the single person when `KlyDisplay.People` is empty (no name is shown when it is not set either), or the caption of a `group`. For a Date block it replaces the formatted date, or is a caption under the `countdown` and `range` text, and for a Media block it is the alt text. |
-| `Tone` | `KlyColor` | The tone of the block. Only `DisplayKind.Alert` reads it: it selects the default icon and sets `role="status"` for `KlyColor.Warning` and `KlyColor.Error`. Items have their own `Tone`. |
-| `Trend` | `IReadOnlyList<double>?` | The series of a Stat sparkline. It is drawn from two points or more. |
-| `Unit` | `string?` | The unit shown beside a Stat value, or at the end of a Chart title. |
-| `Value` | `string?` | The main text of the block: the Text body, the Alert message, the Stat value, the Meter value label, or the Code content. |
-| `Variant` | `DisplayVariant` | Selects a variant of the kind (`DisplayVariant.Default` is the default layout). A variant that belongs to another kind renders the default layout and, in Development, logs a warning. Heading: `DisplayVariant.Eyebrow`. Text: `DisplayVariant.Quote`. Stat: `DisplayVariant.Row`. Breakdown: `DisplayVariant.Collapsible`. Meter: `DisplayVariant.Ring`, `DisplayVariant.Scale`. Chart: `DisplayVariant.Line`, `DisplayVariant.Funnel`. Table: `DisplayVariant.Sticky`. Person: `DisplayVariant.Group`. List: `DisplayVariant.Steps`, `DisplayVariant.Checks`, `DisplayVariant.Files`. Timeline: `DisplayVariant.Pipeline`, `DisplayVariant.Log`, `DisplayVariant.Schedule`. Date: `DisplayVariant.Countdown`, `DisplayVariant.Range`. Media: `DisplayVariant.Gallery`. Code: `DisplayVariant.Secret`. |
-| `VisibleChars` | `int` | The number of trailing characters left visible by a `secret` Code block (`4` by default). A longer value shows eight bullets followed by those characters. A value that is not longer than this number is fully masked. |
-| `WarningThreshold` | `double?` | The percentage of `KlyDisplay.MeterMax` from which the Meter bar turns to the warning color. |
+| `Code` | `string?` | The source code to show. It is plain text: markup in it is escaped. |
+| `Copy` | `bool` | Whether the block shows a copy button, which copies the code as given (`true` by default). The button needs an interactive render mode. |
+| `Highlight` | `bool` | Whether the code is highlighted according to `KlyCodeBlock.Language` (`true` by default). A code longer than `CodeHighlighter.MaxLength` characters or `CodeHighlighter.MaxLines` lines is always plain text. |
+| `HighlightLines` | `IReadOnlyList<CodeLineRange>?` | The lines to emphasize, counted from 1: a neutral fill and an accent marker in the gutter. Single lines and runs mix in one list: `HighlightLines="@([3, new CodeLineRange(6, 9)])"`. Lines past the end of the code are ignored. |
+| `Label` | `string?` | The label above the code. Without it, the name of `KlyCodeBlock.Language`, or the localized "Code". |
+| `Language` | `CodeLanguage?` | The language of the code: it selects the syntax highlighting, and it is the label of the block when `KlyCodeBlock.Label` is not set. `null` (the default) shows plain text. Get it from a name, an alias or a file extension with `CodeHighlighter.ResolveLanguage` or `CodeHighlighter.ResolveFileName`. |
+| `LineNumbers` | `bool` | Shows the number of each line in a gutter. The numbers are drawn by CSS, so they are not part of the text that is selected or copied. |
+| `Ui` | `CodeBlockUi?` | Per-instance class overrides of the slots of the block, see `CodeBlockUi`. They are merged after the theme, and `Class` wins on the root slot. |
+
+Also accepts the parameters of `KlyComponentBase`.
+
+#### `KlyFileList`
+
+`Klyroo.Display` · component · inherits `KlyComponentBase`
+
+A list of files, each with an extension badge, its name, its size and its date. Clicking a file opens the whole list as a gallery in the file preview, at that file, when a `KlyFilePreviewProvider` is mounted and the page is interactive. Otherwise the name is a plain link to the file.
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `Files` | `IReadOnlyList<FilePreviewFile>?` | The files to list, in order. A file shows its extension, its name (or the last segment of its `Src`), its size and its date when it has them. |
+| `Max` | `int?` | The number of files shown before a Show more button (all files when `null`). |
+| `Step` | `int?` | The number of files each click on Show more reveals (all remaining files when `null`). |
+| `Title` | `string?` | A title above the list. |
+| `Ui` | `FileListUi?` | Per-instance class overrides of the slots of the list, see `FileListUi`. They are merged after the theme, and `Class` wins on the root slot. |
 
 Also accepts the parameters of `KlyComponentBase`.
 
@@ -459,6 +467,22 @@ Renders the file preview overlay that `FilePreviewService` opens: a dialog, draw
 | :--- | :--- | :--- |
 | `ChildContent` | `RenderFragment?` | Content rendered before the overlay. Use it to wrap your layout, or leave it empty and place the provider next to it. |
 | `MarkdownRenderer` | `Func<string, string>?` | Converts the Markdown of a file to HTML. The result is rendered as markup without sanitizing, so use a renderer that escapes untrusted input. When `null`, Markdown files are shown as source. |
+
+Also accepts the parameters of `KlyComponentBase`.
+
+#### `KlySecretBlock`
+
+`Klyroo.Display` · component · inherits `KlyComponentBase`
+
+A value that is masked until the user reveals it, such as an API key or a token, with a Reveal and Conceal toggle and a copy button. It is never highlighted.
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `Copy` | `bool` | Whether the block shows a copy button, which copies the whole secret even while it is masked (`true` by default). The Reveal and copy buttons need an interactive render mode. |
+| `Label` | `string?` | The label above the value. Without it, the localized "Secret". |
+| `Ui` | `SecretBlockUi?` | Per-instance class overrides of the slots of the block, see `SecretBlockUi`. They are merged after the theme, and `Class` wins on the root slot. |
+| `Value` | `string?` | The secret, such as an API key or a token. While it is masked it is not written to the page at all, only its last `KlySecretBlock.VisibleChars` characters are. |
+| `VisibleChars` | `int` | The number of trailing characters left visible while the value is masked (`4` by default). A longer value shows eight bullets followed by those characters. A value that is not longer than this number is fully masked, so a short secret is never shown whole. |
 
 Also accepts the parameters of `KlyComponentBase`.
 
@@ -565,103 +589,6 @@ Service registration for Klyroo.Display.
 
 ### Classes
 
-#### `DisplayAction`
-
-`Klyroo.Display` · class
-
-A button or link shown in a block, rendered as a small `KlyButton`.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayAction()` | Creates an action. Set `DisplayAction.Label` before use. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Color` (init) | `KlyColor` | The button color (neutral by default). |
-| `Href` (init) | `string?` | The link target. When set, the button navigates instead of only raising `DisplayAction.OnClick`. |
-| `Icon` (init) | `string?` | An icon name shown before the label. |
-| `Label` (init) | `string` | The button text. |
-| `OnClick` (init) | `EventCallback` | The callback invoked when the button is clicked. It only runs once the page is interactive. |
-| `Target` (init) | `KlyLinkTarget?` | The `target` of the link, such as `KlyLinkTarget.Blank`. It applies only with `DisplayAction.Href`. |
-| `Variant` (init) | `ButtonVariant` | The button style (outline by default). |
-
-#### `DisplayFact`
-
-`Klyroo.Display` · class
-
-One label and value row of a `DisplayKind.Facts` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayFact()` | Creates a row. Set `DisplayFact.Label` before use. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Chip` (init) | `DisplayChip?` | A badge shown instead of the value. |
-| `Copy` (init) | `bool` | Shows a copy button that copies `DisplayFact.CopyText`, or `DisplayFact.Value` when that is not set. |
-| `CopyText` (init) | `string?` | The text copied by the copy button. Setting it also shows the button. |
-| `Emphasis` (init) | `bool` | Renders the value in bold. |
-| `Hint` (init) | `string?` | A short line of help shown under the label. |
-| `Href` (init) | `string?` | Renders the value as a link to this URL. |
-| `Icon` (init) | `string?` | An icon name shown before the label. |
-| `Label` (init) | `string` | The row label. |
-| `Loading` (init) | `bool` | Shows a placeholder instead of the value. |
-| `Mono` (init) | `bool` | Renders the value in a monospace font. |
-| `Tone` (init) | `KlyColor?` | A color for the value, such as `KlyColor.Success`. It applies to plain values; a link keeps the link color and a chip its own. |
-| `Value` (init) | `string?` | The row value. An empty value with no `DisplayFact.Chip` renders a dash. |
-
-#### `DisplayListItem`
-
-`Klyroo.Display` · class
-
-One item of a `DisplayKind.List` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayListItem()` | Creates an item. Set `DisplayListItem.Text` before use. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Current` (init) | `bool` | Marks the item as the current step in the `steps` and `checks` variants. |
-| `Description` (init) | `string?` | A line under the text. When `DisplayListItem.FileSize` is set, the formatted size is shown instead. |
-| `Done` (init) | `bool` | Marks the item as done in the `steps` and `checks` variants. |
-| `FileName` (init) | `string?` | The file name of a file item, used for the extension badge and the preview. It defaults to `DisplayListItem.Text`. |
-| `FileSize` (init) | `long?` | The size of a file item in bytes. |
-| `Href` (init) | `string?` | The URL of the item. In the `files` variant, a click opens the item in the file preview when a `KlyFilePreviewProvider` is mounted. |
-| `Icon` (init) | `string?` | An icon name shown instead of the bullet in the default variant. The `steps`, `checks` and `files` variants keep their own marker. |
-| `Meta` (init) | `string?` | Text shown at the end of the row. |
-| `MimeType` (init) | `string?` | The MIME type of a file item, used for the extension badge and to detect the preview kind. |
-| `Text` (init) | `string` | The item text. It is a link when `DisplayListItem.Href` is set. |
-| `Tone` (init) | `KlyColor?` | A color for the bullet or `DisplayListItem.Icon` in the default variant. |
-
-#### `DisplayRecordItem`
-
-`Klyroo.Display` · class
-
-One row of a `DisplayKind.Record` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayRecordItem()` | Creates a row. Set `DisplayRecordItem.Title` before use. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `AvatarText` (init) | `string?` | Short text, such as initials, shown in the leading tile. |
-| `Badges` (init) | `IReadOnlyList<DisplayChip>?` | Badges shown at the end of the row, before `DisplayRecordItem.Chip`. |
-| `Chip` (init) | `DisplayChip?` | A badge shown at the end of the row. |
-| `Description` (init) | `string?` | The secondary line when `DisplayRecordItem.Meta` is not set. |
-| `Href` (init) | `string?` | The URL the title links to. |
-| `Icon` (init) | `string?` | An icon name shown in the leading tile. It takes precedence over `DisplayRecordItem.AvatarText`, and `DisplayRecordItem.ImageSrc` takes precedence over it. |
-| `ImageSrc` (init) | `string?` | The URL of an image shown in the leading tile instead of the icon or avatar text. It is decorative (empty `alt`), since the title names the row. |
-| `Meta` (init) | `string?` | The secondary line. It takes precedence over `DisplayRecordItem.Description` unless it is empty. |
-| `MetaIcon` (init) | `string?` | An icon shown before the secondary line (`DisplayRecordItem.Meta` or `DisplayRecordItem.Description`). |
-| `OnClick` (init) | `EventCallback` | A callback invoked when the title is clicked. Without `DisplayRecordItem.Href` the title becomes a button; with it, the link is followed and the callback runs too. It only runs once the page is interactive. |
-| `Reference` (init) | `string?` | A reference such as an order number, shown above the title in a monospace font. |
-| `Title` (init) | `string` | The row title. It is a link when `DisplayRecordItem.Href` is set. |
-| `Tone` (init) | `KlyColor?` | A color for the leading tile and the trailing value. |
-| `Trailing` (init) | `string?` | A value shown at the end of the row, such as an amount. |
-| `TrailingCaption` (init) | `string?` | A line of smaller text under the trailing value, such as a date. |
-
 #### `KlyrooDisplayOptions`
 
 `Klyroo.Display` · class
@@ -674,7 +601,9 @@ Configuration of Klyroo.Display: the built-in texts of each locale. It is an ext
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `WarnOnUnknownVariant` (get, set) | `bool?` | Logs a warning (`ILogger<KlyDisplay>`, once per component) when `KlyDisplay.Variant` is not a variant of its `KlyDisplay.Kind`, which renders the default layout. `null` (the default) turns it on when the `ASPNETCORE_ENVIRONMENT` (or `DOTNET_ENVIRONMENT`) variable is `Development`, as in Blazor Web and Server apps. A WebAssembly or MAUI app does not have that variable: set this to `builder.HostEnvironment.IsDevelopment()` there. `false` turns the warning off. |
+| `CodeBlock` | `ComponentTheme` | The look of `KlyCodeBlock`: its slots (`root`, `pre`, `line`, the `token*` colors...) with their default classes. Add classes in `AddKlyrooDisplay`. |
+| `FileList` | `ComponentTheme` | The look of `KlyFileList`. Add classes in `AddKlyrooDisplay`. |
+| `SecretBlock` | `ComponentTheme` | The look of `KlySecretBlock`. Add classes in `AddKlyrooDisplay`. |
 
 | Method | Returns | Description |
 | :--- | :--- | :--- |
@@ -682,205 +611,40 @@ Configuration of Klyroo.Display: the built-in texts of each locale. It is an ext
 
 ### Records
 
-#### `DisplayAccordionItem`
+#### `CodeBlockUi`
 
 `Klyroo.Display` · record
 
-One section of a `DisplayKind.Accordion` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayAccordionItem(string Label, string? Content = null, string? Icon = null, bool DefaultOpen = false, RenderFragment? Template = null)` | One section of a `DisplayKind.Accordion` block. |
+Per-instance class overrides of `KlyCodeBlock` slots.
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `Content` (init) | `string?` | The section text, used when `Template` is not set. |
-| `DefaultOpen` (init) | `bool` | Whether the section starts open. |
-| `Icon` (init) | `string?` | An icon name shown before the label. |
-| `Label` (init) | `string` | The section header. |
-| `Template` (init) | `RenderFragment?` | Markup for the section body. It takes precedence over `Content`. |
-
-#### `DisplayBreakdownLine`
-
-`Klyroo.Display` · record
-
-One line of a `DisplayKind.Breakdown` block, also used for its total.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayBreakdownLine(string Label, string? Value = null, string? CompareValue = null, string? Detail = null, bool IsSubtotal = false, bool IsMuted = false, KlyColor? Tone = null, DisplayChip? Chip = null)` | One line of a `DisplayKind.Breakdown` block, also used for its total. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Chip` (init) | `DisplayChip?` | A badge shown after the label. |
-| `CompareValue` (init) | `string?` | A second amount, such as the previous period, shown in a second column. Setting it on any line, or setting `KlyDisplay.CompareColumns`, switches the block to two columns, with a dash where a line has no second amount. |
-| `Detail` (init) | `string?` | A line of smaller text under the label. |
-| `IsMuted` (init) | `bool` | Renders the line in a dimmed color. |
-| `IsSubtotal` (init) | `bool` | Renders the line as a subtotal, with a top border and bold text. |
-| `Label` (init) | `string` | The line label. |
-| `Tone` (init) | `KlyColor?` | A color for the amount, such as `KlyColor.Success` for a discount. |
-| `Value` (init) | `string?` | The amount, already formatted. A missing value renders a dash. |
-
-#### `DisplayChartPoint`
-
-`Klyroo.Display` · record
-
-One bar or step of a `DisplayKind.Chart` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayChartPoint(string Label, double Value, KlyColor? Tone = null)` | One bar or step of a `DisplayKind.Chart` block. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Label` (init) | `string` | The label under the bar. |
-| `Tone` (init) | `KlyColor?` | The color of the bar, step or point (primary when `null`), for example to highlight one value. |
-| `Value` (init) | `double` | The value. Bar heights are relative to the largest value. |
-
-#### `DisplayChip`
-
-`Klyroo.Display` · record
-
-A small badge shown in a block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayChip(string Label, KlyColor? Color = null, string? Icon = null)` | A small badge shown in a block. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Color` (init) | `KlyColor?` | The badge color, or `null` for neutral. |
-| `Icon` (init) | `string?` | An icon name shown before the label. |
-| `Label` (init) | `string` | The badge text. |
-
-#### `DisplayContactItem`
-
-`Klyroo.Display` · record
-
-One contact line of a `DisplayKind.Person` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayContactItem(string Value, string? Icon = null, string? Href = null, bool Copy = true)` | One contact line of a `DisplayKind.Person` block. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Copy` (init) | `bool` | Whether to show a copy button. |
-| `Href` (init) | `string?` | A link for the value, such as a `mailto:` or `tel:` URL. |
-| `Icon` (init) | `string?` | An icon name shown before the value, such as `"mail"`. |
-| `Value` (init) | `string` | The text shown and copied, such as an email address. |
-
-#### `DisplayDiffItem`
-
-`Klyroo.Display` · record
-
-One field of a `DisplayKind.Diff` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayDiffItem(string Label, string? Before, string? After, bool Changed = true, DisplayChip? Note = null)` | One field of a `DisplayKind.Diff` block. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `After` (init) | `string?` | The new value. |
-| `Before` (init) | `string?` | The previous value, shown struck through. |
-| `Changed` (init) | `bool` | Whether the field changed. Unchanged fields are hidden unless `KlyDisplay.ShowUnchanged` is set. |
-| `Label` (init) | `string` | The field label. |
-| `Note` (init) | `DisplayChip?` | A badge shown after the label, such as `"Requires approval"`. |
-
-#### `DisplayFactGroup`
-
-`Klyroo.Display` · record
-
-A titled group of rows in a `DisplayKind.Facts` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayFactGroup(string? Title, IReadOnlyList<DisplayFact> Items, string? Aside = null)` | A titled group of rows in a `DisplayKind.Facts` block. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Aside` (init) | `string?` | Text shown opposite the title. |
-| `Items` (init) | `IReadOnlyList<DisplayFact>` | The rows of the group. |
-| `Title` (init) | `string?` | The group title. |
-
-#### `DisplayMeterPart`
-
-`Klyroo.Display` · record
-
-One segment of a `DisplayKind.Meter` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayMeterPart(string Label, double Value, string? ValueLabel = null, KlyColor? Tone = null, string? Icon = null, double? Max = null)` | One segment of a `DisplayKind.Meter` block. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Icon` (init) | `string?` | An icon name shown in the legend instead of the color dot. |
-| `Label` (init) | `string` | The segment label, shown as a tooltip and in the legend. |
-| `Max` (init) | `double?` | A maximum for this segment: the segment never grows past it, and the legend shows the value out of it. |
-| `Tone` (init) | `KlyColor?` | The segment color (primary when `null`). |
-| `Value` (init) | `double` | The segment size, in the same unit as `KlyDisplay.MeterMax`. |
-| `ValueLabel` (init) | `string?` | The value as displayed in the tooltip and the legend, such as `"3.2 GB"`. When `null`, the number is shown. |
-
-#### `DisplayPersonItem`
-
-`Klyroo.Display` · record
-
-One person of a `DisplayKind.Person` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayPersonItem(string Name, string? Description = null, string? AvatarSrc = null, KlyColor? Tone = null, DisplayChip? Chip = null)` | One person of a `DisplayKind.Person` block. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `AvatarSrc` (init) | `string?` | The URL of an avatar image, shown instead of the initials. It is decorative (empty `alt`), since the name is shown or in the tooltip. |
-| `Chip` (init) | `DisplayChip?` | A badge shown at the end of the row. In the `group` variant its label goes in the avatar tooltip. |
-| `Description` (init) | `string?` | A line under the name, such as a role. In the `group` variant it goes in the avatar tooltip. |
-| `Name` (init) | `string` | The person's name. The avatar shows its initials. |
-| `Tone` (init) | `KlyColor?` | A color that tints the initials avatar. |
-
-#### `DisplayStatItem`
-
-`Klyroo.Display` · record
-
-One metric of the `row` variant of a `DisplayKind.Stat` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayStatItem(string Label, string Value, string? Caption = null, KlyColor? Tone = null)` | One metric of the `row` variant of a `DisplayKind.Stat` block. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Caption` (init) | `string?` | A line of text below the value. |
-| `Label` (init) | `string` | The metric label. |
-| `Tone` (init) | `KlyColor?` | A color for the value, such as `KlyColor.Error` for a metric that went wrong. |
-| `Value` (init) | `string` | The metric value. |
-
-#### `DisplayTableColumn`
-
-`Klyroo.Display` · record
-
-One column of a `DisplayKind.Table` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayTableColumn(string Key, string Label, bool Numeric = false, DisplayAlign Align = Start, bool Mono = false)` | One column of a `DisplayKind.Table` block. |
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `Align` (init) | `DisplayAlign` | Set to `DisplayAlign.End` to align the column to the end. |
-| `Key` (init) | `string` | The key that selects this column's cell in each row. |
-| `Label` (init) | `string` | The header text. |
-| `Mono` (init) | `bool` | Renders the cells in a monospace font. |
-| `Numeric` (init) | `bool` | Aligns the column to the end and uses tabular figures. |
+| `Actions` (init) | `string?` | Classes merged into the `actions` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `Copy` (init) | `string?` | Classes merged into the `copy` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `CopyIcon` (init) | `string?` | Classes merged into the `copyIcon` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `Header` (init) | `string?` | Classes merged into the `header` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `Label` (init) | `string?` | Classes merged into the `label` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `Line` (init) | `string?` | Classes merged into the `line` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `LineHighlighted` (init) | `string?` | Classes merged into the `lineHighlighted` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `LineIdle` (init) | `string?` | Classes merged into the `lineIdle` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `LineNumbered` (init) | `string?` | Classes merged into the `lineNumbered` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `Pre` (init) | `string?` | Classes merged into the `pre` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `Root` (init) | `string?` | Classes merged into the `root` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `TokenComment` (init) | `string?` | Classes merged into the `tokenComment` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `TokenFunction` (init) | `string?` | Classes merged into the `tokenFunction` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `TokenKeyword` (init) | `string?` | Classes merged into the `tokenKeyword` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `TokenNumber` (init) | `string?` | Classes merged into the `tokenNumber` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `TokenProperty` (init) | `string?` | Classes merged into the `tokenProperty` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `TokenPunctuation` (init) | `string?` | Classes merged into the `tokenPunctuation` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `TokenString` (init) | `string?` | Classes merged into the `tokenString` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `TokenTag` (init) | `string?` | Classes merged into the `tokenTag` slot of `KlyCodeBlock`, after the theme and the app configuration. |
+| `TokenType` (init) | `string?` | Classes merged into the `tokenType` slot of `KlyCodeBlock`, after the theme and the app configuration. |
 
 #### `DisplayTexts`
 
 `Klyroo.Display` · record
 
-The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyFilePreviewProvider`: button labels, accessible names, empty states and counters. There is one set per locale of Klyroo.UI (`DisplayLocales`), and a component shows the set of its current locale, the one its `Messages` come from. Change a set with `KlyrooDisplayOptions.Texts` in `AddKlyrooDisplay(d => ...)`.
+The built-in texts of `KlyCodeBlock`, `KlySecretBlock`, `KlyFileList`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyFilePreviewProvider`: button labels, accessible names and counters. There is one set per locale of Klyroo.UI (`DisplayLocales`), and a component shows the set of its current locale, the one its `Messages` come from. Change a set with `KlyrooDisplayOptions.Texts` in `AddKlyrooDisplay(d => ...)`.
 
 | Constructor | Description |
 | :--- | :--- |
@@ -888,45 +652,32 @@ The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyF
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `AllDay` (init) | `string` | The time of a `schedule` Timeline event that lasts whole days (`"All day"`). |
 | `AudioPlayer` (init) | `string` | The accessible name of an audio player without a title (`"Audio player"`). |
 | `Captions` (init) | `string` | The captions button of the video player (`"Subtitles"`). |
-| `ChartValue` (init) | `string` | The name of the series of a Chart block without a title, used in the tooltip and the data table (`"Value"`). |
 | `ClosePreview` (init) | `string` | The close button of the preview (`"Close preview"`). |
-| `Code` (init) | `string` | The label of a Code block without a title or language (`"Code"`). |
-| `Conceal` (init) | `string` | The button that masks a revealed `secret` Code block again (`"Conceal"`). |
+| `Code` (init) | `string` | The label of a code block without a label or language (`"Code"`). |
+| `Conceal` (init) | `string` | The button that masks a revealed secret block again (`"Conceal"`). |
 | `ConvertedPreview` (init) | `Func<string, string>` | The notice above a rendition, given the kind of the original file (`"Converted preview · The original is a Office file."`). |
-| `CopyCode` (init) | `string` | The accessible name of the copy button of a Code block (`"Copy code"`). |
-| `CopyValue` (init) | `Func<string, string>` | The accessible name of a copy button, given the label or value it copies (`"Copy Email"`). |
+| `CopyCode` (init) | `string` | The accessible name of the copy button of a code block and of a secret block (`"Copy code"`). |
 | `CsvSummary` (init) | `Func<int, int, string, string>` | The footer of a CSV table, given the number of rows, the number of columns and the delimiter (`"12 rows · 4 columns · delimiter ','"`, with `"tab"` for a tab). |
 | `CsvTruncated` (init) | `Func<int, string>` | The notice of a CSV table cut to its first rows, given the number of rows shown (`"Showing first 1,000 rows"`). |
-| `DayCount` (init) | `Func<int, string>` | The length of a `range` Date, given the number of days (`"7 days"`). |
-| `DaysOverdue` (init) | `Func<int, string>` | The `countdown` Date text for a past date, given the number of days (`"3 days overdue"`). |
 | `DetailName` (init) | `string` | The file name row of the details panel (`"Name"`). |
-| `Details` (init) | `string` | The toggle that opens the lines of a `collapsible` Breakdown, and the details button and panel title of the file preview (`"Details"`). |
+| `Details` (init) | `string` | The details button and panel title of the file preview (`"Details"`). |
 | `DetailSize` (init) | `string` | The file size row of the details panel (`"Size"`). |
 | `DetailType` (init) | `string` | The file type row of the details panel (`"Type"`). |
 | `Download` (init) | `string` | The download link of the players and the file preview (`"Download"`). |
 | `DownloadOriginal` (init) | `string` | The download link of the rendition notice (`"Download original"`). |
-| `Duration` (init) | `Func<int, string>` | The length of a `schedule` Timeline event, given its total number of minutes (`"1 h 30 min"`, `"45 min"`, `"2 h"`). The length is never negative. |
 | `ExitFullscreen` (init) | `string` | The fullscreen button of the video player while it is fullscreen (`"Exit fullscreen"`). |
 | `ExpandPreview` (init) | `string` | The button that expands a modal or drawer to the whole viewport (`"Expand preview"`). |
 | `Fullscreen` (init) | `string` | The fullscreen button of the video player (`"Fullscreen"`). |
-| `HideDetails` (init) | `string` | The toggle that closes the details of an Alert or the lines of a `collapsible` Breakdown (`"Hide details"`). |
-| `ImageAlt` (init) | `Func<int, string>` | The alternative text of a gallery image when the block has no title, given its one-based position (`"Image 2"`). |
-| `InDays` (init) | `Func<int, string>` | The `countdown` Date text for a date two days away or more, given the number of days (`"In 5 days"`). |
 | `LineCount` (init) | `Func<int, string>` | The line count of a text file (`"1 line"`, `"12 lines"`). |
 | `MarkdownPreview` (init) | `string` | The tab that shows rendered Markdown (`"Preview"`). |
 | `MarkdownSource` (init) | `string` | The tab that shows Markdown source (`"Source"`). |
-| `MediaAlt` (init) | `string` | The alternative text of a Media image when the block has no title (`"Media"`). |
-| `Meter` (init) | `string` | The accessible name of a Meter without a title (`"Meter"`). |
 | `Mute` (init) | `string` | The mute button of an unmuted player (`"Mute"`). |
 | `NextFile` (init) | `string` | The next file button of a gallery (`"Next file"`). |
-| `NoData` (init) | `string` | The text of a Chart block without data (`"No data"`). |
 | `NoPlaysLeft` (init) | `string` | The message of a locked player (`"No plays left"`). |
 | `NoPreview` (init) | `string` | The title of the card shown for a file without a renderer (`"No preview available"`). |
 | `NoPreviewHint` (init) | `string` | The text of the card shown for a file without a renderer (`"Download this file to open it in another application."`). |
-| `NothingToShow` (init) | `string` | The title of an Empty block without a title (`"Nothing to show"`). |
 | `Pause` (init) | `string` | The pause button (`"Pause"`). |
 | `PictureInPicture` (init) | `string` | The picture-in-picture button of the video player (`"Picture in picture"`). |
 | `Play` (init) | `string` | The play button (`"Play"`). |
@@ -936,153 +687,56 @@ The built-in texts of `KlyDisplay`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyF
 | `PlayVideo` (init) | `string` | The large play button over a paused video (`"Play the video"`). |
 | `PreviewPosition` (init) | `Func<int, int, string, string>` | The announcement of gallery navigation for screen readers, given the one-based position, the number of files and the file name (`"2 of 5: report.pdf"`). |
 | `PreviousFile` (init) | `string` | The previous file button of a gallery (`"Previous file"`). |
-| `ReadMore` (init) | `string` | The toggle that expands a clamped Text block (`"Read more"`). |
 | `ResetZoom` (init) | `string` | The button that resets the zoom of an image (`"Reset zoom"`). |
 | `RestorePreview` (init) | `string` | The button that returns an expanded preview to its container (`"Restore preview size"`). |
-| `Reveal` (init) | `string` | The button that unmasks a `secret` Code block (`"Reveal"`). |
+| `Reveal` (init) | `string` | The button that unmasks a secret block (`"Reveal"`). |
 | `Rotate` (init) | `string` | The rotate button of an image (`"Rotate 90 degrees"`). |
-| `Secret` (init) | `string` | The label of a `secret` Code block without a title or language (`"Secret"`). |
+| `Secret` (init) | `string` | The label of a secret block without a label (`"Secret"`). |
 | `Seek` (init) | `string` | The timeline slider (`"Seek"`). |
 | `SeekValueText` (init) | `Func<string, string, string>` | The spoken value of the timeline slider and of the progress bar of a non-seekable player, given the position and the length of the clip (`"0:37 of 1:00"`). |
-| `ShowDetails` (init) | `string` | The toggle that opens the details of an Alert (`"Show details"`). |
-| `ShowLess` (init) | `string` | The toggle that clamps an expanded Text block again (`"Show less"`). |
-| `ShowMore` (init) | `Func<int, string>` | The Show more button of a list, given the number of items the next click reveals (`"Show more · 3"`). |
-| `Today` (init) | `string` | The `countdown` Date text for the current day (`"Today"`). |
-| `Tomorrow` (init) | `string` | The `countdown` Date text for the next day (`"Tomorrow"`). |
+| `ShowMore` (init) | `Func<int, string>` | The Show more button of a file list, given the number of files the next click reveals (`"Show more · 3"`). |
 | `Unmute` (init) | `string` | The mute button of a muted player (`"Unmute"`). |
-| `Unscheduled` (init) | `string` | The heading of the events of a `schedule` Timeline that have no date (`"Unscheduled"`). |
 | `VideoPlayer` (init) | `string` | The accessible name of a video player without a title (`"Video player"`). |
 | `Volume` (init) | `string` | The volume slider (`"Volume"`). |
 | `WrapLines` (init) | `string` | The toggle that wraps long lines of a text file (`"Wrap lines"`). |
 | `ZoomIn` (init) | `string` | The zoom in button of an image (`"Zoom in"`). |
 | `ZoomOut` (init) | `string` | The zoom out button of an image (`"Zoom out"`). |
 
-#### `DisplayTimelineItem`
+#### `FileListUi`
 
 `Klyroo.Display` · record
 
-One event of a `DisplayKind.Timeline` block.
-
-| Constructor | Description |
-| :--- | :--- |
-| `DisplayTimelineItem(string Title, string? Description = null, string? Time = null, DateTimeOffset? Date = null, string? Icon = null, string? ActorName = null, DisplayTimelineState? State = null, KlyColor? Tone = null, DateTimeOffset? EndDate = null)` | One event of a `DisplayKind.Timeline` block. |
+Per-instance class overrides of `KlyFileList` slots.
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `ActorName` (init) | `string?` | The name of the person behind the event. |
-| `Date` (init) | `DateTimeOffset?` | When the event happened or starts. It is shown in the short date and time format of the resolved culture when `Time` is not set, set as the `datetime` of the `time` element, and starts each line of the `log` variant. It is shown in its own offset. In the `schedule` variant it places the event on its day and orders the events; an event without a date is listed last, under the unscheduled heading. |
-| `Description` (init) | `string?` | A line under the title. |
-| `EndDate` (init) | `DateTimeOffset?` | When the event ends. Only the `schedule` variant reads it: it shows the time range and the length of the event. It is ignored when `Date` is not set or when it is not after `Date`, and it is shown in its own offset. An event that starts at midnight and has no end, or ends at midnight or at the end of a day, is an all-day event. An end at midnight is excluded, as in calendar files (iCal): a `Date` of the 12th and an `EndDate` of the 14th at midnight is two days, and one of the 14th at 23:59 is three. |
-| `Icon` (init) | `string?` | An icon name shown in the marker instead of the event number (or the dot of the `log` variant). |
-| `State` (init) | `DisplayTimelineState?` | The event state. When `null`, `DisplayTimelineState.Done` is used, except in the `schedule` variant, where an event without a state is shown as a plain upcoming event: only an explicit `DisplayTimelineState.Done` is muted and only `DisplayTimelineState.Current` is emphasized and gets `aria-current`. |
-| `Time` (init) | `string?` | The time text shown beside the title. It is displayed as given and takes precedence over `Date` for the text; in the `log` variant it replaces the time part of the date. |
-| `Title` (init) | `string` | The event title. |
-| `Tone` (init) | `KlyColor?` | A color for the marker, replacing the primary color of done and current events and the border of upcoming ones. |
+| `Badge` (init) | `string?` | Classes merged into the `badge` slot of `KlyFileList`, after the theme and the app configuration. |
+| `Body` (init) | `string?` | Classes merged into the `body` slot of `KlyFileList`, after the theme and the app configuration. |
+| `Description` (init) | `string?` | Classes merged into the `description` slot of `KlyFileList`, after the theme and the app configuration. |
+| `Item` (init) | `string?` | Classes merged into the `item` slot of `KlyFileList`, after the theme and the app configuration. |
+| `List` (init) | `string?` | Classes merged into the `list` slot of `KlyFileList`, after the theme and the app configuration. |
+| `Main` (init) | `string?` | Classes merged into the `main` slot of `KlyFileList`, after the theme and the app configuration. |
+| `Meta` (init) | `string?` | Classes merged into the `meta` slot of `KlyFileList`, after the theme and the app configuration. |
+| `More` (init) | `string?` | Classes merged into the `more` slot of `KlyFileList`, after the theme and the app configuration. |
+| `MoreIcon` (init) | `string?` | Classes merged into the `moreIcon` slot of `KlyFileList`, after the theme and the app configuration. |
+| `Name` (init) | `string?` | Classes merged into the `name` slot of `KlyFileList`, after the theme and the app configuration. |
+| `Root` (init) | `string?` | Classes merged into the `root` slot of `KlyFileList`, after the theme and the app configuration. |
+| `Title` (init) | `string?` | Classes merged into the `title` slot of `KlyFileList`, after the theme and the app configuration. |
 
-### Enums
+#### `SecretBlockUi`
 
-#### `DisplayAlign`
+`Klyroo.Display` · record
 
-`Klyroo.Display` · enum
+Per-instance class overrides of `KlySecretBlock` slots.
 
-The alignment of a `DisplayTableColumn`.
-
-| Value | Description |
-| :--- | :--- |
-| `Start` | At the start of the cell. |
-| `End` | At the end of the cell. |
-
-#### `DisplayDeltaDirection`
-
-`Klyroo.Display` · enum
-
-The direction of the delta of a Stat block, which only chooses its color.
-
-| Value | Description |
-| :--- | :--- |
-| `Up` | Green. |
-| `Down` | Red. |
-| `Flat` | Neutral. |
-
-#### `DisplayKind`
-
-`Klyroo.Display` · enum
-
-The kind of block rendered by `KlyDisplay`. Each kind reads its own set of parameters and a few of them accept a `KlyDisplay.Variant`. The summaries list what each kind renders.
-
-| Value | Description |
-| :--- | :--- |
-| `Heading` | A section heading with an optional icon, count pill, description and action, rendered as the heading element chosen by `KlyDisplay.HeadingLevel`. The `eyebrow` variant renders small uppercase text instead of a heading element. |
-| `Text` | One or more paragraphs, or a single value. The `quote` variant adds a start border and a footer with the author and meta text. `KlyDisplay.MaxLines` clamps the value and adds a Read more toggle. |
-| `Alert` | A message with an icon chosen from `KlyDisplay.Tone`, an optional collapsible details text and action buttons. |
-| `Facts` | A list of label and value rows, flat from `KlyDisplay.Facts` or grouped from `KlyDisplay.FactGroups`. Rows can show a chip, a link, a copy button and a loading placeholder. |
-| `Stat` | A highlighted value with a title, unit, delta badge, sparkline and caption. The `row` variant shows the title above several small metrics side by side from `KlyDisplay.StatItems`, and ignores the value, unit, delta, trend and caption. |
-| `Breakdown` | A list of labelled amounts with subtotal rows and a total row. The `collapsible` variant hides the lines behind a toggle. With `KlyDisplay.CompareColumns`, or when a line has a `DisplayBreakdownLine.CompareValue`, the amounts are shown in two columns. |
-| `Meter` | A horizontal meter driven by `KlyDisplay.MeterValue` and `KlyDisplay.MeterMax`, with warning and error thresholds, or stacked parts with an optional legend. The `ring` variant draws the same value or parts as a ring with the value in its center, and the `scale` variant shows discrete levels instead. |
-| `Chart` | A small bar chart from `KlyDisplay.ChartData`. The `line` variant draws a line through the points, and the `funnel` variant draws one bar per step with the conversion rate from the previous step. |
-| `Table` | A plain table of text cells, defined by columns and rows keyed by column, with an optional footer row. The `sticky` variant scrolls the rows in a box at most 20rem high and keeps the header row visible. |
-| `Diff` | Before and after values per field, with unchanged fields hidden unless `KlyDisplay.ShowUnchanged` is set. |
-| `Record` | A list of entity rows, each with an image, avatar or icon, a reference, a title, a secondary line, badges and a trailing value with a caption. |
-| `Person` | A person with an avatar (image or initials), name, description and chip and optional contacts, or with the `group` variant a stack of avatars with a +N overflow, whose tooltips give each name, description and chip. |
-| `List` | A list of items. The `steps` and `checks` variants number the items and mark done ones, and the `files` variant shows an extension badge and file size and can open the items in the file preview. |
-| `Timeline` | A numbered list of events with a done, current or upcoming state. The `pipeline` variant lays the events out in a row, and the `log` variant shows compact lines that start with the date and time of each event. |
-| `Date` | A calendar tile with a title. The `countdown` variant shows the days until or since the date, and the `range` variant shows a start and end date with the number of days; both show the title as a caption below. |
-| `Media` | A single image, or with the `gallery` variant a grid of images with a +N overflow tile. |
-| `Code` | A preformatted value with a label and a copy button. The `secret` variant masks the value and adds a Reveal toggle. |
-| `Empty` | An empty state with an icon, a title, a description and action buttons. |
-| `Accordion` | Collapsible sections, one open at a time unless `KlyDisplay.Multiple` is set. |
-
-#### `DisplaySurface`
-
-`Klyroo.Display` · enum
-
-The surface treatment of a `KlyDisplay` block: border, background and padding.
-
-| Value | Description |
-| :--- | :--- |
-| `Plain` | No border, background or padding. |
-| `Muted` | A muted background with padding. |
-| `Bordered` | A border and padding. |
-| `Elevated` | A border, an elevated background, padding and a shadow. |
-
-#### `DisplayTimelineState`
-
-`Klyroo.Display` · enum
-
-The state of an event of a `DisplayKind.Timeline` block.
-
-| Value | Description |
-| :--- | :--- |
-| `Done` | The event happened. This is the state of an event whose state is not set. |
-| `Current` | The event is happening now. |
-| `Upcoming` | The event has not happened yet. |
-
-#### `DisplayVariant`
-
-`Klyroo.Display` · enum
-
-The layout of a `KlyDisplay` within its `DisplayKind`. A variant belongs to one kind (the comments name it); on another kind it renders the default layout and, in Development, logs a warning.
-
-| Value | Description |
-| :--- | :--- |
-| `Default` | The default layout of the kind. |
-| `Eyebrow` | Heading: the text above the title. |
-| `Quote` | Text: a block quote. |
-| `Row` | Stat: several metrics in a row. |
-| `Collapsible` | Breakdown: a collapsible block. |
-| `Ring` | Meter: a ring. |
-| `Scale` | Meter: a scale of levels. |
-| `Line` | Chart: a line plot. |
-| `Funnel` | Chart: a funnel. |
-| `Sticky` | Table: a sticky header. |
-| `Group` | Person: a group of people. |
-| `Steps` | List: numbered steps. |
-| `Checks` | List: a checklist. |
-| `Files` | List: files that open in the preview. |
-| `Pipeline` | Timeline: a pipeline. |
-| `Log` | Timeline: a log. |
-| `Schedule` | Timeline: an agenda grouped by day. |
-| `Countdown` | Date: a countdown. |
-| `Range` | Date: a range between two dates. |
-| `Gallery` | Media: a gallery of images. |
-| `Secret` | Code: a value that is masked until the user reveals it. |
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `Actions` (init) | `string?` | Classes merged into the `actions` slot of `KlySecretBlock`, after the theme and the app configuration. |
+| `Copy` (init) | `string?` | Classes merged into the `copy` slot of `KlySecretBlock`, after the theme and the app configuration. |
+| `CopyIcon` (init) | `string?` | Classes merged into the `copyIcon` slot of `KlySecretBlock`, after the theme and the app configuration. |
+| `Header` (init) | `string?` | Classes merged into the `header` slot of `KlySecretBlock`, after the theme and the app configuration. |
+| `Label` (init) | `string?` | Classes merged into the `label` slot of `KlySecretBlock`, after the theme and the app configuration. |
+| `Pre` (init) | `string?` | Classes merged into the `pre` slot of `KlySecretBlock`, after the theme and the app configuration. |
+| `Root` (init) | `string?` | Classes merged into the `root` slot of `KlySecretBlock`, after the theme and the app configuration. |
+| `Toggle` (init) | `string?` | Classes merged into the `toggle` slot of `KlySecretBlock`, after the theme and the app configuration. |
+| `ToggleIcon` (init) | `string?` | Classes merged into the `toggleIcon` slot of `KlySecretBlock`, after the theme and the app configuration. |
