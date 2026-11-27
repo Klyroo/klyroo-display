@@ -62,7 +62,7 @@ internal static class DisplayThemes
             .Slot("badgeTone", "bg-(--kly-color)/10 text-(--kly-color-text)")
             .Slot("badgeIcon", "size-3.5")
             .Slot("body", "flex min-w-0 flex-col")
-            .Slot("name", "truncate font-medium text-(--klyroo-text-highlighted) hover:underline")
+            .Slot("name", "font-medium [overflow-wrap:anywhere] text-(--klyroo-text-highlighted) hover:underline")
             .Slot("description", "text-xs text-(--klyroo-text-muted)")
             .Slot("meta", "shrink-0 text-xs text-(--klyroo-text-muted)")
             .Slot("more", "-ms-2 inline-flex items-center gap-1.5 self-start rounded-(--klyroo-radius) px-2 py-1 text-xs font-medium text-(--klyroo-text-muted) hover:bg-(--klyroo-bg-muted) hover:text-(--klyroo-text) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--klyroo-primary)")
