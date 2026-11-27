@@ -2,6 +2,49 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Klyroo.Display;
 
+/// <summary>A language <see cref="CodeHighlighter"/> can highlight. A code in no language (<see langword="null"/> where a <see cref="CodeLanguage"/>? is taken) is plain text.</summary>
+public enum CodeLanguage
+{
+    /// <summary>Bash and other POSIX shells (<c>sh</c>, <c>zsh</c>, <c>shell</c>).</summary>
+    Bash,
+
+    /// <summary>C# (<c>cs</c>, <c>csx</c>).</summary>
+    CSharp,
+
+    /// <summary>CSS.</summary>
+    Css,
+
+    /// <summary>HTML and Razor (<c>htm</c>, <c>razor</c>, <c>cshtml</c>, <c>svg</c>): <c>script</c> and <c>style</c> contents are highlighted as JavaScript and CSS.</summary>
+    Html,
+
+    /// <summary>JavaScript (<c>js</c>, <c>jsx</c>, <c>mjs</c>, <c>cjs</c>).</summary>
+    JavaScript,
+
+    /// <summary>JSON, with comments (<c>jsonc</c>).</summary>
+    Json,
+
+    /// <summary>Less.</summary>
+    Less,
+
+    /// <summary>Python (<c>py</c>).</summary>
+    Python,
+
+    /// <summary>SCSS.</summary>
+    Scss,
+
+    /// <summary>SQL.</summary>
+    Sql,
+
+    /// <summary>TypeScript (<c>ts</c>, <c>tsx</c>, <c>mts</c>, <c>cts</c>).</summary>
+    TypeScript,
+
+    /// <summary>XML and its dialects (<c>xaml</c>, <c>csproj</c>, <c>props</c>, <c>xsd</c>).</summary>
+    Xml,
+
+    /// <summary>YAML (<c>yml</c>).</summary>
+    Yaml,
+}
+
 /// <summary>The category of a <see cref="CodeToken"/>. A theme gives each category a color.</summary>
 public enum CodeTokenKind
 {
@@ -49,9 +92,8 @@ public readonly record struct CodeToken(CodeTokenKind Kind, string Text);
 /// <para>The scanners are lexical, not parsers: they recognize comments, strings, numbers, keywords and a few naming heuristics (a name followed
 /// by <c>(</c> is a function, a capitalized name is a type). <see cref="Tokenize"/> never throws, whatever the input: an unterminated string or
 /// comment runs to the end of its line or of the code, and the tokens always concatenate to the input.</para>
-/// <para>The work is capped: a code longer than <see cref="MaxLength"/> characters or <see cref="MaxLines"/> lines, and a code in a language that is not
-/// supported, come back as one <see cref="CodeTokenKind.Plain"/> token.</para>
-/// <para>Supported languages (and their aliases): <c>csharp</c> (cs, c#, csx), <c>javascript</c> (js, jsx, mjs, cjs), <c>typescript</c> (ts, tsx, mts, cts),
+/// <para>The work is capped: a code longer than <see cref="MaxLength"/> characters or <see cref="MaxLines"/> lines, and a code with no language, come back as one <see cref="CodeTokenKind.Plain"/> token.</para>
+/// <para>Supported languages (<see cref="CodeLanguage"/>, with the aliases <see cref="ResolveLanguage"/> accepts): <c>csharp</c> (cs, c#, csx), <c>javascript</c> (js, jsx, mjs, cjs), <c>typescript</c> (ts, tsx, mts, cts),
 /// <c>json</c> (jsonc), <c>html</c> (htm, xhtml, razor, cshtml, svg: <c>script</c> and <c>style</c> contents are highlighted as JavaScript and CSS),
 /// <c>xml</c> (xaml, csproj, props, targets, xsd, xslt, config and others), <c>css</c>, <c>scss</c>, <c>less</c>, <c>sql</c>, <c>python</c> (py),
 /// <c>bash</c> (sh, shell, zsh) and <c>yaml</c> (yml).</para>
@@ -64,71 +106,91 @@ public static class CodeHighlighter
     /// <summary>The largest number of lines of a code that is highlighted (<c>5000</c>). A longer code is returned as one plain token.</summary>
     public const int MaxLines = 5_000;
 
-    private static readonly Dictionary<string, string> Aliases = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, CodeLanguage> Aliases = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["csharp"] = "csharp", ["cs"] = "csharp", ["c#"] = "csharp", ["csx"] = "csharp", ["cake"] = "csharp",
-        ["javascript"] = "javascript", ["js"] = "javascript", ["jsx"] = "javascript", ["mjs"] = "javascript", ["cjs"] = "javascript", ["node"] = "javascript",
-        ["typescript"] = "typescript", ["ts"] = "typescript", ["tsx"] = "typescript", ["mts"] = "typescript", ["cts"] = "typescript",
-        ["json"] = "json", ["jsonc"] = "json", ["json5"] = "json", ["webmanifest"] = "json", ["geojson"] = "json",
-        ["html"] = "html", ["htm"] = "html", ["xhtml"] = "html", ["razor"] = "html", ["cshtml"] = "html", ["svg"] = "html", ["vue"] = "html", ["svelte"] = "html",
-        ["xml"] = "xml", ["xaml"] = "xml", ["axaml"] = "xml", ["csproj"] = "xml", ["fsproj"] = "xml", ["vbproj"] = "xml", ["props"] = "xml", ["targets"] = "xml",
-        ["xsd"] = "xml", ["xsl"] = "xml", ["xslt"] = "xml", ["rss"] = "xml", ["atom"] = "xml", ["plist"] = "xml", ["resx"] = "xml", ["nuspec"] = "xml", ["slnx"] = "xml",
-        ["css"] = "css", ["scss"] = "scss", ["less"] = "less",
-        ["sql"] = "sql", ["psql"] = "sql", ["mysql"] = "sql", ["pgsql"] = "sql", ["tsql"] = "sql",
-        ["python"] = "python", ["py"] = "python", ["pyw"] = "python", ["python3"] = "python",
-        ["bash"] = "bash", ["sh"] = "bash", ["zsh"] = "bash", ["shell"] = "bash", ["ksh"] = "bash", ["console"] = "bash", ["shellscript"] = "bash",
-        ["yaml"] = "yaml", ["yml"] = "yaml",
+        ["csharp"] = CodeLanguage.CSharp, ["cs"] = CodeLanguage.CSharp, ["c#"] = CodeLanguage.CSharp, ["csx"] = CodeLanguage.CSharp, ["cake"] = CodeLanguage.CSharp,
+        ["javascript"] = CodeLanguage.JavaScript, ["js"] = CodeLanguage.JavaScript, ["jsx"] = CodeLanguage.JavaScript, ["mjs"] = CodeLanguage.JavaScript, ["cjs"] = CodeLanguage.JavaScript, ["node"] = CodeLanguage.JavaScript,
+        ["typescript"] = CodeLanguage.TypeScript, ["ts"] = CodeLanguage.TypeScript, ["tsx"] = CodeLanguage.TypeScript, ["mts"] = CodeLanguage.TypeScript, ["cts"] = CodeLanguage.TypeScript,
+        ["json"] = CodeLanguage.Json, ["jsonc"] = CodeLanguage.Json, ["json5"] = CodeLanguage.Json, ["webmanifest"] = CodeLanguage.Json, ["geojson"] = CodeLanguage.Json,
+        ["html"] = CodeLanguage.Html, ["htm"] = CodeLanguage.Html, ["xhtml"] = CodeLanguage.Html, ["razor"] = CodeLanguage.Html, ["cshtml"] = CodeLanguage.Html, ["svg"] = CodeLanguage.Html, ["vue"] = CodeLanguage.Html, ["svelte"] = CodeLanguage.Html,
+        ["xml"] = CodeLanguage.Xml, ["xaml"] = CodeLanguage.Xml, ["axaml"] = CodeLanguage.Xml, ["csproj"] = CodeLanguage.Xml, ["fsproj"] = CodeLanguage.Xml, ["vbproj"] = CodeLanguage.Xml, ["props"] = CodeLanguage.Xml, ["targets"] = CodeLanguage.Xml,
+        ["xsd"] = CodeLanguage.Xml, ["xsl"] = CodeLanguage.Xml, ["xslt"] = CodeLanguage.Xml, ["rss"] = CodeLanguage.Xml, ["atom"] = CodeLanguage.Xml, ["plist"] = CodeLanguage.Xml, ["resx"] = CodeLanguage.Xml, ["nuspec"] = CodeLanguage.Xml, ["slnx"] = CodeLanguage.Xml,
+        ["css"] = CodeLanguage.Css, ["scss"] = CodeLanguage.Scss, ["less"] = CodeLanguage.Less,
+        ["sql"] = CodeLanguage.Sql, ["psql"] = CodeLanguage.Sql, ["mysql"] = CodeLanguage.Sql, ["pgsql"] = CodeLanguage.Sql, ["tsql"] = CodeLanguage.Sql,
+        ["python"] = CodeLanguage.Python, ["py"] = CodeLanguage.Python, ["pyw"] = CodeLanguage.Python, ["python3"] = CodeLanguage.Python,
+        ["bash"] = CodeLanguage.Bash, ["sh"] = CodeLanguage.Bash, ["zsh"] = CodeLanguage.Bash, ["shell"] = CodeLanguage.Bash, ["ksh"] = CodeLanguage.Bash, ["console"] = CodeLanguage.Bash, ["shellscript"] = CodeLanguage.Bash,
+        ["yaml"] = CodeLanguage.Yaml, ["yml"] = CodeLanguage.Yaml,
     };
 
-    /// <summary>The canonical names of the supported languages, in alphabetical order.</summary>
-    public static IReadOnlyList<string> Languages { get; } =
-        ["bash", "csharp", "css", "html", "javascript", "json", "less", "python", "scss", "sql", "typescript", "xml", "yaml"];
+    /// <summary>Every supported language, in alphabetical order of <see cref="Name"/>.</summary>
+    public static IReadOnlyList<CodeLanguage> Languages { get; } =
+        [CodeLanguage.Bash, CodeLanguage.CSharp, CodeLanguage.Css, CodeLanguage.Html, CodeLanguage.JavaScript, CodeLanguage.Json, CodeLanguage.Less,
+         CodeLanguage.Python, CodeLanguage.Scss, CodeLanguage.Sql, CodeLanguage.TypeScript, CodeLanguage.Xml, CodeLanguage.Yaml];
 
-    /// <summary>Maps a language name, an alias or a file extension to the canonical name of a supported language.</summary>
+    /// <summary>The canonical lowercase name of a language (<c>csharp</c>, <c>typescript</c>), as it is written in a <c>language-</c> class and a code block label.</summary>
+    /// <param name="language">The language.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="language"/> is not a defined <see cref="CodeLanguage"/>.</exception>
+    public static string Name(CodeLanguage language) => language switch
+    {
+        CodeLanguage.Bash => "bash",
+        CodeLanguage.CSharp => "csharp",
+        CodeLanguage.Css => "css",
+        CodeLanguage.Html => "html",
+        CodeLanguage.JavaScript => "javascript",
+        CodeLanguage.Json => "json",
+        CodeLanguage.Less => "less",
+        CodeLanguage.Python => "python",
+        CodeLanguage.Scss => "scss",
+        CodeLanguage.Sql => "sql",
+        CodeLanguage.TypeScript => "typescript",
+        CodeLanguage.Xml => "xml",
+        CodeLanguage.Yaml => "yaml",
+        _ => throw new ArgumentOutOfRangeException(nameof(language), language, "Not a defined CodeLanguage."),
+    };
+
+    /// <summary>Maps a language name, an alias or a file extension, which come from outside the program (a Markdown fence, a file name), to a <see cref="CodeLanguage"/>.</summary>
     /// <param name="languageOrExtension">A name such as <c>csharp</c>, <c>c#</c>, <c>TSX</c>, <c>.yml</c> or <c>language-js</c>. The case, a leading dot and a <c>language-</c> prefix are ignored.</param>
-    /// <returns>An element of <see cref="Languages"/>, or <see langword="null"/> when the language is not supported.</returns>
-    public static string? ResolveLanguage(string? languageOrExtension)
+    /// <returns>The language, or <see langword="null"/> when it is not supported.</returns>
+    public static CodeLanguage? ResolveLanguage(string? languageOrExtension)
     {
         if (string.IsNullOrWhiteSpace(languageOrExtension)) return null;
         var name = languageOrExtension.Trim();
         if (name.StartsWith("language-", StringComparison.OrdinalIgnoreCase)) name = name["language-".Length..];
         name = name.TrimStart('.');
-        return Aliases.TryGetValue(name, out var canonical) ? canonical : null;
+        return Aliases.TryGetValue(name, out var language) ? language : null;
     }
 
-    /// <summary>Maps a file name or URL to the canonical name of a supported language, from its extension.</summary>
+    /// <summary>Maps a file name or URL to a <see cref="CodeLanguage"/>, from its extension.</summary>
     /// <param name="fileNameOrUrl">A file name or URL. A query string or fragment is ignored.</param>
-    /// <returns>An element of <see cref="Languages"/>, or <see langword="null"/> when there is no extension or the language is not supported.</returns>
-    public static string? ResolveFileName(string? fileNameOrUrl)
+    /// <returns>The language, or <see langword="null"/> when there is no extension or the language is not supported.</returns>
+    public static CodeLanguage? ResolveFileName(string? fileNameOrUrl)
     {
         var extension = FilePreviewService.ExtractExtension(fileNameOrUrl);
         return extension is null ? null : ResolveLanguage(extension);
     }
 
-    /// <summary>Whether <see cref="Tokenize"/> would highlight this code: the language is supported and the code is within the size caps.</summary>
+    /// <summary>Whether <see cref="Tokenize"/> would highlight this code: the language is set and the code is within the size caps.</summary>
     /// <param name="code">The source code.</param>
-    /// <param name="language">A language name, alias or file extension, see <see cref="ResolveLanguage"/>.</param>
-    public static bool CanHighlight([NotNullWhen(true)] string? code, string? language) =>
-        !string.IsNullOrEmpty(code) && ResolveLanguage(language) is not null && WithinCaps(code);
+    /// <param name="language">The language, or <see langword="null"/> for plain text.</param>
+    public static bool CanHighlight([NotNullWhen(true)] string? code, [NotNullWhen(true)] CodeLanguage? language) =>
+        !string.IsNullOrEmpty(code) && language is not null && WithinCaps(code);
 
     /// <summary>Splits source code into tokens.</summary>
     /// <param name="code">The source code. It may be malformed, truncated or not code at all.</param>
-    /// <param name="language">A language name, alias or file extension, see <see cref="ResolveLanguage"/>. An unsupported language, or <see langword="null"/>, gives plain text.</param>
+    /// <param name="language">The language, or <see langword="null"/> for plain text.</param>
     /// <returns>
     /// The tokens, in order: their texts concatenate to exactly <paramref name="code"/>. An empty or <see langword="null"/> code gives no token.
-    /// A code that is not highlighted (unsupported language, or over <see cref="MaxLength"/> characters or <see cref="MaxLines"/> lines) gives one <see cref="CodeTokenKind.Plain"/> token.
+    /// A code that is not highlighted (no language, or over <see cref="MaxLength"/> characters or <see cref="MaxLines"/> lines) gives one <see cref="CodeTokenKind.Plain"/> token.
     /// </returns>
-    public static IReadOnlyList<CodeToken> Tokenize(string? code, string? language)
+    public static IReadOnlyList<CodeToken> Tokenize(string? code, CodeLanguage? language)
     {
         if (string.IsNullOrEmpty(code)) return [];
-        var canonical = ResolveLanguage(language);
-        if (canonical is null || !WithinCaps(code)) return [new CodeToken(CodeTokenKind.Plain, code)];
+        if (language is not { } canonical || !WithinCaps(code)) return [new CodeToken(CodeTokenKind.Plain, code)];
         try
         {
             var writer = new TokenWriter(code);
             Create(canonical, code, writer).Run();
-            var tokens = writer.Finish();
-            return tokens;
+            return writer.Finish();
         }
         catch (Exception)
         {
@@ -136,6 +198,48 @@ public static class CodeHighlighter
             return [new CodeToken(CodeTokenKind.Plain, code)];
         }
     }
+
+    /// <summary>
+    /// Highlights a code as HTML-safe markup, for a page that is not rendered by Blazor (an e-mail, a static site, a PDF). Text that has a category is wrapped in
+    /// <c>&lt;span data-token="keyword"&gt;</c> (<c>keyword</c>, <c>string</c>, <c>number</c>, <c>comment</c>, <c>type</c>, <c>function</c>, <c>property</c>, <c>tag</c> or
+    /// <c>punctuation</c>), and plain text is bare. Every character of the code is escaped, so the result can be placed inside an element as it is.
+    /// The spans carry no style: color them with your own CSS on <c>[data-token]</c>.
+    /// </summary>
+    /// <param name="code">The source code.</param>
+    /// <param name="language">The language of the code.</param>
+    /// <returns>The markup. Its text, once the tags are removed and the entities decoded, is exactly <paramref name="code"/>.</returns>
+    public static string Highlight(string code, CodeLanguage language)
+    {
+        ArgumentNullException.ThrowIfNull(code);
+        var html = new System.Text.StringBuilder(code.Length * 2);
+        foreach (var token in Tokenize(code, language))
+        {
+            if (token.Kind == CodeTokenKind.Plain)
+            {
+                html.Append(System.Net.WebUtility.HtmlEncode(token.Text));
+                continue;
+            }
+            html.Append("<span data-token=\"").Append(TokenName(token.Kind)).Append("\">")
+                .Append(System.Net.WebUtility.HtmlEncode(token.Text)).Append("</span>");
+        }
+        return html.ToString();
+    }
+
+    /// <summary>The value of the <c>data-token</c> attribute of a token category (<c>keyword</c>, <c>string</c>...); <c>plain</c> for <see cref="CodeTokenKind.Plain"/>.</summary>
+    /// <param name="kind">The category.</param>
+    public static string TokenName(CodeTokenKind kind) => kind switch
+    {
+        CodeTokenKind.Keyword => "keyword",
+        CodeTokenKind.String => "string",
+        CodeTokenKind.Number => "number",
+        CodeTokenKind.Comment => "comment",
+        CodeTokenKind.Type => "type",
+        CodeTokenKind.Function => "function",
+        CodeTokenKind.Property => "property",
+        CodeTokenKind.Tag => "tag",
+        CodeTokenKind.Punctuation => "punctuation",
+        _ => "plain",
+    };
 
     private static bool WithinCaps(string code)
     {
@@ -148,21 +252,21 @@ public static class CodeHighlighter
         return true;
     }
 
-    private static Lexer Create(string language, string code, TokenWriter writer) => language switch
+    private static Lexer Create(CodeLanguage language, string code, TokenWriter writer) => language switch
     {
-        "csharp" => new CSharpLexer(code, 0, code.Length, writer),
-        "javascript" => new JavaScriptLexer(code, 0, code.Length, writer, typescript: false),
-        "typescript" => new JavaScriptLexer(code, 0, code.Length, writer, typescript: true),
-        "json" => new JsonLexer(code, 0, code.Length, writer),
-        "html" => new MarkupLexer(code, 0, code.Length, writer, html: true),
-        "xml" => new MarkupLexer(code, 0, code.Length, writer, html: false),
-        "css" => new CssLexer(code, 0, code.Length, writer, CssDialect.Css),
-        "scss" => new CssLexer(code, 0, code.Length, writer, CssDialect.Scss),
-        "less" => new CssLexer(code, 0, code.Length, writer, CssDialect.Less),
-        "sql" => new SqlLexer(code, 0, code.Length, writer),
-        "python" => new PythonLexer(code, 0, code.Length, writer),
-        "bash" => new BashLexer(code, 0, code.Length, writer),
-        "yaml" => new YamlLexer(code, 0, code.Length, writer),
+        CodeLanguage.CSharp => new CSharpLexer(code, 0, code.Length, writer),
+        CodeLanguage.JavaScript => new JavaScriptLexer(code, 0, code.Length, writer, typescript: false),
+        CodeLanguage.TypeScript => new JavaScriptLexer(code, 0, code.Length, writer, typescript: true),
+        CodeLanguage.Json => new JsonLexer(code, 0, code.Length, writer),
+        CodeLanguage.Html => new MarkupLexer(code, 0, code.Length, writer, html: true),
+        CodeLanguage.Xml => new MarkupLexer(code, 0, code.Length, writer, html: false),
+        CodeLanguage.Css => new CssLexer(code, 0, code.Length, writer, CssDialect.Css),
+        CodeLanguage.Scss => new CssLexer(code, 0, code.Length, writer, CssDialect.Scss),
+        CodeLanguage.Less => new CssLexer(code, 0, code.Length, writer, CssDialect.Less),
+        CodeLanguage.Sql => new SqlLexer(code, 0, code.Length, writer),
+        CodeLanguage.Python => new PythonLexer(code, 0, code.Length, writer),
+        CodeLanguage.Bash => new BashLexer(code, 0, code.Length, writer),
+        CodeLanguage.Yaml => new YamlLexer(code, 0, code.Length, writer),
         _ => new PlainLexer(code, 0, code.Length, writer),
     };
 }

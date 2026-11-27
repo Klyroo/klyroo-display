@@ -1,0 +1,119 @@
+@namespace Klyroo.Display
+@using Microsoft.JSInterop
+@inherits KlyComponentBase
+
+<div class="@_slots["root"]" data-slot="code-block" @attributes="AdditionalAttributes">
+    <div class="@_slots["header"]" data-slot="code-header">
+        <span class="@_slots["label"]" data-slot="code-label">@(Label ?? (Language is { } language ? CodeHighlighter.Name(language) : Texts.Code))</span>
+        @if (Copy)
+        {
+            <div class="@_slots["actions"]">
+                <button type="button" class="@_slots["copy"]" aria-label="@Texts.CopyCode" data-slot="code-copy" @onclick="CopyAsync">
+                    @RenderIcon("copy", _slots["copyIcon"])
+                </button>
+            </div>
+        }
+    </div>
+    <pre class="@_slots["pre"]" data-slot="code-value" data-language="@(_highlighted && Language is { } highlightedLanguage ? CodeHighlighter.Name(highlightedLanguage) : null)"><code>@_body</code></pre>
+</div>
+
+@code {
+    private SlotSet _slots = default!;
+    private RenderFragment? _body;
+
+    // The tokens of the last code, language and highlight setting: a re-render (a click on the copy button, a parent update) does not scan a large code again.
+    private string? _tokensSource;
+    private CodeLanguage? _tokensLanguage;
+    private bool _tokensHighlighted;
+    private IReadOnlyList<CodeToken> _tokens = [];
+    private bool _highlighted;
+
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    /// <summary>The source code to show. It is plain text: markup in it is escaped.</summary>
+    [Parameter] public string? Code { get; set; }
+
+    /// <summary>
+    /// The language of the code: it selects the syntax highlighting, and it is the label of the block when <see cref="Label"/> is not set. <see langword="null"/> (the default) shows plain text.
+    /// Get it from a name, an alias or a file extension with <see cref="CodeHighlighter.ResolveLanguage"/> or <see cref="CodeHighlighter.ResolveFileName"/>.
+    /// </summary>
+    [Parameter] public CodeLanguage? Language { get; set; }
+
+    /// <summary>The label above the code. Without it, the name of <see cref="Language"/>, or the localized "Code".</summary>
+    [Parameter] public string? Label { get; set; }
+
+    /// <summary>Whether the code is highlighted according to <see cref="Language"/> (<see langword="true"/> by default). A code longer than <see cref="CodeHighlighter.MaxLength"/> characters or <see cref="CodeHighlighter.MaxLines"/> lines is always plain text.</summary>
+    [Parameter] public bool Highlight { get; set; } = true;
+
+    /// <summary>Whether the block shows a copy button, which copies the code as given (<see langword="true"/> by default). The button needs an interactive render mode.</summary>
+    [Parameter] public bool Copy { get; set; } = true;
+
+    /// <summary>Shows the number of each line in a gutter. The numbers are drawn by CSS, so they are not part of the text that is selected or copied.</summary>
+    [Parameter] public bool LineNumbers { get; set; }
+
+    /// <summary>
+    /// The lines to emphasize, counted from 1: a neutral fill and an accent marker in the gutter. Single lines and runs mix in one list:
+    /// <c>HighlightLines="@([3, new CodeLineRange(6, 9)])"</c>. Lines past the end of the code are ignored.
+    /// </summary>
+    [Parameter] public IReadOnlyList<CodeLineRange>? HighlightLines { get; set; }
+
+    /// <summary>Per-instance class overrides of the slots of the block, see <see cref="CodeBlockUi"/>. They are merged after the theme, and <c>Class</c> wins on the root slot.</summary>
+    [Parameter] public CodeBlockUi? Ui { get; set; }
+
+    private DisplayTexts Texts => Options.Extension<KlyrooDisplayOptions>().ResolveTexts(CurrentLocale.Code);
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        _slots = ResolveSlots(Options.Extension<KlyrooDisplayOptions>().CodeBlock, new Dictionary<string, string?>(), Ui, "root");
+        var raw = Code ?? "";
+        var wantsHighlight = Highlight && CodeHighlighter.CanHighlight(raw, Language);
+        if (!string.Equals(_tokensSource, raw, StringComparison.Ordinal) || _tokensLanguage != Language || _tokensHighlighted != wantsHighlight)
+        {
+            _tokensSource = raw;
+            _tokensLanguage = Language;
+            _tokensHighlighted = wantsHighlight;
+            _tokens = wantsHighlight ? CodeHighlighter.Tokenize(raw, Language) : CodeHighlighter.Tokenize(raw, null);
+        }
+        _highlighted = wantsHighlight;
+        _body = BuildBody();
+    }
+
+    private RenderFragment BuildBody()
+    {
+        var tokenClass = TokenClass;
+        var ranges = HighlightLines;
+        if (!LineNumbers && (ranges is null || ranges.Count == 0))
+        {
+            return builder => CodeRendering.Build(builder, _tokens, tokenClass);
+        }
+        bool IsHighlighted(int line)
+        {
+            if (ranges is null) return false;
+            foreach (var range in ranges)
+            {
+                if (range.Contains(line)) return true;
+            }
+            return false;
+        }
+        var (line, idle, marked, numbered) = (_slots["line"], _slots["lineIdle"], _slots["lineHighlighted"], _slots["lineNumbered"]);
+        var numbers = LineNumbers;
+        return builder => CodeRendering.BuildLines(builder, _tokens, tokenClass, IsHighlighted, line, idle, marked, numbered, numbers);
+    }
+
+    private string? TokenClass(CodeTokenKind kind) => kind switch
+    {
+        CodeTokenKind.Keyword => _slots["tokenKeyword"],
+        CodeTokenKind.String => _slots["tokenString"],
+        CodeTokenKind.Number => _slots["tokenNumber"],
+        CodeTokenKind.Comment => _slots["tokenComment"],
+        CodeTokenKind.Type => _slots["tokenType"],
+        CodeTokenKind.Function => _slots["tokenFunction"],
+        CodeTokenKind.Property => _slots["tokenProperty"],
+        CodeTokenKind.Tag => _slots["tokenTag"],
+        CodeTokenKind.Punctuation => _slots["tokenPunctuation"],
+        _ => null,
+    };
+
+    private Task CopyAsync() => ClipboardCopy.WriteAsync(JS, RendererInfo.IsInteractive, Code);
+}

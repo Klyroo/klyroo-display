@@ -18,17 +18,16 @@ public sealed class DisplayLocalesTests : BunitContext
     private IRenderedComponent<CascadingValue<KlyLocale>> RenderList(KlyLocale locale) =>
         Render<CascadingValue<KlyLocale>>(p => p
             .Add(x => x.Value, locale)
-            .AddChildContent<KlyDisplay>(d => d
-                .Add(x => x.Kind, DisplayKind.List)
+            .AddChildContent<KlyFileList>(d => d
                 .Add(x => x.Max, 1)
-                .Add(x => x.ListItems, [new DisplayListItem { Text = "a" }, new DisplayListItem { Text = "b" }])));
+                .Add(x => x.Files, [new FilePreviewFile { Src = "/a.txt" }, new FilePreviewFile { Src = "/b.txt" }])));
 
     [Fact]
     public void A_component_shows_the_texts_of_its_locale()
     {
-        Assert.Equal("Afficher plus · 1", RenderList(KlyLocales.Fr).Find("[data-slot=display-more]").TextContent.Trim());
-        Assert.Equal("Mehr anzeigen · 1", RenderList(KlyLocales.De).Find("[data-slot=display-more]").TextContent.Trim());
-        Assert.Equal("Show more · 1", RenderList(KlyLocales.En).Find("[data-slot=display-more]").TextContent.Trim());
+        Assert.Equal("Afficher plus · 1", RenderList(KlyLocales.Fr).Find("[data-slot=file-list-more]").TextContent.Trim());
+        Assert.Equal("Mehr anzeigen · 1", RenderList(KlyLocales.De).Find("[data-slot=file-list-more]").TextContent.Trim());
+        Assert.Equal("Show more · 1", RenderList(KlyLocales.En).Find("[data-slot=file-list-more]").TextContent.Trim());
     }
 
     [Fact]
@@ -37,9 +36,9 @@ public sealed class DisplayLocalesTests : BunitContext
         Services.AddKlyrooDisplay(d => d.Texts("fr", t => t with { ShowMore = n => $"Encore {n}" }));
         var canadian = KlyLocales.Extend(KlyLocales.Fr, code: "fr-CA", name: "Français (Canada)");
 
-        Assert.Equal("Encore 1", RenderList(KlyLocales.Fr).Find("[data-slot=display-more]").TextContent.Trim());
-        Assert.Equal("Encore 1", RenderList(canadian).Find("[data-slot=display-more]").TextContent.Trim());
-        Assert.Equal("Show more · 1", RenderList(KlyLocales.En).Find("[data-slot=display-more]").TextContent.Trim());
+        Assert.Equal("Encore 1", RenderList(KlyLocales.Fr).Find("[data-slot=file-list-more]").TextContent.Trim());
+        Assert.Equal("Encore 1", RenderList(canadian).Find("[data-slot=file-list-more]").TextContent.Trim());
+        Assert.Equal("Show more · 1", RenderList(KlyLocales.En).Find("[data-slot=file-list-more]").TextContent.Trim());
     }
 
     [Fact]
@@ -81,17 +80,17 @@ public sealed class DisplayLocalesTests : BunitContext
     }
 
     [Theory]
-    [InlineData(1, "день")]
-    [InlineData(21, "день")]
-    [InlineData(2, "дня")]
-    [InlineData(24, "дня")]
-    [InlineData(5, "дней")]
-    [InlineData(11, "дней")]
-    [InlineData(12, "дней")]
-    [InlineData(14, "дней")]
-    [InlineData(111, "дней")]
+    [InlineData(1, "строка")]
+    [InlineData(21, "строка")]
+    [InlineData(2, "строки")]
+    [InlineData(24, "строки")]
+    [InlineData(5, "строк")]
+    [InlineData(11, "строк")]
+    [InlineData(12, "строк")]
+    [InlineData(14, "строк")]
+    [InlineData(111, "строк")]
     public void Russian_counts_take_their_plural_form(int n, string word) =>
-        Assert.Equal($"{n} {word}", DisplayLocales.Ru.DayCount(n));
+        Assert.Equal($"{n} {word}", DisplayLocales.Ru.LineCount(n));
 
     [Fact]
     public void Counts_group_thousands_the_way_the_language_writes_them()

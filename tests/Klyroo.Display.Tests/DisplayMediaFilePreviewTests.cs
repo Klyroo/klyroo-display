@@ -14,77 +14,9 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
     }
 
     [Fact]
-    public void KlyDisplay_renders_Heading_Text_Alert_and_Callout()
+    public void KlySecretBlock_masks_the_value_and_KlyFileList_reveals_more_files()
     {
-        var heading = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Heading)
-            .Add(x => x.Title, "Active Subscriptions")
-            .Add(x => x.Count, "42")
-            .Add(x => x.Description, "Updated 5m ago"));
-
-        Assert.Contains("Active Subscriptions", heading.Find("[data-slot=heading-title]").TextContent);
-        Assert.Equal("42", heading.Find("[data-slot=heading-count]").TextContent);
-
-        var alert = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Alert)
-            .Add(x => x.Tone, KlyColor.Warning)
-            .Add(x => x.Title, "Quota warning")
-            .Add(x => x.Details, "85% of monthly volume used"));
-
-        Assert.Equal("status", alert.Find("[data-slot=display-alert]").GetAttribute("role"));
-        Assert.Empty(alert.FindAll("[data-slot=alert-details]"));
-        alert.Find("[data-slot=alert-details-toggle]").Click();
-        Assert.Contains("85% of monthly volume used", alert.Find("[data-slot=alert-details]").TextContent);
-    }
-
-    [Fact]
-    public void KlyDisplay_renders_Facts_Stat_Breakdown_Meter_Chart_Table_and_Diff()
-    {
-        var facts = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Facts)
-            .Add(x => x.Facts, [
-                new DisplayFact { Label = "Environment", Value = "Production", Copy = true },
-                new DisplayFact { Label = "Region", Value = null }
-            ]));
-        Assert.Equal(2, facts.FindAll("[data-slot=fact-item]").Count);
-        Assert.NotNull(facts.Find("[data-slot=fact-copy]"));
-        Assert.NotNull(facts.Find("[data-slot=fact-empty]"));
-
-        var stat = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Stat)
-            .Add(x => x.Title, "MRR")
-            .Add(x => x.Value, "€12,400")
-            .Add(x => x.Delta, "+14%")
-            .Add(x => x.Trend, [10, 14, 13, 19]));
-        Assert.Equal("€12,400", stat.Find("[data-slot=stat-value]").TextContent);
-        Assert.NotNull(stat.Find("[data-slot=stat-sparkline]"));
-
-        var meter = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Meter)
-            .Add(x => x.Title, "Storage")
-            .Add(x => x.MeterValue, 92)
-            .Add(x => x.MeterMax, 100)
-            .Add(x => x.WarningThreshold, 75)
-            .Add(x => x.ErrorThreshold, 90));
-        Assert.Equal("error", meter.Find("[data-slot=display-meter]").GetAttribute("data-tone"));
-
-        var diff = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Diff)
-            .Add(x => x.DiffItems, [
-                new DisplayDiffItem("Plan", "Starter", "Enterprise", Changed: true),
-                new DisplayDiffItem("Currency", "EUR", "EUR", Changed: false)
-            ]));
-        Assert.Single(diff.FindAll("[data-slot=diff-item]"));
-        Assert.Equal("Starter", diff.Find("[data-slot=diff-before]").TextContent);
-        Assert.Equal("Enterprise", diff.Find("[data-slot=diff-after]").TextContent);
-    }
-
-    [Fact]
-    public void KlyDisplay_renders_Code_secret_mask_Record_Reveal_and_Accordion()
-    {
-        var code = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Code)
-            .Add(x => x.Variant, DisplayVariant.Secret)
+        var code = Render<KlySecretBlock>(p => p
             .Add(x => x.Value, "sk_live_9876543210")
             .Add(x => x.VisibleChars, 4));
 
@@ -92,31 +24,19 @@ public sealed class DisplayMediaFilePreviewTests : BunitContext
         code.Find("[data-slot=code-secret-toggle]").Click();
         Assert.Equal("sk_live_9876543210", code.Find("[data-slot=code-value]").TextContent);
 
-        var list = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.List)
+        var list = Render<KlyFileList>(p => p
             .Add(x => x.Max, 2)
             .Add(x => x.Step, 2)
-            .Add(x => x.ListItems, [
-                new DisplayListItem { Text = "Step 1" },
-                new DisplayListItem { Text = "Step 2" },
-                new DisplayListItem { Text = "Step 3" }
+            .Add(x => x.Files, [
+                new FilePreviewFile { Src = "/f/step-1.txt" },
+                new FilePreviewFile { Src = "/f/step-2.txt" },
+                new FilePreviewFile { Src = "/f/step-3.txt" }
             ]));
 
         Assert.Equal(2, list.FindAll("[data-slot=list-item]").Count);
-        list.Find("[data-slot=display-more]").Click();
+        list.Find("[data-slot=file-list-more]").Click();
         Assert.Equal(3, list.FindAll("[data-slot=list-item]").Count);
-
-        var accordion = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.Accordion)
-            .Add(x => x.AccordionItems, [
-                new DisplayAccordionItem("Section A", "Content A", DefaultOpen: true),
-                new DisplayAccordionItem("Section B", "Content B")
-            ]));
-
-        Assert.Single(accordion.FindAll("[data-slot=accordion-content]"));
-        accordion.FindAll("[data-slot=accordion-trigger]")[1].Click();
-        Assert.Single(accordion.FindAll("[data-slot=accordion-content]"));
-        Assert.Contains("Content B", accordion.Find("[data-slot=accordion-content]").TextContent);
+        Assert.Empty(list.FindAll("[data-slot=file-list-more]"));
     }
 
     [Fact]

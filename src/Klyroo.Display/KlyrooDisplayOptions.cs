@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using Klyroo.Display.Theming;
+using Klyroo.UI.Theming;
 
 namespace Klyroo.Display;
 
@@ -12,13 +14,14 @@ public sealed class KlyrooDisplayOptions
     /// <summary>Creates the options with the built-in texts of <see cref="DisplayLocales"/>.</summary>
     public KlyrooDisplayOptions() { }
 
-    /// <summary>
-    /// Logs a warning (<c>ILogger&lt;KlyDisplay&gt;</c>, once per component) when <see cref="KlyDisplay.Variant"/> is not a variant of its
-    /// <see cref="KlyDisplay.Kind"/>, which renders the default layout. <see langword="null"/> (the default) turns it on when the
-    /// <c>ASPNETCORE_ENVIRONMENT</c> (or <c>DOTNET_ENVIRONMENT</c>) variable is <c>Development</c>, as in Blazor Web and Server apps. A
-    /// WebAssembly or MAUI app does not have that variable: set this to <c>builder.HostEnvironment.IsDevelopment()</c> there. <see langword="false"/> turns the warning off.
-    /// </summary>
-    public bool? WarnOnUnknownVariant { get; set; }
+    /// <summary>The look of <see cref="KlyCodeBlock"/>: its slots (<c>root</c>, <c>pre</c>, <c>line</c>, the <c>token*</c> colors...) with their default classes. Add classes in <c>AddKlyrooDisplay</c>.</summary>
+    public ComponentTheme CodeBlock { get; } = DisplayThemes.CodeBlock();
+
+    /// <summary>The look of <see cref="KlySecretBlock"/>. Add classes in <c>AddKlyrooDisplay</c>.</summary>
+    public ComponentTheme SecretBlock { get; } = DisplayThemes.SecretBlock();
+
+    /// <summary>The look of <see cref="KlyFileList"/>. Add classes in <c>AddKlyrooDisplay</c>.</summary>
+    public ComponentTheme FileList { get; } = DisplayThemes.FileList();
 
     private readonly object _gate = new();
     private readonly Dictionary<string, List<Func<DisplayTexts, DisplayTexts>>> _changes = new(StringComparer.OrdinalIgnoreCase);

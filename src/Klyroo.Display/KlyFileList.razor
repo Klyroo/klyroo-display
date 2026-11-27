@@ -1,0 +1,104 @@
+@namespace Klyroo.Display
+@inherits KlyComponentBase
+@inject IServiceProvider Services
+
+@{
+    var (visible, remaining) = ApplyReveal();
+}
+<div class="@_slots["root"]" data-slot="file-list" @attributes="AdditionalAttributes">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <p class="@_slots["title"]" data-slot="file-list-title">@Title</p>
+    }
+    <ul class="@_slots["list"]">
+        @foreach (var file in visible)
+        {
+            var name = file.Name ?? FilePreviewService.FileNameFromUrl(file.Src);
+            <li class="@_slots["item"]" data-slot="list-item">
+                <div class="@_slots["main"]">
+                    <span class="@_slots["badge"]" data-slot="file-badge">@FilePreviewService.ExtensionLabel(name, file.Mime)</span>
+                    <div class="@_slots["body"]">
+                        <a href="@file.Src" class="@_slots["name"]" data-slot="file-name" @onclick="@(() => Open(file))" @onclick:preventDefault="@CanPreview()">@name</a>
+                        @if (file.Size is { } size)
+                        {
+                            <span class="@_slots["description"]" data-slot="file-size">@FilePreviewService.FormatFileSize(size, FormatCulture)</span>
+                        }
+                    </div>
+                </div>
+                @if (file.UpdatedAt is { } updated)
+                {
+                    <span class="@_slots["meta"]" data-slot="file-date">@updated.ToString("d", FormatCulture)</span>
+                }
+            </li>
+        }
+    </ul>
+    @if (remaining > 0)
+    {
+        <button type="button" class="@_slots["more"]" data-slot="file-list-more" @onclick="RevealMore">
+            <span>@Texts.ShowMore(remaining)</span>
+            @RenderIcon("chevron-down", _slots["moreIcon"])
+        </button>
+    }
+</div>
+
+@code {
+    private SlotSet _slots = default!;
+    private int _revealedCount;
+
+    /// <summary>The files to list, in order. A file shows its extension, its name (or the last segment of its <c>Src</c>), its size and its date when it has them.</summary>
+    [Parameter] public IReadOnlyList<FilePreviewFile>? Files { get; set; }
+
+    /// <summary>A title above the list.</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>The number of files shown before a Show more button (all files when <see langword="null"/>).</summary>
+    [Parameter] public int? Max { get; set; }
+
+    /// <summary>The number of files each click on Show more reveals (all remaining files when <see langword="null"/>).</summary>
+    [Parameter] public int? Step { get; set; }
+
+    /// <summary>Per-instance class overrides of the slots of the list, see <see cref="FileListUi"/>. They are merged after the theme, and <c>Class</c> wins on the root slot.</summary>
+    [Parameter] public FileListUi? Ui { get; set; }
+
+    private DisplayTexts Texts => Options.Extension<KlyrooDisplayOptions>().ResolveTexts(CurrentLocale.Code);
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        _slots = ResolveSlots(Options.Extension<KlyrooDisplayOptions>().FileList, new Dictionary<string, string?>(), Ui, "root");
+        if (Max is { } max && _revealedCount < max) _revealedCount = max;
+    }
+
+    private (IReadOnlyList<FilePreviewFile> Visible, int Remaining) ApplyReveal()
+    {
+        var source = Files;
+        if (source is null || source.Count == 0) return ([], 0);
+        if (Max is not { } max || max <= 0) return (source, 0);
+        var limit = Math.Max(max, _revealedCount);
+        if (source.Count <= limit) return (source, 0);
+        var next = Step is > 0 ? Math.Min(Step.Value, source.Count - limit) : source.Count - limit;
+        return (source.Take(limit).ToList(), next);
+    }
+
+    private void RevealMore()
+    {
+        var total = Files?.Count ?? 0;
+        var current = Math.Max(Max ?? 0, _revealedCount);
+        _revealedCount = Step is > 0 ? Math.Min(total, current + Step.Value) : total;
+    }
+
+    // A click opens the preview when a KlyFilePreviewProvider is mounted and the page is interactive; otherwise the link goes to the file.
+    private bool CanPreview() =>
+        Services.GetService(typeof(FilePreviewService)) is FilePreviewService { IsMounted: true } && RendererInfo.IsInteractive;
+
+    private void Open(FilePreviewFile clicked)
+    {
+        if (!CanPreview() || Files is null || Services.GetService(typeof(FilePreviewService)) is not FilePreviewService preview) return;
+        var index = 0;
+        for (var i = 0; i < Files.Count; i++)
+        {
+            if (ReferenceEquals(Files[i], clicked)) { index = i; break; }
+        }
+        preview.OpenGallery(Files, new FilePreviewOptions { Index = index });
+    }
+}

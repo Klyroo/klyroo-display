@@ -11,20 +11,6 @@ namespace Klyroo.Display;
 /// </summary>
 internal static class CodeRendering
 {
-    public static string TokenName(CodeTokenKind kind) => kind switch
-    {
-        CodeTokenKind.Keyword => "keyword",
-        CodeTokenKind.String => "string",
-        CodeTokenKind.Number => "number",
-        CodeTokenKind.Comment => "comment",
-        CodeTokenKind.Type => "type",
-        CodeTokenKind.Function => "function",
-        CodeTokenKind.Property => "property",
-        CodeTokenKind.Tag => "tag",
-        CodeTokenKind.Punctuation => "punctuation",
-        _ => "plain",
-    };
-
     public static string? TokenClass(CodeTokenKind kind) => kind switch
     {
         CodeTokenKind.Keyword => "text-(--klyroo-primary-text)",
@@ -39,23 +25,84 @@ internal static class CodeRendering
         _ => null,
     };
 
-    public static RenderFragment Fragment(IReadOnlyList<CodeToken> tokens) => builder => Build(builder, tokens);
+    public static RenderFragment Fragment(IReadOnlyList<CodeToken> tokens) => builder => Build(builder, tokens, TokenClass);
 
-    public static void Build(RenderTreeBuilder builder, IReadOnlyList<CodeToken> tokens)
+    /// <summary>Writes the tokens as spans and text nodes. <paramref name="tokenClass"/> gives the classes of a category, or <see langword="null"/> for bare text.</summary>
+    public static void Build(RenderTreeBuilder builder, IReadOnlyList<CodeToken> tokens, Func<CodeTokenKind, string?> tokenClass)
     {
         var sequence = 0;
         foreach (var token in tokens)
         {
-            if (TokenClass(token.Kind) is not { } cssClass)
+            sequence = AddToken(builder, sequence, token.Kind, token.Text, tokenClass);
+        }
+    }
+
+    /// <summary>The lines of a code as lists of tokens: a token that spans several lines is cut at each line break. The last line break ends a line, it does not start an empty one.</summary>
+    public static List<List<CodeToken>> SplitLines(IReadOnlyList<CodeToken> tokens)
+    {
+        var lines = new List<List<CodeToken>>();
+        var current = new List<CodeToken>();
+        foreach (var token in tokens)
+        {
+            var text = token.Text;
+            var start = 0;
+            while (start < text.Length)
             {
-                builder.AddContent(sequence++, token.Text);
-                continue;
+                var newline = text.IndexOf('\n', start);
+                if (newline < 0)
+                {
+                    current.Add(new CodeToken(token.Kind, text[start..]));
+                    break;
+                }
+                // The line break stays at the end of its line, so the text of the block is the code itself.
+                current.Add(new CodeToken(token.Kind, text[start..(newline + 1)]));
+                lines.Add(current);
+                current = [];
+                start = newline + 1;
             }
+        }
+        if (current.Count > 0) lines.Add(current);
+        return lines;
+    }
+
+    /// <summary>
+    /// Writes a code as one block-level span per line, for line numbers and emphasized lines. A line is <c>data-slot="code-line"</c> with its
+    /// number in <c>data-line</c> and <c>data-highlighted="true"</c> when emphasized. The line break stays inside its line, so the text content is the code itself.
+    /// </summary>
+    public static void BuildLines(RenderTreeBuilder builder, IReadOnlyList<CodeToken> tokens, Func<CodeTokenKind, string?> tokenClass,
+        Func<int, bool> isHighlighted, string lineClass, string idleClass, string highlightedClass, string numberedClass, bool numbered)
+    {
+        var sequence = 0;
+        var number = 0;
+        foreach (var line in SplitLines(tokens))
+        {
+            number++;
+            var highlighted = isHighlighted(number);
             builder.OpenElement(sequence++, "span");
-            builder.AddAttribute(sequence++, "data-token", TokenName(token.Kind));
-            builder.AddAttribute(sequence++, "class", cssClass);
-            builder.AddContent(sequence++, token.Text);
+            builder.AddAttribute(sequence++, "class", $"{lineClass} {(highlighted ? highlightedClass : idleClass)}{(numbered ? " " + numberedClass : "")}");
+            builder.AddAttribute(sequence++, "data-slot", "code-line");
+            builder.AddAttribute(sequence++, "data-line", number.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            builder.AddAttribute(sequence++, "data-highlighted", highlighted ? "true" : null);
+            foreach (var token in line)
+            {
+                sequence = AddToken(builder, sequence, token.Kind, token.Text, tokenClass);
+            }
             builder.CloseElement();
         }
+    }
+
+    private static int AddToken(RenderTreeBuilder builder, int sequence, CodeTokenKind kind, string text, Func<CodeTokenKind, string?> tokenClass)
+    {
+        if (tokenClass(kind) is not { } cssClass)
+        {
+            builder.AddContent(sequence++, text);
+            return sequence;
+        }
+        builder.OpenElement(sequence++, "span");
+        builder.AddAttribute(sequence++, "data-token", CodeHighlighter.TokenName(kind));
+        builder.AddAttribute(sequence++, "class", cssClass);
+        builder.AddContent(sequence++, text);
+        builder.CloseElement();
+        return sequence;
     }
 }

@@ -1,8 +1,8 @@
 namespace Klyroo.Display;
 
 /// <summary>
-/// The built-in texts of <see cref="KlyDisplay"/>, <see cref="KlyAudioPlayer"/>, <see cref="KlyVideoPlayer"/> and
-/// <see cref="KlyFilePreviewProvider"/>: button labels, accessible names, empty states and counters. There is one set per locale of
+/// The built-in texts of <see cref="KlyCodeBlock"/>, <see cref="KlySecretBlock"/>, <see cref="KlyFileList"/>, <see cref="KlyAudioPlayer"/>, <see cref="KlyVideoPlayer"/> and
+/// <see cref="KlyFilePreviewProvider"/>: button labels, accessible names and counters. There is one set per locale of
 /// Klyroo.UI (<see cref="DisplayLocales"/>), and a component shows the set of its current locale, the one its <c>Messages</c> come from.
 /// Change a set with <see cref="KlyrooDisplayOptions.Texts"/> in <c>AddKlyrooDisplay(d =&gt; ...)</c>.
 /// </summary>
@@ -27,85 +27,28 @@ public sealed record DisplayTexts
     {
     }
 
-    // KlyDisplay
+    // Code, secret and file list blocks
 
-    /// <summary>The Show more button of a list, given the number of items the next click reveals (<c>"Show more · 3"</c>).</summary>
+    /// <summary>The Show more button of a file list, given the number of files the next click reveals (<c>"Show more · 3"</c>).</summary>
     public Func<int, string> ShowMore { get; init; } = n => $"Show more · {n}";
 
-    /// <summary>The toggle that expands a clamped Text block (<c>"Read more"</c>).</summary>
-    public string ReadMore { get; init; } = "Read more";
-
-    /// <summary>The toggle that clamps an expanded Text block again (<c>"Show less"</c>).</summary>
-    public string ShowLess { get; init; } = "Show less";
-
-    /// <summary>The toggle that opens the details of an Alert (<c>"Show details"</c>).</summary>
-    public string ShowDetails { get; init; } = "Show details";
-
-    /// <summary>The toggle that closes the details of an Alert or the lines of a <c>collapsible</c> Breakdown (<c>"Hide details"</c>).</summary>
-    public string HideDetails { get; init; } = "Hide details";
-
-    /// <summary>The toggle that opens the lines of a <c>collapsible</c> Breakdown, and the details button and panel title of the file preview (<c>"Details"</c>).</summary>
+    /// <summary>The details button and panel title of the file preview (<c>"Details"</c>).</summary>
     public string Details { get; init; } = "Details";
 
-    /// <summary>The accessible name of a copy button, given the label or value it copies (<c>"Copy Email"</c>).</summary>
-    public Func<string, string> CopyValue { get; init; } = label => $"Copy {label}";
-
-    /// <summary>The accessible name of the copy button of a Code block (<c>"Copy code"</c>).</summary>
+    /// <summary>The accessible name of the copy button of a code block and of a secret block (<c>"Copy code"</c>).</summary>
     public string CopyCode { get; init; } = "Copy code";
 
-    /// <summary>The text of a Chart block without data (<c>"No data"</c>).</summary>
-    public string NoData { get; init; } = "No data";
-
-    /// <summary>The name of the series of a Chart block without a title, used in the tooltip and the data table (<c>"Value"</c>).</summary>
-    public string ChartValue { get; init; } = "Value";
-
-    /// <summary>The accessible name of a Meter without a title (<c>"Meter"</c>).</summary>
-    public string Meter { get; init; } = "Meter";
-
-    /// <summary>The <c>countdown</c> Date text for the current day (<c>"Today"</c>).</summary>
-    public string Today { get; init; } = "Today";
-
-    /// <summary>The <c>countdown</c> Date text for the next day (<c>"Tomorrow"</c>).</summary>
-    public string Tomorrow { get; init; } = "Tomorrow";
-
-    /// <summary>The <c>countdown</c> Date text for a date two days away or more, given the number of days (<c>"In 5 days"</c>).</summary>
-    public Func<int, string> InDays { get; init; } = n => $"In {n} days";
-
-    /// <summary>The <c>countdown</c> Date text for a past date, given the number of days (<c>"3 days overdue"</c>).</summary>
-    public Func<int, string> DaysOverdue { get; init; } = n => n == 1 ? "1 day overdue" : $"{n} days overdue";
-
-    /// <summary>The length of a <c>range</c> Date, given the number of days (<c>"7 days"</c>).</summary>
-    public Func<int, string> DayCount { get; init; } = n => n == 1 ? "1 day" : $"{n} days";
-
-    /// <summary>The time of a <c>schedule</c> Timeline event that lasts whole days (<c>"All day"</c>).</summary>
-    public string AllDay { get; init; } = "All day";
-
-    /// <summary>The heading of the events of a <c>schedule</c> Timeline that have no date (<c>"Unscheduled"</c>).</summary>
-    public string Unscheduled { get; init; } = "Unscheduled";
-
-    /// <summary>The length of a <c>schedule</c> Timeline event, given its total number of minutes (<c>"1 h 30 min"</c>, <c>"45 min"</c>, <c>"2 h"</c>). The length is never negative.</summary>
-    public Func<int, string> Duration { get; init; } = m => DisplayLocales.Duration(m, "h", "min");
-
-    /// <summary>The alternative text of a gallery image when the block has no title, given its one-based position (<c>"Image 2"</c>).</summary>
-    public Func<int, string> ImageAlt { get; init; } = n => $"Image {n}";
-
-    /// <summary>The alternative text of a Media image when the block has no title (<c>"Media"</c>).</summary>
-    public string MediaAlt { get; init; } = "Media";
-
-    /// <summary>The label of a <c>secret</c> Code block without a title or language (<c>"Secret"</c>).</summary>
+    /// <summary>The label of a secret block without a label (<c>"Secret"</c>).</summary>
     public string Secret { get; init; } = "Secret";
 
-    /// <summary>The label of a Code block without a title or language (<c>"Code"</c>).</summary>
+    /// <summary>The label of a code block without a label or language (<c>"Code"</c>).</summary>
     public string Code { get; init; } = "Code";
 
-    /// <summary>The button that unmasks a <c>secret</c> Code block (<c>"Reveal"</c>).</summary>
+    /// <summary>The button that unmasks a secret block (<c>"Reveal"</c>).</summary>
     public string Reveal { get; init; } = "Reveal";
 
-    /// <summary>The button that masks a revealed <c>secret</c> Code block again (<c>"Conceal"</c>).</summary>
+    /// <summary>The button that masks a revealed secret block again (<c>"Conceal"</c>).</summary>
     public string Conceal { get; init; } = "Conceal";
-
-    /// <summary>The title of an Empty block without a title (<c>"Nothing to show"</c>).</summary>
-    public string NothingToShow { get; init; } = "Nothing to show";
 
     // Media players
 

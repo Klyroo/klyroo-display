@@ -100,20 +100,17 @@ public sealed class MediaPlaybackTests : BunitContext
     }
 
     [Fact]
-    public async Task Clicking_a_file_opens_that_file_when_earlier_items_have_no_link()
+    public async Task Clicking_a_file_opens_the_whole_list_as_a_gallery_at_that_file()
     {
         SetRendererInfo(new RendererInfo("Server", isInteractive: true));
         Render<KlyFilePreviewProvider>();
         var preview = Services.GetRequiredService<FilePreviewService>();
-        var cut = Render<KlyDisplay>(p => p
-            .Add(x => x.Kind, DisplayKind.List)
-            .Add(x => x.Variant, DisplayVariant.Files)
-            .Add(x => x.ListItems,
+        var cut = Render<KlyFileList>(p => p
+            .Add(x => x.Files,
             [
-                new DisplayListItem { Text = "Pending upload" },
-                new DisplayListItem { Text = "contract.pdf", Href = "/files/contract.pdf" },
-                new DisplayListItem { Text = "invoice.pdf", Href = "/files/invoice.pdf" },
-                new DisplayListItem { Text = "receipt.pdf", Href = "/files/receipt.pdf" },
+                new FilePreviewFile { Src = "/files/contract.pdf" },
+                new FilePreviewFile { Src = "/files/invoice.pdf" },
+                new FilePreviewFile { Src = "/files/receipt.pdf" },
             ]));
 
         await cut.FindAll("a").Single(a => a.TextContent == "invoice.pdf").ClickAsync();
@@ -121,6 +118,20 @@ public sealed class MediaPlaybackTests : BunitContext
         Assert.Equal(3, preview.Files.Count);
         Assert.Equal(1, preview.CurrentIndex);
         Assert.Equal("/files/invoice.pdf", preview.Files[preview.CurrentIndex].Src);
+    }
+
+    [Fact]
+    public async Task Without_a_mounted_provider_a_click_only_follows_the_link()
+    {
+        SetRendererInfo(new RendererInfo("Server", isInteractive: true));
+        var preview = Services.GetRequiredService<FilePreviewService>();
+        var cut = Render<KlyFileList>(p => p.Add(x => x.Files, [new FilePreviewFile { Src = "/files/contract.pdf" }]));
+
+        var link = cut.Find("a");
+        await link.ClickAsync();
+
+        Assert.False(preview.IsOpen);
+        Assert.Equal("/files/contract.pdf", link.GetAttribute("href"));
     }
 
     [Fact]

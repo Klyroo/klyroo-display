@@ -181,7 +181,12 @@ public sealed class CodeHighlighterTests
 
     private static bool Has(IReadOnlyList<CodeToken> tokens, CodeTokenKind kind, string text) => tokens.Any(t => t.Kind == kind && t.Text == text);
 
-    private static IReadOnlyList<CodeToken> Tokens(string language, string code) => CodeHighlighter.Tokenize(code, language);
+    // The samples are named by what a Markdown fence or a file extension would say; the highlighter takes the typed language.
+    private static CodeLanguage? Lang(string? name) => CodeHighlighter.ResolveLanguage(name);
+
+    private static string? NameOf(CodeLanguage? language) => language is { } l ? CodeHighlighter.Name(l) : null;
+
+    private static IReadOnlyList<CodeToken> Tokens(string language, string code) => CodeHighlighter.Tokenize(code, Lang(language));
 
     [Theory]
     [MemberData(nameof(Samples))]
@@ -191,7 +196,7 @@ public sealed class CodeHighlighterTests
         for (var length = 0; length <= code.Length; length++)
         {
             var prefix = code[..length];
-            var tokens = CodeHighlighter.Tokenize(prefix, language);
+            var tokens = CodeHighlighter.Tokenize(prefix, Lang(language));
             Assert.Equal(prefix, Join(tokens));
             Assert.All(tokens, t => Assert.NotEqual(0, t.Text.Length));
         }
@@ -204,7 +209,7 @@ public sealed class CodeHighlighterTests
         for (var start = 0; start < code.Length; start += 3)
         {
             var suffix = code[start..];
-            Assert.Equal(suffix, Join(CodeHighlighter.Tokenize(suffix, language)));
+            Assert.Equal(suffix, Join(CodeHighlighter.Tokenize(suffix, Lang(language))));
         }
     }
 
@@ -217,15 +222,15 @@ public sealed class CodeHighlighterTests
         for (var round = 0; round < 300; round++)
         {
             var garbage = new string(Enumerable.Range(0, random.Next(0, 200)).Select(_ => alphabet[random.Next(alphabet.Length)]).ToArray());
-            Assert.Equal(garbage, Join(CodeHighlighter.Tokenize(garbage, language)));
+            Assert.Equal(garbage, Join(CodeHighlighter.Tokenize(garbage, Lang(language))));
 
             var from = random.Next(0, code.Length);
             var length = random.Next(0, code.Length - from);
             var slice = code.Substring(from, length);
-            Assert.Equal(slice, Join(CodeHighlighter.Tokenize(slice, language)));
+            Assert.Equal(slice, Join(CodeHighlighter.Tokenize(slice, Lang(language))));
 
             var mixed = slice + garbage + code[..random.Next(0, code.Length)];
-            Assert.Equal(mixed, Join(CodeHighlighter.Tokenize(mixed, language)));
+            Assert.Equal(mixed, Join(CodeHighlighter.Tokenize(mixed, Lang(language))));
         }
     }
 
@@ -246,7 +251,7 @@ public sealed class CodeHighlighterTests
         {
             var code = string.Concat(Enumerable.Repeat(unit, 20_000));
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            var tokens = CodeHighlighter.Tokenize(code, language);
+            var tokens = CodeHighlighter.Tokenize(code, Lang(language));
             watch.Stop();
             Assert.Equal(code, Join(tokens));
             Assert.True(watch.ElapsedMilliseconds < 3000, $"{language} took {watch.ElapsedMilliseconds} ms on '{unit}'");
@@ -551,7 +556,7 @@ public sealed class CodeHighlighterTests
             ("python", "x = 'a\r\ny = 2\r\n"), ("css", "a {\r\n color: red;\r\n}\r\n"), ("html", "<p\r\nclass='a'>x</p>\r\n"),
         })
         {
-            Assert.Equal(code, Join(CodeHighlighter.Tokenize(code, language)));
+            Assert.Equal(code, Join(CodeHighlighter.Tokenize(code, Lang(language))));
         }
         Assert.True(Has(Tokens("yaml", "a: 1\r\nb: |\r\n  text\r\nc: 2\r\n"), CodeTokenKind.Property, "c"));
         Assert.True(Has(Tokens("csharp", "var a = \"x\r\nvar b = 1;"), CodeTokenKind.Number, "1"));
@@ -565,7 +570,7 @@ public sealed class CodeHighlighterTests
     [InlineData("text")]
     public void An_unknown_language_is_plain_text(string? language)
     {
-        var tokens = CodeHighlighter.Tokenize("if (x) { return \"a\"; }", language);
+        var tokens = CodeHighlighter.Tokenize("if (x) { return \"a\"; }", Lang(language));
         var token = Assert.Single(tokens);
         Assert.Equal(CodeTokenKind.Plain, token.Kind);
         Assert.Equal("if (x) { return \"a\"; }", token.Text);
@@ -574,8 +579,8 @@ public sealed class CodeHighlighterTests
     [Fact]
     public void Empty_or_null_code_has_no_tokens()
     {
-        Assert.Empty(CodeHighlighter.Tokenize(null, "cs"));
-        Assert.Empty(CodeHighlighter.Tokenize("", "cs"));
+        Assert.Empty(CodeHighlighter.Tokenize(null, Lang("cs")));
+        Assert.Empty(CodeHighlighter.Tokenize("", Lang("cs")));
         Assert.Empty(CodeHighlighter.Tokenize("", null));
     }
 
@@ -584,15 +589,15 @@ public sealed class CodeHighlighterTests
     {
         var longCode = string.Concat(Enumerable.Repeat("int x = 1;\n", CodeHighlighter.MaxLines + 1));
         Assert.True(longCode.Length < CodeHighlighter.MaxLength);
-        Assert.Equal(CodeTokenKind.Plain, Assert.Single(CodeHighlighter.Tokenize(longCode, "cs")).Kind);
+        Assert.Equal(CodeTokenKind.Plain, Assert.Single(CodeHighlighter.Tokenize(longCode, Lang("cs"))).Kind);
 
         var wide = new string('a', CodeHighlighter.MaxLength + 1);
-        Assert.Equal(CodeTokenKind.Plain, Assert.Single(CodeHighlighter.Tokenize(wide, "cs")).Kind);
-        Assert.False(CodeHighlighter.CanHighlight(wide, "cs"));
+        Assert.Equal(CodeTokenKind.Plain, Assert.Single(CodeHighlighter.Tokenize(wide, Lang("cs"))).Kind);
+        Assert.False(CodeHighlighter.CanHighlight(wide, Lang("cs")));
 
         var limit = string.Join("\n", Enumerable.Repeat("int x = 1;", CodeHighlighter.MaxLines));
-        Assert.True(CodeHighlighter.CanHighlight(limit, "cs"));
-        Assert.True(CodeHighlighter.Tokenize(limit, "cs").Count > 1);
+        Assert.True(CodeHighlighter.CanHighlight(limit, Lang("cs")));
+        Assert.True(CodeHighlighter.Tokenize(limit, Lang("cs")).Count > 1);
     }
 
     [Theory]
@@ -616,7 +621,7 @@ public sealed class CodeHighlighterTests
     [InlineData("yml", "yaml")]
     public void Aliases_and_extensions_resolve_to_one_canonical_language(string name, string expected)
     {
-        Assert.Equal(expected, CodeHighlighter.ResolveLanguage(name));
+        Assert.Equal(expected, NameOf(CodeHighlighter.ResolveLanguage(name)));
     }
 
     [Theory]
@@ -629,7 +634,7 @@ public sealed class CodeHighlighterTests
     [InlineData(null, null)]
     public void File_names_resolve_from_their_extension(string? name, string? expected)
     {
-        Assert.Equal(expected, CodeHighlighter.ResolveFileName(name));
+        Assert.Equal(expected, NameOf(CodeHighlighter.ResolveFileName(name)));
     }
 
     [Fact]
@@ -637,8 +642,65 @@ public sealed class CodeHighlighterTests
     {
         foreach (var language in CodeHighlighter.Languages)
         {
-            Assert.Equal(language, CodeHighlighter.ResolveLanguage(language));
+            Assert.Equal(language, CodeHighlighter.ResolveLanguage(CodeHighlighter.Name(language)));
         }
         Assert.Equal(13, CodeHighlighter.Languages.Count);
+        Assert.Equal(Enum.GetValues<CodeLanguage>().Order(), CodeHighlighter.Languages.Order());
+        Assert.Equal(CodeHighlighter.Languages.Select(CodeHighlighter.Name).Order(StringComparer.Ordinal), CodeHighlighter.Languages.Select(CodeHighlighter.Name));
+    }
+
+    [Fact]
+    public void An_undefined_language_has_no_name_and_is_scanned_as_plain_text()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => CodeHighlighter.Name((CodeLanguage)99));
+        Assert.Equal(CodeTokenKind.Plain, Assert.Single(CodeHighlighter.Tokenize("var a = 1;", (CodeLanguage)99)).Kind);
+    }
+
+    [Fact]
+    public void Highlight_returns_escaped_markup_whose_text_is_the_code()
+    {
+        const string code = "if (a < b && c) { return \"x\"; } // 1 > 0";
+        var html = CodeHighlighter.Highlight(code, CodeLanguage.CSharp);
+
+        Assert.Contains("<span data-token=\"keyword\">if</span>", html);
+        Assert.Contains("<span data-token=\"string\">&quot;x&quot;</span>", html);
+        Assert.Contains("&lt;", html);
+        Assert.Contains("&amp;&amp;", html);
+        Assert.DoesNotContain("<b", html);
+        Assert.DoesNotContain("class=", html);
+        var text = System.Net.WebUtility.HtmlDecode(System.Text.RegularExpressions.Regex.Replace(html, "<[^>]+>", ""));
+        Assert.Equal(code, text);
+    }
+
+    [Fact]
+    public void Highlight_of_markup_cannot_inject_a_tag()
+    {
+        var html = CodeHighlighter.Highlight("<script>alert(1)</script>", CodeLanguage.Html);
+
+        Assert.DoesNotContain("<script", html);
+        Assert.Contains("&lt;", html);
+        Assert.Equal("", CodeHighlighter.Highlight("", CodeLanguage.Html));
+    }
+
+    [Theory]
+    [InlineData(CodeTokenKind.Keyword, "keyword")]
+    [InlineData(CodeTokenKind.Punctuation, "punctuation")]
+    [InlineData(CodeTokenKind.Plain, "plain")]
+    public void Token_names_are_the_values_of_the_data_token_attribute(CodeTokenKind kind, string name) =>
+        Assert.Equal(name, CodeHighlighter.TokenName(kind));
+
+    [Fact]
+    public void A_line_range_contains_its_ends_and_a_line_converts_to_one()
+    {
+        CodeLineRange single = 3;
+        Assert.True(single.Contains(3));
+        Assert.False(single.Contains(2));
+        Assert.False(single.Contains(4));
+
+        var run = CodeLineRange.Of(6, 9);
+        Assert.True(run.Contains(6) && run.Contains(9) && run.Contains(7));
+        Assert.False(run.Contains(5) || run.Contains(10));
+        Assert.False(new CodeLineRange(9, 6).Contains(7));
+        Assert.Equal(new CodeLineRange(4, 4), new CodeLineRange(4));
     }
 }

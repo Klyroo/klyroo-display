@@ -462,7 +462,7 @@
     }
 
     private string? _codeSource;
-    private string? _codeLanguage;
+    private CodeLanguage? _codeLanguage;
     private RenderFragment? _codeFragment;
 
     // The text of a file with a supported code extension is highlighted. The last result is kept: toggling the line wrapping or moving the
@@ -499,7 +499,7 @@
                     @Texts.WrapLines
                 </button>
             </div>
-            <pre class="m-0 flex-1 overflow-auto rounded-(--klyroo-radius) bg-(--klyroo-bg-muted) p-4 font-mono text-xs text-(--klyroo-text-highlighted) @(_wrapLines ? "whitespace-pre-wrap" : "whitespace-pre")" data-slot="text-content" data-language="@(highlighted is null ? null : _codeLanguage)"><code>@if (highlighted is null) { @raw } else { @highlighted }</code></pre>
+            <pre class="m-0 flex-1 overflow-auto rounded-(--klyroo-radius) bg-(--klyroo-bg-muted) p-4 font-mono text-xs text-(--klyroo-text-highlighted) @(_wrapLines ? "whitespace-pre-wrap" : "whitespace-pre")" data-slot="text-content" data-language="@(highlighted is null || _codeLanguage is not { } codeLanguage ? null : CodeHighlighter.Name(codeLanguage))"><code>@if (highlighted is null) { @raw } else { @highlighted }</code></pre>
         </div>;
     }
 
