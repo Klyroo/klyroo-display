@@ -27,8 +27,6 @@ lead: >-
 # dark mode are computed from it. Without it: the color of the library in klyroo-stack/docs-site/Klyroo.Docs.Site/libraries.yml.
 accent: "#ec4899"
 
-# The texture of the ground behind the header and the hero: blueprint-grid, dot-matrix, ruled-rows, baseline-grid, chart-ticks, halftone, cell-grid or node-dots.
-texture: halftone
 
 # What the hero demonstrates: the board of the library, with feature chips and several results (authored in klyroo-stack/docs-site).
 demo:
