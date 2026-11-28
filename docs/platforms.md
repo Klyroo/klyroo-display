@@ -44,7 +44,11 @@ Notes that apply to all modes:
 
 A `BlazorWebView` renders interactively, so no extra render mode is needed. The repository has no MAUI sample project and the test suite runs on bUnit, so behavior on a device or emulator is not covered here, in particular PDF display in an `iframe` and the Clipboard API inside each platform's web view. Test those on your target platforms.
 
-For a native MAUI UI with XAML and no `BlazorWebView`, install `Klyroo.Display.Core` only. It has no ASP.NET Core or Razor dependency, so a view model can use `FilePreviewService`, `ParseCsv` and the models directly.
+### Native C# MAUI without a web view
+
+For a native MAUI UI with XAML and no `BlazorWebView`, install `Klyroo.Display.Core` alone if you want to bind your own view models to `FilePreviewService`, `CodeHighlighter`, `ParseCsv` and the media models.
+
+The repository also includes [`Klyroo.Display.Maui`](../src/Klyroo.Display.Maui/README.md) (`src/Klyroo.Display.Maui`): native .NET MAUI controls (`KlyCodeBlock`, `KlySecretBlock`, `KlyFileList`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyFilePreviewProvider`) over `Klyroo.Display.Core`, drawn with the design tokens of `Klyroo.UI.Maui` and no WebView. It requires the MAUI workload and a sibling checkout of `klyroo-ui`, and is built and unit-tested by `.github/workflows/maui.yml`.
 
 ## NativeAOT and trimming
 

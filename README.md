@@ -25,6 +25,8 @@ Some content needs more than markup: code that has to be colored, copied and ann
 | [`Klyroo.Display.Core`](https://www.nuget.org/packages/Klyroo.Display.Core) | `CodeHighlighter` and `CodeLanguage`, `FilePreviewService`, file kind detection, CSV parser and the file and media models. No UI dependency. |
 | [`Klyroo.Display`](https://www.nuget.org/packages/Klyroo.Display) | `KlyCodeBlock`, `KlySecretBlock`, `KlyFileList`, `KlyAudioPlayer`, `KlyVideoPlayer` and `KlyFilePreviewProvider` for Blazor. Builds on [Klyroo.UI](https://github.com/klyroo/klyroo-ui) and includes the Core package. |
 
+For native .NET MAUI apps without a `BlazorWebView`, the repository also includes [`Klyroo.Display.Maui`](src/Klyroo.Display.Maui/README.md) (built from source over `Klyroo.Display.Core` and `Klyroo.UI.Maui`).
+
 ## Prerequisites
 
 To use the library in an app:
@@ -148,6 +150,7 @@ Klyroo is a family of independent .NET libraries that compose. Each one has its 
 | **[Klyroo.Display](https://github.com/klyroo/klyroo-display)** | Code highlighting, file preview and audio and video players |
 | [Klyroo.Spreadsheet](https://github.com/klyroo/klyroo-spreadsheet) | Import wizard for CSV, TSV and pasted data, with column and value mapping |
 | [Klyroo.Agent](https://github.com/klyroo/klyroo-agent) | Bridge that lets AI agents read and act on Klyroo forms, dashboards and imports |
+| [Klyroo.Hotkey](https://github.com/klyroo/klyroo-hotkey) | Server-side .NET client for Hotkey cloud browsers, human handoffs and signed webhooks |
 | [Klyroo.Stack](https://github.com/klyroo/klyroo-stack) | Meta-package, MCP documentation server and `dotnet new` templates |
 
 ## Contributing
