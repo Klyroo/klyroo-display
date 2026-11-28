@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Native .NET MAUI controls for Klyroo.Display: the code, secret and file blocks, the media players and the file preview. No WebView, no Blazor. Same version as the library: build/Version.props. -->
+  <PropertyGroup>
+    <!-- The plain framework target is what the unit tests run on; the platform targets are what an app uses. -->
+    <TargetFrameworks>$(KlyrooMauiTfm);$(KlyrooMauiTfm)-android</TargetFrameworks>
+    <TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);$(KlyrooMauiTfm)-ios;$(KlyrooMauiTfm)-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);$(KlyrooMauiTfm)-windows10.0.19041.0</TargetFrameworks>
+
+    <UseMaui>true</UseMaui>
+    <SingleProject>false</SingleProject>
+    <RootNamespace>Klyroo.Display.Maui</RootNamespace>
+    <PackageId>Klyroo.Display.Maui</PackageId>
+    <Description>Native .NET MAUI controls (no WebView) for Klyroo.Display: syntax highlighted code blocks, secret blocks, file lists, audio and video player controls and a file preview, drawn with the Klyroo.UI design tokens.</Description>
+    <PackageTags>maui;dotnet-maui;android;ios;controls;code-block;media-player;file-preview</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Klyroo.Display.Core\Klyroo.Display.Core.csproj" />
+    <ProjectReference Include="..\..\..\klyroo-ui\src\Klyroo.UI.Maui\Klyroo.UI.Maui.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Klyroo.Display.Maui.Tests" />
+    <Using Include="Klyroo.UI.Maui" />
+  </ItemGroup>
+
+</Project>
