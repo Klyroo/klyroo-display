@@ -37,7 +37,7 @@ public class KlyVideoPlayer : KlyMediaPlayerBase
         BackgroundColor = Colors.Black;
         StrokeThickness = 0;
         Padding = 0;
-        this.SetRadius(DisplayThemeExtensions.RadiusOf(0.75));
+        this.SetRadius(KlyTheme.RadiusOf(0.75));
 
         var texts = DisplayTexts.Current;
         _start = new MediaButton(KlyIconNames.Play, texts.PlayVideo, DisplayUi.PrimaryContrast, iconScale: 1.2, circleSize: 48, circleFill: DisplayUi.PrimaryFill) { WidthRequest = 56, HeightRequest = 56, HorizontalOptions = LayoutOptions.Center };

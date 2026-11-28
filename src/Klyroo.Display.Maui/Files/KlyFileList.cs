@@ -176,7 +176,7 @@ public class KlyFileList : Border
     private static Border BuildBadge(FileListItem item, string name)
     {
         var badge = new Border { StrokeThickness = 0, HeightRequest = 24, MinimumWidthRequest = 32, Padding = new Thickness(6, 0), VerticalOptions = LayoutOptions.Center };
-        badge.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        badge.SetRadius(KlyTheme.RadiusOf(1));
         KlyThemeColor text;
         if (item.Tone is { } tone)
         {

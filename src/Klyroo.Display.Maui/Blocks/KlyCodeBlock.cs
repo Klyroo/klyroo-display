@@ -39,7 +39,7 @@ public class KlyCodeBlock : Border
         this.SetThemeColor(BackgroundColorProperty, KlyTheme.Background);
         this.SetStroke(KlyTheme.Border);
         StrokeThickness = 1;
-        this.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        this.SetRadius(KlyTheme.RadiusOf(1));
         Padding = new Thickness(16);
         HorizontalOptions = LayoutOptions.Fill;
 
@@ -57,7 +57,7 @@ public class KlyCodeBlock : Border
 
         var pre = new Border { StrokeThickness = 0, Padding = new Thickness(12), HorizontalOptions = LayoutOptions.Fill };
         pre.SetThemeColor(BackgroundColorProperty, KlyTheme.BackgroundMuted);
-        pre.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        pre.SetRadius(KlyTheme.RadiusOf(1));
         pre.Content = _view;
 
         Content = new VerticalStackLayout { Spacing = 8, Children = { header, pre } };

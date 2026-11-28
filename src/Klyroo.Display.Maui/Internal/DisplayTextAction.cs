@@ -16,7 +16,7 @@ internal sealed class DisplayTextAction : Border
         BackgroundColor = Colors.Transparent;
         HorizontalOptions = LayoutOptions.Start;
         VerticalOptions = LayoutOptions.Center;
-        this.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        this.SetRadius(KlyTheme.RadiusOf(1));
 
         _icon = new KlyIcon { Name = iconName ?? "", Size = KlySize.Sm, IconColor = tone, VerticalOptions = LayoutOptions.Center, IsVisible = iconName is not null };
         _label = DisplayUi.NewLabel(12, tone, FontAttributes.None, LineBreakMode.TailTruncation);

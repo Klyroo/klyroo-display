@@ -49,9 +49,9 @@ public class KlyFilePreviewProvider : ContentView
     public KlyFilePreviewProvider()
     {
         _banner.SetThemeColor(BackgroundColorProperty, KlyTheme.BackgroundMuted);
-        _banner.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        _banner.SetRadius(KlyTheme.RadiusOf(1));
         _details.SetThemeColor(BackgroundColorProperty, KlyTheme.BackgroundElevated);
-        _details.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        _details.SetRadius(KlyTheme.RadiusOf(1));
         _body.Children.Add(_toolbar);
         _body.Children.Add(_banner);
         _body.Children.Add(_stage);
@@ -391,7 +391,7 @@ public class KlyFilePreviewProvider : ContentView
             title.MaximumWidthRequest = 112;
 
             var chip = new Border { StrokeThickness = 1, Padding = new Thickness(10, 0), MinimumHeightRequest = 40, Content = new HorizontalStackLayout { Spacing = 6, VerticalOptions = LayoutOptions.Center, Children = { ext, title } } };
-            chip.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+            chip.SetRadius(KlyTheme.RadiusOf(1));
             chip.SetStroke(current ? DisplayUi.PrimaryText : KlyTheme.Border);
             if (current) chip.SetThemeColor(BackgroundColorProperty, KlyTheme.BackgroundMuted);
             SemanticProperties.SetDescription(chip, fileName);
@@ -512,7 +512,7 @@ public class KlyFilePreviewProvider : ContentView
         }
 
         var table = new Border { StrokeThickness = 1, Padding = 0, Content = new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = grid } };
-        table.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        table.SetRadius(KlyTheme.RadiusOf(1));
         table.SetStroke(KlyTheme.Border);
 
         var summary = DisplayUi.NewLabel(12, KlyTheme.TextMuted);
@@ -562,7 +562,7 @@ public class KlyFilePreviewProvider : ContentView
         label.FontFamily = DisplayUi.MonoFont();
         label.Text = raw;
         var block = new Border { StrokeThickness = 0, Padding = new Thickness(16), Content = label };
-        block.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        block.SetRadius(KlyTheme.RadiusOf(1));
         block.SetThemeColor(BackgroundColorProperty, KlyTheme.BackgroundMuted);
         return block;
     }
@@ -592,7 +592,7 @@ public class KlyFilePreviewProvider : ContentView
         var view = new DisplayCodeView();
         view.Set(tokens, lineNumbers: false, highlightLines: null, wrap: _wrapLines);
         var block = new Border { StrokeThickness = 0, Padding = new Thickness(16), Content = view };
-        block.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        block.SetRadius(KlyTheme.RadiusOf(1));
         block.SetThemeColor(BackgroundColorProperty, KlyTheme.BackgroundMuted);
         return new VerticalStackLayout { Spacing = 8, Children = { bar, block } };
     }
@@ -601,7 +601,7 @@ public class KlyFilePreviewProvider : ContentView
     {
         var texts = DisplayTexts.Current;
         var badge = new Border { StrokeThickness = 0, MinimumHeightRequest = 40, MinimumWidthRequest = 48, Padding = new Thickness(10, 0), HorizontalOptions = LayoutOptions.Center };
-        badge.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        badge.SetRadius(KlyTheme.RadiusOf(1));
         badge.SetThemeColor(BackgroundColorProperty, KlyTheme.BackgroundMuted);
         var ext = DisplayUi.NewLabel(12, KlyTheme.TextHighlighted, FontAttributes.Bold, LineBreakMode.NoWrap);
         ext.Text = FilePreviewService.ExtensionLabel(name, file.Mime);
@@ -623,7 +623,7 @@ public class KlyFilePreviewProvider : ContentView
     private static Border Card(View content, double padding)
     {
         var card = new Border { StrokeThickness = 1, Padding = new Thickness(padding), Content = content, HorizontalOptions = LayoutOptions.Fill };
-        card.SetRadius(DisplayThemeExtensions.RadiusOf(0.75));
+        card.SetRadius(KlyTheme.RadiusOf(0.75));
         card.SetStroke(KlyTheme.Border);
         card.SetThemeColor(BackgroundColorProperty, KlyTheme.BackgroundElevated);
         return card;

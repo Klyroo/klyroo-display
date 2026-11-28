@@ -28,7 +28,7 @@ public class KlySecretBlock : Border
         this.SetThemeColor(BackgroundColorProperty, KlyTheme.Background);
         this.SetStroke(KlyTheme.Border);
         StrokeThickness = 1;
-        this.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        this.SetRadius(KlyTheme.RadiusOf(1));
         Padding = new Thickness(16);
         HorizontalOptions = LayoutOptions.Fill;
 
@@ -51,7 +51,7 @@ public class KlySecretBlock : Border
         _text.FontFamily = DisplayUi.MonoFont();
         var pre = new Border { StrokeThickness = 0, Padding = new Thickness(12), HorizontalOptions = LayoutOptions.Fill, Content = _text };
         pre.SetThemeColor(BackgroundColorProperty, KlyTheme.BackgroundMuted);
-        pre.SetRadius(DisplayThemeExtensions.RadiusOf(1));
+        pre.SetRadius(KlyTheme.RadiusOf(1));
 
         Content = new VerticalStackLayout { Spacing = 8, Children = { header, pre } };
         Update();
